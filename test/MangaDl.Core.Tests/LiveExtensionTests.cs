@@ -73,8 +73,8 @@ public class LiveExtensionTests
         Assert.True(bridge.IsLoaded);
 
         // Verify exported methods on bridge
-        Assert.True(bridge.Engine.Evaluate("typeof extension.getChapterText === 'function'").AsBoolean());
-        Assert.True(bridge.Engine.Evaluate("typeof extension.search === 'function'").AsBoolean());
-        Assert.True(bridge.Engine.Evaluate("typeof extension.getMangaDetail === 'function'").AsBoolean());
+        Assert.True(bridge.HasFunction("getChapterText"));
+        Assert.True(bridge.HasFunction("search"));
+        Assert.True(bridge.HasFunction("getMangaDetail"));
     }
 }
