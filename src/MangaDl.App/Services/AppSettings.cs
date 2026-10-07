@@ -22,8 +22,11 @@ public sealed class AppSettings
     public string? ApiKey { get; set; }
     public bool AutoCheckUpdates { get; set; } = true;
 
-    public string? SupabaseUrl { get; set; }
-    public string? SupabaseAnonKey { get; set; }
+    public const string DefaultSupabaseUrl = "https://gyivwfweldwvzccbpgoz.supabase.co";
+    public const string DefaultSupabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5aXZ3ZndlbGR3dnpjY2JwZ296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjg2NTUsImV4cCI6MjA5NTc0NDY1NX0.XcEJk1fyv-QxSehPUIeRR77ocIkPIZzDyc4DDfrr6XQ";
+
+    public string? SupabaseUrl { get; set; } = DefaultSupabaseUrl;
+    public string? SupabaseAnonKey { get; set; } = DefaultSupabaseAnonKey;
     public string? UserEmail { get; set; }
     public string? UserId { get; set; }
 
@@ -40,7 +43,14 @@ public sealed class AppSettings
             {
                 var json = File.ReadAllText(SettingsFile);
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json);
-                if (loaded != null) return loaded;
+                if (loaded != null)
+                {
+                    if (string.IsNullOrWhiteSpace(loaded.SupabaseUrl))
+                        loaded.SupabaseUrl = DefaultSupabaseUrl;
+                    if (string.IsNullOrWhiteSpace(loaded.SupabaseAnonKey))
+                        loaded.SupabaseAnonKey = DefaultSupabaseAnonKey;
+                    return loaded;
+                }
             }
         }
         catch (Exception ex)

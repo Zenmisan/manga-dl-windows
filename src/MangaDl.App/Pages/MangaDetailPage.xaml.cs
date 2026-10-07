@@ -114,21 +114,25 @@ public sealed partial class MangaDetailPage : Page
 
         try
         {
+            var libEntity = new LibraryEntity
+            {
+                Provider = _currentManga.Source,
+                MangaId = _currentManga.Id,
+                Title = _currentManga.Title,
+                CoverUrl = _currentManga.Cover,
+                Type = AppServices.Extensions.IsNovel(_currentManga.Source) ? "novel" : "manga"
+            };
+
             if (_inLibrary)
             {
-                await AppServices.Database.AddToLibraryAsync(new LibraryEntity
-                {
-                    Provider = _currentManga.Source,
-                    MangaId = _currentManga.Id,
-                    Title = _currentManga.Title,
-                    CoverUrl = _currentManga.Cover,
-                    Type = AppServices.Extensions.IsNovel(_currentManga.Source) ? "novel" : "manga"
-                });
+                await AppServices.Database.AddToLibraryAsync(libEntity);
+                _ = AppServices.Sync.SyncMangaSubscriptionAsync(libEntity, subscribed: true);
                 Nav.Toast($"Added \"{_currentManga.Title}\" to library");
             }
             else
             {
                 await AppServices.Database.RemoveFromLibraryAsync(_currentManga.Source, _currentManga.Id);
+                _ = AppServices.Sync.SyncMangaSubscriptionAsync(libEntity, subscribed: false);
                 Nav.Toast($"Removed \"{_currentManga.Title}\" from library");
             }
         }

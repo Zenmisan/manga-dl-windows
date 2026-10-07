@@ -53,6 +53,11 @@ public sealed partial class RegisterPage : Page
                 AppServices.Settings.UserEmail = session.Email ?? email;
                 AppServices.Settings.UserId = session.UserId;
                 AppServices.Settings.Save();
+                _ = Task.Run(async () =>
+                {
+                    try { await AppServices.Sync.SyncAllAsync(); }
+                    catch (Exception syncEx) { AppLog.Warn("RegisterPage.PostSignUpSync", syncEx); }
+                });
                 Nav.Home();
             }
             else

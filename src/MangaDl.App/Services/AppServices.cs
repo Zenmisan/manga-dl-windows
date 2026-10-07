@@ -3,6 +3,7 @@ using MangaDl.Core.Database;
 using MangaDl.Core.Downloads;
 using MangaDl.Core.Extensions;
 using MangaDl.Core.Http;
+using MangaDl.Core.Sync;
 
 namespace MangaDl.Services;
 
@@ -35,8 +36,19 @@ public static class AppServices
 
     public static SupabaseAuthService Auth { get; } = new(
         Http,
-        Settings.SupabaseUrl ?? string.Empty,
-        Settings.SupabaseAnonKey ?? string.Empty);
+        Settings.SupabaseUrl ?? AppSettings.DefaultSupabaseUrl,
+        Settings.SupabaseAnonKey ?? AppSettings.DefaultSupabaseAnonKey);
+
+    public static SupabaseSyncService Sync { get; } = new(
+        Http,
+        Database,
+        Settings.SupabaseUrl ?? AppSettings.DefaultSupabaseUrl,
+        Settings.SupabaseAnonKey ?? AppSettings.DefaultSupabaseAnonKey,
+        credentialProvider: () =>
+        {
+            var (accessToken, _) = CredentialStore.Load();
+            return (Settings.UserId, accessToken);
+        });
 
     public static async Task InitializeAsync()
     {
@@ -51,5 +63,21 @@ public static class AppServices
 
         // 3. Scan extensions
         Extensions.ScanExtensions();
+
+        // 4. Background cloud sync on app start if signed in
+        if (!string.IsNullOrEmpty(Settings.UserId))
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Sync.SyncAllAsync();
+                }
+                catch (Exception ex)
+                {
+                    AppLog.Warn("AppServices.InitialSync", ex);
+                }
+            });
+        }
     }
 }

@@ -23,30 +23,59 @@ public sealed partial class HistoryPage : Page
         try
         {
             var records = await AppServices.Database.GetHistoryAsync(50);
-            if (records.Count > 0)
-            {
-                _allHistory.Clear();
-                foreach (var r in records)
-                {
-                    var manga = new Manga(r.MangaId, r.MangaTitle, r.CoverUrl ?? "#1A2433", 0, false, false, r.Provider);
-                    var dt = DateTimeOffset.FromUnixTimeMilliseconds(r.ReadAt);
-                    var when = dt.Date == DateTimeOffset.UtcNow.Date ? $"Today · {dt:HH:mm}" : dt.ToString("MMM d");
+            PopulateHistory(records);
 
-                    _allHistory.Add(new HistoryItem(manga, r.ChapterTitle ?? r.ChapterId, when));
-                }
-            }
-            else
+            // Pull cloud history in background if user is authenticated
+            if (!string.IsNullOrEmpty(AppServices.Settings.UserId))
             {
-                _allHistory.Clear();
-                _allHistory.AddRange(Sample.History);
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var (token, _) = CredentialStore.Load();
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            var count = await AppServices.Sync.PullReadingProgressAndHistoryAsync(AppServices.Settings.UserId, token);
+                            if (count > 0)
+                            {
+                                var refreshed = await AppServices.Database.GetHistoryAsync(50);
+                                DispatcherQueue?.TryEnqueue(() => PopulateHistory(refreshed));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLog.Warn("HistoryPage.CloudPull", ex);
+                    }
+                });
             }
-            ApplyFilters();
         }
         catch (Exception ex)
         {
             AppLog.Warn("HistoryPage.LoadHistoryAsync", ex);
             Nav.Toast("Couldn't load history");
         }
+    }
+
+    private void PopulateHistory(List<HistoryEntity> records)
+    {
+        _allHistory.Clear();
+        if (records.Count > 0)
+        {
+            foreach (var r in records)
+            {
+                var manga = new Manga(r.MangaId, r.MangaTitle, r.CoverUrl ?? "#1A2433", 0, false, false, r.Provider);
+                var dt = DateTimeOffset.FromUnixTimeMilliseconds(r.ReadAt);
+                var when = dt.Date == DateTimeOffset.UtcNow.Date ? $"Today · {dt:HH:mm}" : dt.ToString("MMM d");
+
+                _allHistory.Add(new HistoryItem(manga, r.ChapterTitle ?? r.ChapterId, when));
+            }
+        }
+        else
+        {
+            _allHistory.AddRange(Sample.History);
+        }
+        ApplyFilters();
     }
 
     private void ApplyFilters()

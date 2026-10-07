@@ -34,6 +34,11 @@ public sealed partial class LoginPage : Page
             AppServices.Settings.UserEmail = session.Email ?? email;
             AppServices.Settings.UserId = session.UserId;
             AppServices.Settings.Save();
+            _ = Task.Run(async () =>
+            {
+                try { await AppServices.Sync.SyncAllAsync(); }
+                catch (Exception syncEx) { AppLog.Warn("LoginPage.PostSignInSync", syncEx); }
+            });
             Nav.Home();
         }
         catch (AuthException ex)

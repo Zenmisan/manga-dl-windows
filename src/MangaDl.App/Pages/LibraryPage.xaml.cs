@@ -28,46 +28,79 @@ public sealed partial class LibraryPage : Page
         try
         {
             var saved = await AppServices.Database.GetLibraryAsync();
-            if (saved.Count > 0)
-            {
-                _allManga.Clear();
-                foreach (var s in saved)
-                {
-                    _allManga.Add(new Manga(
-                        s.MangaId,
-                        s.Title,
-                        s.CoverUrl ?? "#1A2433",
-                        0,
-                        false,
-                        true,
-                        s.Provider));
-                }
-                ApplyFilters();
-                if (CategoryAll != null) CategoryAll.Content = $"All · {_allManga.Count}";
-            }
-            else
-            {
-                _allManga.Clear();
-                _allManga.AddRange(Sample.Library);
-                if (CategoryAll != null) CategoryAll.Content = $"All · {_allManga.Count}";
-            }
+            PopulateLibrary(saved);
 
             var history = await AppServices.Database.GetHistoryAsync(5);
-            if (history.Count > 0)
+            PopulateHistory(history);
+
+            // Pull cloud library in background if user is authenticated
+            if (!string.IsNullOrEmpty(AppServices.Settings.UserId))
             {
-                Continue.Clear();
-                foreach (var h in history)
+                _ = Task.Run(async () =>
                 {
-                    var manga = _allManga.FirstOrDefault(m => m.Id == h.MangaId)
-                        ?? new Manga(h.MangaId, h.MangaTitle, h.CoverUrl ?? "#1A2433", 0, false, true, h.Provider);
-                    Continue.Add(new ContinueItem(manga, h.ChapterTitle ?? h.ChapterId, 0.5));
-                }
+                    try
+                    {
+                        var (token, _) = CredentialStore.Load();
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            var count = await AppServices.Sync.PullLibraryAsync(AppServices.Settings.UserId, token);
+                            if (count > 0)
+                            {
+                                var refreshed = await AppServices.Database.GetLibraryAsync();
+                                DispatcherQueue?.TryEnqueue(() => PopulateLibrary(refreshed));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLog.Warn("LibraryPage.CloudPull", ex);
+                    }
+                });
             }
         }
         catch (Exception ex)
         {
             AppLog.Warn("LibraryPage.LoadLibraryAsync", ex);
             Nav.Toast("Couldn't load library");
+        }
+    }
+
+    private void PopulateLibrary(List<LibraryEntity> saved)
+    {
+        _allManga.Clear();
+        if (saved.Count > 0)
+        {
+            foreach (var s in saved)
+            {
+                _allManga.Add(new Manga(
+                    s.MangaId,
+                    s.Title,
+                    s.CoverUrl ?? "#1A2433",
+                    0,
+                    false,
+                    true,
+                    s.Provider));
+            }
+        }
+        else
+        {
+            _allManga.AddRange(Sample.Library);
+        }
+        ApplyFilters();
+        if (CategoryAll != null) CategoryAll.Content = $"All · {_allManga.Count}";
+    }
+
+    private void PopulateHistory(List<HistoryEntity> history)
+    {
+        Continue.Clear();
+        if (history.Count > 0)
+        {
+            foreach (var h in history)
+            {
+                var manga = _allManga.FirstOrDefault(m => m.Id == h.MangaId)
+                    ?? new Manga(h.MangaId, h.MangaTitle, h.CoverUrl ?? "#1A2433", 0, false, true, h.Provider);
+                Continue.Add(new ContinueItem(manga, h.ChapterTitle ?? h.ChapterId, 0.5));
+            }
         }
     }
 

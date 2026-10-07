@@ -140,6 +140,18 @@ public sealed class MangaDatabase : IAsyncDisposable
         await _db.InsertOrReplaceAsync(entity);
     }
 
+    public async Task<List<ProgressEntity>> GetAllProgressAsync()
+    {
+        await InitializeAsync();
+        return await _db.Table<ProgressEntity>().ToListAsync();
+    }
+
+    public async Task<List<ProgressEntity>> GetAllCompletedProgressAsync()
+    {
+        await InitializeAsync();
+        return await _db.Table<ProgressEntity>().Where(x => x.Completed == 1).ToListAsync();
+    }
+
     // ----------------------------------------------------
     // History
     // ----------------------------------------------------
