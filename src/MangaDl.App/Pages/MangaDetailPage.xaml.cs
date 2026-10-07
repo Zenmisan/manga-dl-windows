@@ -13,8 +13,10 @@ public sealed partial class MangaDetailPage : Page
 {
     public ObservableCollection<Chapter> Chapters { get; } = new(Sample.Chapters);
 
+    private readonly List<Chapter> _allChapters = [];
     private Manga _currentManga = Sample.HollowCrown;
     private bool _inLibrary;
+    private bool _newestFirst = true;
 
     public MangaDetailPage() => InitializeComponent();
 
@@ -43,18 +45,28 @@ public sealed partial class MangaDetailPage : Page
         try
         {
             var detail = await AppServices.Extensions.GetMangaDetailAsync(_currentManga.Source, _currentManga.Id);
-            if (detail != null && detail.Chapters.Count > 0)
+            if (detail != null)
             {
-                Chapters.Clear();
-                foreach (var ch in detail.Chapters)
+                if (!string.IsNullOrWhiteSpace(detail.Description))
                 {
-                    Chapters.Add(new Chapter(
-                        ch.Number,
-                        ch.Title,
-                        ch.Released,
-                        ch.Scanlator ?? _currentManga.Source,
-                        "Download",
-                        Read: false));
+                    SynopsisText.Text = detail.Description;
+                }
+
+                if (detail.Chapters.Count > 0)
+                {
+                    _allChapters.Clear();
+                    foreach (var ch in detail.Chapters)
+                    {
+                        _allChapters.Add(new Chapter(
+                            ch.Number,
+                            ch.Title,
+                            ch.Released,
+                            ch.Scanlator ?? _currentManga.Source,
+                            "Download",
+                            Read: false));
+                    }
+                    ApplyChapterFilters();
+                    ResumeText.Text = $"Resume {_allChapters.First().Number}";
                 }
             }
         }
@@ -63,6 +75,36 @@ public sealed partial class MangaDetailPage : Page
             AppLog.Warn("MangaDetailPage.LoadChaptersAsync", ex);
             Nav.Toast("Couldn't load chapters");
         }
+    }
+
+    private void ApplyChapterFilters()
+    {
+        var filtered = _allChapters.AsEnumerable();
+
+        if (FilterUnread?.IsChecked == true)
+        {
+            filtered = filtered.Where(ch => !ch.Read);
+        }
+
+        if (FilterDownloaded?.IsChecked == true)
+        {
+            filtered = filtered.Where(ch => ch.Status == "Downloaded");
+        }
+
+        filtered = _newestFirst ? filtered.OrderByDescending(ch => ch.Number) : filtered.OrderBy(ch => ch.Number);
+
+        Chapters.Clear();
+        foreach (var ch in filtered) Chapters.Add(ch);
+        ChapterCountText.Text = $"{Chapters.Count} chapters";
+    }
+
+    private void OnFilterChanged(object sender, RoutedEventArgs e) => ApplyChapterFilters();
+
+    private void OnSortChapters(object sender, RoutedEventArgs e)
+    {
+        _newestFirst = !_newestFirst;
+        SortChaptersButton.Content = _newestFirst ? "Newest first" : "Oldest first";
+        ApplyChapterFilters();
     }
 
     private async void OnLibraryToggled(object sender, RoutedEventArgs e)
@@ -106,11 +148,32 @@ public sealed partial class MangaDetailPage : Page
 
     private void OnBack(object sender, RoutedEventArgs e) => Nav.Back();
 
-    private void OnResume(object sender, RoutedEventArgs e) =>
-        Nav.Go(typeof(ReaderPage), _currentManga);
+    private void OnTrack(object sender, RoutedEventArgs e) =>
+        Nav.Go(typeof(Settings.TrackersSettingsPage));
 
-    private void OnOpenChapter(object sender, RoutedEventArgs e) =>
-        Nav.Go(typeof(ReaderPage), _currentManga);
+    private void OnResume(object sender, RoutedEventArgs e)
+    {
+        if (AppServices.Extensions.IsNovel(_currentManga.Source))
+        {
+            Nav.Go(typeof(NovelReaderPage), _currentManga);
+        }
+        else
+        {
+            Nav.Go(typeof(ReaderPage), _currentManga);
+        }
+    }
+
+    private void OnOpenChapter(object sender, RoutedEventArgs e)
+    {
+        if (AppServices.Extensions.IsNovel(_currentManga.Source))
+        {
+            Nav.Go(typeof(NovelReaderPage), _currentManga);
+        }
+        else
+        {
+            Nav.Go(typeof(ReaderPage), _currentManga);
+        }
+    }
 
     private async void OnDownload(object sender, RoutedEventArgs e)
     {
