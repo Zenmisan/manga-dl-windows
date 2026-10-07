@@ -51,4 +51,30 @@ public class LiveExtensionTests
         Assert.NotEmpty(pages);
         Assert.StartsWith("https://", pages[0]);
     }
+
+    [Fact]
+    public async Task TestRealNovelExtensionContract()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "MangaDl.sln")))
+        {
+            dir = dir.Parent;
+        }
+
+        Assert.NotNull(dir);
+        var extensionPath = Path.Combine(dir.FullName, "src", "MangaDl.App", "Assets", "extensions", "royalroad.js");
+        Assert.True(File.Exists(extensionPath), $"Extension file not found at: {extensionPath}");
+
+        var jsSource = await File.ReadAllTextAsync(extensionPath);
+        using var http = new HttpService();
+        using var bridge = new ExtensionBridge(http);
+
+        await bridge.LoadScriptAsync(jsSource);
+        Assert.True(bridge.IsLoaded);
+
+        // Verify exported methods on bridge
+        Assert.True(bridge.Engine.Evaluate("typeof extension.getChapterText === 'function'").AsBoolean());
+        Assert.True(bridge.Engine.Evaluate("typeof extension.search === 'function'").AsBoolean());
+        Assert.True(bridge.Engine.Evaluate("typeof extension.getMangaDetail === 'function'").AsBoolean());
+    }
 }

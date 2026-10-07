@@ -98,7 +98,15 @@ public sealed partial class NovelReaderPage : Page
 
         try
         {
-            var text = await AppServices.Extensions.GetChapterTextAsync(_currentNovel.Source, chapter.Id);
+            var result = await AppServices.Extensions.GetChapterTextAsync(_currentNovel.Source, chapter.Id);
+            var text = result?.Content ?? string.Empty;
+            if (result?.Format == "html" && !string.IsNullOrEmpty(text))
+            {
+                text = System.Text.RegularExpressions.Regex.Replace(text, "<br\\s*/?>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                text = System.Text.RegularExpressions.Regex.Replace(text, "</p>", "\n\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                text = System.Text.RegularExpressions.Regex.Replace(text, "<[^>]+>", " ");
+                text = System.Net.WebUtility.HtmlDecode(text).Trim();
+            }
             if (!string.IsNullOrWhiteSpace(text))
             {
                 var paragraphs = text.Split(new[] { "\r\n\r\n", "\n\n", "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
