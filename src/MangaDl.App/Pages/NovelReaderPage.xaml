@@ -111,7 +111,7 @@
             <!-- Article -->
             <ScrollViewer x:Name="Article" Grid.Column="1" Style="{StaticResource PageScroller}">
                 <StackPanel MaxWidth="680" Padding="40,56" Spacing="22">
-                    <TextBlock Text="CHAPTER 12 · [CHAPTER TITLE]" FontSize="13" FontWeight="ExtraBold" CharacterSpacing="150" Foreground="{StaticResource FgSubtleBrush}" Margin="0,0,0,6" />
+                    <TextBlock x:Name="ChapterHeading" Text="CHAPTER 1" FontSize="13" FontWeight="ExtraBold" CharacterSpacing="150" Foreground="{StaticResource FgSubtleBrush}" Margin="0,0,0,6" />
                     <!-- Replace with the chapter's paragraphs. -->
                     <TextBlock x:Name="P1" Style="{StaticResource Body}" FontFamily="{StaticResource SerifFont}" FontSize="20" LineHeight="35" Foreground="#DBFFFFFF"
                                Text="[Chapter text loads here in the reading font, centred in a comfortable column. The side list jumps between chapters without leaving the page.]" />
