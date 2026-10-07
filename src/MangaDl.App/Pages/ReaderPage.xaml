@@ -42,10 +42,10 @@
                 </StackPanel>
             </Border>
 
-            <Button Grid.Column="3" Content="Prev ch." Style="{StaticResource SmallGhostButton}" FontWeight="Bold" />
+            <Button Grid.Column="3" Content="Prev ch." Style="{StaticResource SmallGhostButton}" FontWeight="Bold" Click="OnPrevChapter" />
             <TextBlock x:Name="PageCount" Grid.Column="4" Text="14–15 / 38" MinWidth="72" TextAlignment="Center" FontSize="13" FontWeight="Bold"
                        Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
-            <Button Grid.Column="5" Content="Next ch." Style="{StaticResource SmallGhostButton}" FontWeight="Bold" />
+            <Button Grid.Column="5" Content="Next ch." Style="{StaticResource SmallGhostButton}" FontWeight="Bold" Click="OnNextChapter" />
 
             <Button Grid.Column="6" Style="{StaticResource IconButton}" Click="OnBookmark" AutomationProperties.Name="Bookmark page">
                 <c:MdIcon x:Name="BookmarkIcon" Kind="Bookmark" Size="20" />

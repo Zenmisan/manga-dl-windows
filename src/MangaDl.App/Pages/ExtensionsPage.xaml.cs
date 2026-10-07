@@ -79,4 +79,23 @@ public sealed partial class ExtensionsPage : Page
     private void OnOpenSource(object sender, RoutedEventArgs e) => Nav.Go(typeof(BrowseSourcePage), (((FrameworkElement)sender).DataContext as Source)?.Name);
 
     private void OnMigrate(object sender, RoutedEventArgs e) => Nav.Toast("Pick a target source to migrate to");
+
+    private void OnExtensionAction(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is Extension ext)
+        {
+            Nav.Toast($"{ext.Name} is up to date");
+        }
+    }
+
+    private void OnPinSource(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is Source src)
+        {
+            Nav.Toast($"Pinned {src.Name}");
+        }
+    }
+
+    private void OnUpdateAll(object sender, RoutedEventArgs e) =>
+        Nav.Toast("All extensions are up to date");
 }
