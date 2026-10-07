@@ -11,7 +11,7 @@
     <Page.Resources>
         <DataTemplate x:Key="ChapterItem" x:DataType="p:NovelChapter">
             <RadioButton Style="{StaticResource NavRadio}" GroupName="NovelChapters" IsChecked="{x:Bind IsCurrent}" Height="42"
-                         Opacity="{x:Bind h:X.ReadOpacity(Read)}" AutomationProperties.Name="{x:Bind Name}">
+                         Click="OnChapterSelected" Opacity="{x:Bind h:X.ReadOpacity(Read)}" AutomationProperties.Name="{x:Bind Name}">
                 <TextBlock Text="{x:Bind Name}" FontSize="13" />
             </RadioButton>
         </DataTemplate>
@@ -34,8 +34,8 @@
                 <c:MdIcon Kind="Back" Size="20" />
             </Button>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="[Novel title]" FontSize="14" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
-                <TextBlock Text=" · Ch. 12 · 34%" FontSize="14" FontWeight="Medium" Foreground="{StaticResource FgSubtleBrush}" />
+                <TextBlock x:Name="NovelTitleText" Text="Novel" FontSize="14" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
+                <TextBlock x:Name="NovelChapterText" Text=" · Ch. 1" FontSize="14" FontWeight="Medium" Foreground="{StaticResource FgSubtleBrush}" />
             </StackPanel>
             <Button Grid.Column="2" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" AutomationProperties.Name="Reading settings">
                 <StackPanel Orientation="Horizontal" Spacing="8">
