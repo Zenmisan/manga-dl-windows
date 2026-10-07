@@ -107,12 +107,12 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button Content="Prev Ch." Style="{StaticResource PillButton}" Height="40" CornerRadius="20" BorderThickness="0" Background="{StaticResource SurfaceHighBrush}" />
+                        <Button Content="Prev Ch." Style="{StaticResource PillButton}" Height="40" CornerRadius="20" BorderThickness="0" Background="{StaticResource SurfaceHighBrush}" Click="OnPrevChapter" />
                         <TextBlock x:Name="SliderPage" Grid.Column="1" Text="14" MinWidth="24" TextAlignment="Center" FontSize="13" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
                         <Slider x:Name="PageSlider" Grid.Column="2" Minimum="1" Maximum="38" Value="14" StepFrequency="1" VerticalAlignment="Center"
                                 ValueChanged="OnSliderChanged" AutomationProperties.Name="Page" />
                         <TextBlock Grid.Column="3" Text="38" MinWidth="24" TextAlignment="Center" FontSize="13" FontWeight="Bold" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
-                        <Button Grid.Column="4" Content="Next Ch." Style="{StaticResource PillPrimaryButton}" Height="40" CornerRadius="20" />
+                        <Button Grid.Column="4" Content="Next Ch." Style="{StaticResource PillPrimaryButton}" Height="40" CornerRadius="20" Click="OnNextChapter" />
                     </Grid>
                 </Border>
             </Grid>
