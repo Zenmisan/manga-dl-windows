@@ -45,18 +45,18 @@
                     <Button Content="Library" Style="{StaticResource LinkButton}" Foreground="{StaticResource FgSoftBrush}" FontWeight="SemiBold" HorizontalAlignment="Left" Padding="0,4" Click="OnBack" />
                     <TextBlock x:Name="TitleText" Style="{StaticResource DisplayText}" FontSize="64" LineHeight="64" />
                     <TextBlock x:Name="MetaText" FontSize="14" Foreground="{StaticResource FgStrongBrush}" />
-                    <TextBlock Text="[Synopsis — pulled from the source. Shows up to four lines on desktop with a Show more link when it runs longer.]"
+                    <TextBlock x:Name="SynopsisText" Text="Loading synopsis..."
                                Style="{StaticResource Body}" Foreground="{StaticResource FgStrongBrush}" LineHeight="22" MaxWidth="680" HorizontalAlignment="Left"
                                MaxLines="4" TextTrimming="WordEllipsis" />
                     <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
                         <Button Style="{StaticResource PrimaryButton}" Height="46" FontSize="14" Padding="22,0" Click="OnResume">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <c:MdIcon Kind="Play" Size="16" Foreground="{StaticResource WhiteBrush}" />
-                                <TextBlock Text="Resume Ch. 48" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ResumeText" Text="Start Reading" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button x:Name="InLibrary" Content="In Library" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnLibraryToggled" />
-                        <Button Content="Track" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" />
+                        <Button Content="Track" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnTrack" />
                         <Button Content="Download" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnDownload" />
                         <Button Content="Migrate" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnMigrate" />
                     </StackPanel>
@@ -71,10 +71,10 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="96 chapters" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
-                <ToggleButton Grid.Column="1" Content="Unread" Style="{StaticResource SmallChipToggle}" />
-                <ToggleButton Grid.Column="2" Content="Downloaded" Style="{StaticResource SmallChipToggle}" />
-                <Button Grid.Column="3" Content="Newest first" Style="{StaticResource PillButton}" />
+                <TextBlock x:Name="ChapterCountText" Text="Chapters" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                <ToggleButton x:Name="FilterUnread" Grid.Column="1" Content="Unread" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
+                <ToggleButton x:Name="FilterDownloaded" Grid.Column="2" Content="Downloaded" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
+                <Button x:Name="SortChaptersButton" Grid.Column="3" Content="Newest first" Style="{StaticResource PillButton}" Click="OnSortChapters" />
             </Grid>
 
             <!-- Chapter table -->
