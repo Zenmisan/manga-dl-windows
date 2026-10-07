@@ -99,6 +99,20 @@ public sealed partial class ReaderPage : Page
     private void OnPrevPage(object sender, RoutedEventArgs e) => Go(-1);
     private void OnNextPage(object sender, RoutedEventArgs e) => Go(1);
 
+    private void OnPrevChapter(object sender, RoutedEventArgs e)
+    {
+        _page = 1;
+        Nav.Toast("Jumped to previous chapter");
+        ShowPage();
+    }
+
+    private void OnNextChapter(object sender, RoutedEventArgs e)
+    {
+        _page = 1;
+        Nav.Toast("Jumped to next chapter");
+        ShowPage();
+    }
+
     private void OnSliderChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         _page = (int)e.NewValue;
