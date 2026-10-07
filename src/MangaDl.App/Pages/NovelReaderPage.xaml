@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.NovelReaderPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    xmlns:p="using:MangaDl.Pages"
+    xmlns:h="using:MangaDl.Helpers"
+    Background="{StaticResource NovelBgBrush}">
+
+    <Page.Resources>
+        <DataTemplate x:Key="ChapterItem" x:DataType="p:NovelChapter">
+            <RadioButton Style="{StaticResource NavRadio}" GroupName="NovelChapters" IsChecked="{x:Bind IsCurrent}" Height="42"
+                         Opacity="{x:Bind h:X.ReadOpacity(Read)}" AutomationProperties.Name="{x:Bind Name}">
+                <TextBlock Text="{x:Bind Name}" FontSize="13" />
+            </RadioButton>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top bar -->
+        <Grid Background="#EB080808" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1" Padding="16,0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Style="{StaticResource IconButton}" Click="OnClose" AutomationProperties.Name="Close reader">
+                <c:MdIcon Kind="Back" Size="20" />
+            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="[Novel title]" FontSize="14" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
+                <TextBlock Text=" · Ch. 12 · 34%" FontSize="14" FontWeight="Medium" Foreground="{StaticResource FgSubtleBrush}" />
+            </StackPanel>
+            <Button Grid.Column="2" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" AutomationProperties.Name="Reading settings">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Aa" FontFamily="{StaticResource SerifFont}" FontSize="14" VerticalAlignment="Center" />
+                    <TextBlock Text="Reading Settings" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedRight">
+                        <Flyout.FlyoutPresenterStyle>
+                            <Style TargetType="FlyoutPresenter">
+                                <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource TrackBrush}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="CornerRadius" Value="16" />
+                                <Setter Property="Padding" Value="20" />
+                                <Setter Property="MaxWidth" Value="420" />
+                            </Style>
+                        </Flyout.FlyoutPresenterStyle>
+                        <StackPanel Width="340" Spacing="18">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="FONT" Style="{StaticResource EyebrowMuted}" />
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <RadioButton Content="Serif" GroupName="NovelFont" Style="{StaticResource OptionRadio}" FontFamily="{StaticResource SerifFont}" FontSize="15" IsChecked="True" Checked="OnSerif" />
+                                    <RadioButton Grid.Column="1" Content="Sans" GroupName="NovelFont" Style="{StaticResource OptionRadio}" Checked="OnSans" />
+                                </Grid>
+                            </StackPanel>
+                            <StackPanel Spacing="6">
+                                <Grid>
+                                    <TextBlock Text="SIZE" Style="{StaticResource EyebrowMuted}" />
+                                    <TextBlock x:Name="SizeText" Text="20px" FontSize="12" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Slider Minimum="14" Maximum="28" Value="20" StepFrequency="1" ValueChanged="OnSize" AutomationProperties.Name="Text size" />
+                            </StackPanel>
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="THEME" Style="{StaticResource EyebrowMuted}" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button Tag="Dark" Width="44" Height="44" CornerRadius="22" Background="#FF0D0D0D" BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" Style="{StaticResource MdButtonBase}" Click="OnTheme" AutomationProperties.Name="Dark theme" />
+                                    <Button Tag="Black" Width="44" Height="44" CornerRadius="22" Background="#FF000000" BorderBrush="#33FFFFFF" BorderThickness="1" Style="{StaticResource MdButtonBase}" Click="OnTheme" AutomationProperties.Name="Black theme" />
+                                    <Button Tag="Sepia" Width="44" Height="44" CornerRadius="22" Background="#FFE8DCC4" BorderBrush="#33FFFFFF" BorderThickness="1" Style="{StaticResource MdButtonBase}" Click="OnTheme" AutomationProperties.Name="Sepia theme" />
+                                    <Button Tag="Light" Width="44" Height="44" CornerRadius="22" Background="#FFF5F5F2" BorderBrush="#33FFFFFF" BorderThickness="1" Style="{StaticResource MdButtonBase}" Click="OnTheme" AutomationProperties.Name="Light theme" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Chapter list -->
+            <Border Background="#FF0A0A0A" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,1,0">
+                <ScrollViewer Style="{StaticResource PageScroller}">
+                    <StackPanel Padding="12,20" Spacing="2">
+                        <TextBlock Text="CHAPTERS" Style="{StaticResource EyebrowMuted}" Margin="12,0,0,10" />
+                        <ItemsRepeater ItemsSource="{x:Bind Chapters}" ItemTemplate="{StaticResource ChapterItem}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Spacing="2" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Article -->
+            <ScrollViewer x:Name="Article" Grid.Column="1" Style="{StaticResource PageScroller}">
+                <StackPanel MaxWidth="680" Padding="40,56" Spacing="22">
+                    <TextBlock Text="CHAPTER 12 · [CHAPTER TITLE]" FontSize="13" FontWeight="ExtraBold" CharacterSpacing="150" Foreground="{StaticResource FgSubtleBrush}" Margin="0,0,0,6" />
+                    <!-- Replace with the chapter's paragraphs. -->
+                    <TextBlock x:Name="P1" Style="{StaticResource Body}" FontFamily="{StaticResource SerifFont}" FontSize="20" LineHeight="35" Foreground="#DBFFFFFF"
+                               Text="[Chapter text loads here in the reading font, centred in a comfortable column. The side list jumps between chapters without leaving the page.]" />
+                    <TextBlock x:Name="P2" Style="{StaticResource Body}" FontFamily="{StaticResource SerifFont}" FontSize="20" LineHeight="35" Foreground="#DBFFFFFF"
+                               Text="[Font, size, line height, column width and theme come from Reading Settings. Arrow keys and space scroll; N and P jump chapters.]" />
+                    <TextBlock x:Name="P3" Style="{StaticResource Body}" FontFamily="{StaticResource SerifFont}" FontSize="20" LineHeight="35" Foreground="#DBFFFFFF"
+                               Text="[Progress saves as you scroll and syncs like manga progress.]" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

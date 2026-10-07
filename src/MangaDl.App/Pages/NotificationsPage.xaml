@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.NotificationsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    xmlns:m="using:MangaDl.Core"
+    xmlns:h="using:MangaDl.Helpers"
+    Background="{StaticResource BgBrush}">
+
+    <Page.Resources>
+        <DataTemplate x:Key="NoticeRow" x:DataType="m:Notice">
+            <Grid Padding="16" ColumnSpacing="16" Background="{x:Bind h:X.UnreadRow(Unread)}"
+                  BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="40" Height="40" CornerRadius="20" Background="{x:Bind h:X.NoticeIconBg(Kind)}">
+                    <c:MdIcon Kind="{x:Bind Icon}" Size="20" Foreground="{x:Bind h:X.NoticeIconFg(Kind)}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{x:Bind Title}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
+                    <TextBlock Text="{x:Bind Body}" FontSize="13" Foreground="{StaticResource FgSoftBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" Text="{x:Bind When}" FontSize="12" Foreground="{StaticResource FgFaintBrush}" TextAlignment="Right" VerticalAlignment="Center" />
+                <Button Grid.Column="3" Content="{x:Bind Action}" Style="{StaticResource SmallGhostButton}" FontWeight="Bold"
+                        Visibility="{x:Bind h:X.VisStr(Action)}" VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer Style="{StaticResource PageScroller}">
+        <StackPanel Padding="40,28,40,40" Spacing="18" MaxWidth="960" HorizontalAlignment="Left">
+            <Grid>
+                <TextBlock Text="NOTIFICATIONS" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                <Button Content="Mark All Read" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+            <Grid BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Content="All" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" IsChecked="True" />
+                    <RadioButton Content="Unread · 2" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
+                    <RadioButton Content="Chapters" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
+                    <RadioButton Content="Downloads" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
+                    <RadioButton Content="App" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
+                </StackPanel>
+            </Grid>
+            <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource NoticeRow}" Width="880" HorizontalAlignment="Left" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

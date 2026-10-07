@@ -1,0 +1,40 @@
+# Agent tracks
+.agents/
+
+
+# Build and binary outputs
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+x64/
+x86/
+ARM64/
+ARM/
+Win32/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosv
+*.userprefs
+*.sln.docstates
+
+# Packages and cache
+*.nupkg
+packages/
+TestResults/
+*.tmp
+
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Reference docs / archive, not part of the shipped project
+DESKTOP-WINDOWS.md
+PROJECT.md
+manga-dl-windows.zip

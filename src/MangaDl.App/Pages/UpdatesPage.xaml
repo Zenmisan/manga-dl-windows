@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.UpdatesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:m="using:MangaDl.Core"
+    xmlns:h="using:MangaDl.Helpers"
+    Background="{StaticResource BgBrush}">
+
+    <Page.Resources>
+        <DataTemplate x:Key="UpdateRow" x:DataType="m:UpdateItem">
+            <Grid Padding="12,8" ColumnSpacing="16" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="40" Height="60" CornerRadius="6" Background="{x:Bind h:X.Hex(Manga.Cover)}" />
+                <Button Grid.Column="1" Content="{x:Bind Manga.Title}" Style="{StaticResource LinkButton}" Foreground="{StaticResource FgBrush}" FontSize="15"
+                        HorizontalAlignment="Left" Padding="0,4" Click="OnOpenManga" />
+                <TextBlock Grid.Column="2" Text="{x:Bind Chapter}" Foreground="{StaticResource FgSoftBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3" Text="{x:Bind Source}" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Download" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" />
+                    <Button Content="Read" Style="{StaticResource SoftButton}" Height="36" CornerRadius="10" FontSize="12" Padding="14,0" Click="OnRead" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="UpdateGroupTemplate" x:DataType="m:UpdateGroup">
+            <StackPanel>
+                <TextBlock Text="{x:Bind h:X.Upper(Label)}" Style="{StaticResource EyebrowMuted}" Margin="0,12,0,6" />
+                <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource UpdateRow}" />
+            </StackPanel>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer Style="{StaticResource PageScroller}">
+        <StackPanel Padding="40,28,40,40" Spacing="16">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="UPDATES" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Last checked [time] · background sync every 30 min" Style="{StaticResource Caption}" FontSize="13" Margin="0,4,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="Download All New" Style="{StaticResource GhostButton}" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Content="Check Now" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Click="OnCheck" />
+            </Grid>
+            <ItemsRepeater ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource UpdateGroupTemplate}" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

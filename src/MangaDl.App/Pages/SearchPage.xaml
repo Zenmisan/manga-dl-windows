@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.SearchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    xmlns:m="using:MangaDl.Core"
+    xmlns:h="using:MangaDl.Helpers"
+    Background="{StaticResource BgBrush}">
+
+    <Page.Resources>
+        <DataTemplate x:Key="ResultCover" x:DataType="m:Manga">
+            <Button Style="{StaticResource CardButton}" Click="OnOpenManga" AutomationProperties.Name="{x:Bind Title}">
+                <Grid RowSpacing="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid CornerRadius="10" Background="{x:Bind h:X.Hex(Cover)}">
+                        <Border Margin="6" Padding="7,3" CornerRadius="6" Background="{StaticResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Visibility="{x:Bind h:X.Vis(InLibrary)}">
+                            <TextBlock Text="In Library" FontSize="10" FontWeight="ExtraBold" Foreground="{StaticResource WhiteBrush}" />
+                        </Border>
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="{x:Bind Title}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ResultGroup" x:DataType="m:SearchGroup">
+            <StackPanel Spacing="10" Margin="0,0,0,8">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="{x:Bind Source}" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{x:Bind Meta}" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button Content="See All" Style="{StaticResource LinkButton}" FontSize="13" HorizontalAlignment="Right" Click="OnSeeAll" />
+                </Grid>
+                <ItemsRepeater ItemsSource="{x:Bind Results}" ItemTemplate="{StaticResource ResultCover}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout MinItemWidth="110" MinItemHeight="190" MinColumnSpacing="16" MinRowSpacing="16"
+                                           MaximumRowsOrColumns="7" ItemsStretch="Uniform" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="300" />
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Style="{StaticResource PageScroller}">
+            <StackPanel Padding="40,28,32,40" Spacing="16">
+                <Grid>
+                    <c:SearchField x:Name="SearchBox" IsLarge="True" Text="crown" Placeholder="Search all sources" Submitted="OnSearchSubmitted" />
+                    <TextBlock x:Name="SearchStatus" Text="Searching sources" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,18,0" />
+                </Grid>
+                <Grid BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="Manga" GroupName="SearchTabs" Style="{StaticResource TabRadio}" IsChecked="True" />
+                        <RadioButton Content="Web Novels" GroupName="SearchTabs" Style="{StaticResource TabRadio}" />
+                        <RadioButton Content="Readers" GroupName="SearchTabs" Style="{StaticResource TabRadio}" />
+                    </StackPanel>
+                </Grid>
+
+                <ItemsRepeater ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource ResultGroup}" />
+
+                <!-- Still searching -->
+                <StackPanel Spacing="10">
+                    <Grid>
+                        <TextBlock Text="Asura Scans" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Searching…" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <Border Width="110" Height="165" CornerRadius="10" Background="{StaticResource SurfaceRaisedBrush}" />
+                        <Border Width="110" Height="165" CornerRadius="10" Background="{StaticResource SurfaceRaisedBrush}" />
+                        <Border Width="110" Height="165" CornerRadius="10" Background="{StaticResource SurfaceRaisedBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Filters -->
+        <Border Grid.Column="1" Background="{StaticResource NavBgBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1,0,0,0">
+            <Grid Padding="24,28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Spacing="20">
+                    <TextBlock Text="Search filters" Style="{StaticResource SectionTitle}" />
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="SOURCES" Style="{StaticResource EyebrowMuted}" Margin="0,0,0,6" />
+                        <CheckBox Content="MangaDex" IsChecked="True" Style="{StaticResource MdCheckBox}" />
+                        <CheckBox Content="MangaKatana" IsChecked="True" Style="{StaticResource MdCheckBox}" />
+                        <CheckBox Content="Asura Scans" IsChecked="True" Style="{StaticResource MdCheckBox}" />
+                        <CheckBox Content="Komga" Style="{StaticResource MdCheckBox}" />
+                    </StackPanel>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="STATUS" Style="{StaticResource EyebrowMuted}" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <RadioButton Content="Any" GroupName="SearchStatus" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" IsChecked="True" />
+                            <RadioButton Content="Ongoing" GroupName="SearchStatus" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                            <RadioButton Content="Completed" GroupName="SearchStatus" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="SORT BY" Style="{StaticResource EyebrowMuted}" />
+                        <ComboBox SelectedIndex="0" HorizontalAlignment="Stretch" CornerRadius="10" AutomationProperties.Name="Sort by">
+                            <x:String>Relevance</x:String>
+                            <x:String>Latest update</x:String>
+                            <x:String>Title A–Z</x:String>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Content="Reset" Style="{StaticResource GhostButton}" Height="44" HorizontalAlignment="Stretch" />
+                    <Button Grid.Column="1" Content="Apply" Style="{StaticResource PrimaryButton}" Height="44" HorizontalAlignment="Stretch" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

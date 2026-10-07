@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.Settings.AccountSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    Background="Transparent">
+
+    <ScrollViewer Style="{StaticResource PageScroller}">
+        <StackPanel Spacing="20" Padding="0,0,0,40" MaxWidth="1040" HorizontalAlignment="Left">
+            <StackPanel>
+                <TextBlock Text="Account" Style="{StaticResource SectionTitle}" />
+                <TextBlock Text="Your profile, sync and sign-in." Style="{StaticResource Caption}" FontSize="13" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <!-- Profile summary -->
+            <Border Style="{StaticResource Card}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="64" Height="64" CornerRadius="32" Background="#FF3A1518">
+                        <TextBlock Text="U" FontSize="24" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="[Display name]" FontSize="18" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" />
+                        <TextBlock Text="@[username] · [email]" Style="{StaticResource Caption}" FontSize="13" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Content="View profile" Style="{StaticResource GhostButton}" VerticalAlignment="Center" Click="OnViewProfile" />
+                </Grid>
+            </Border>
+
+            <Grid ColumnSpacing="20" RowSpacing="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Public profile -->
+                <Border Grid.RowSpan="2" Style="{StaticResource FaintCard}" VerticalAlignment="Top">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="PUBLIC PROFILE" Style="{StaticResource Eyebrow}" />
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Display name" Style="{StaticResource FieldLabel}" />
+                            <TextBox Style="{StaticResource MdTextBox}" PlaceholderText="[Display name]" AutomationProperties.Name="Display name" />
+                        </StackPanel>
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Bio" Style="{StaticResource FieldLabel}" />
+                            <TextBox Style="{StaticResource MdTextBox}" PlaceholderText="A short line about what you like to read" AcceptsReturn="True" TextWrapping="Wrap" Height="96" AutomationProperties.Name="Bio" />
+                        </StackPanel>
+                        <c:SettingRow Label="Show reading activity" Description="Let others see what you're reading and your stats." ShowDivider="False">
+                            <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                        </c:SettingRow>
+                        <Button Content="Save changes" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="OnSave" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Cloud sync -->
+                <Border Grid.Column="1" Style="{StaticResource Card}" Background="{StaticResource SuccessWashBrush}" BorderBrush="{StaticResource SuccessLineBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource SuccessSoftBrush}">
+                                <c:MdIcon Kind="CloudCheck" Size="18" Foreground="{StaticResource SuccessTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Cloud sync is on" FontSize="15" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" />
+                                <TextBlock Text="Last synced [time] · [n] devices" Style="{StaticResource Caption}" Foreground="{StaticResource SuccessTextBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock Text="Library, progress, categories and settings follow you across Android, Windows and Linux." Style="{StaticResource BodyMuted}" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Sync now" Style="{StaticResource SuccessButton}" Click="OnSyncNow" />
+                            <Button Content="Manage devices" Style="{StaticResource GhostButton}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Sign-in -->
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource FaintCard}">
+                    <StackPanel>
+                        <TextBlock Text="SIGN-IN" Style="{StaticResource Eyebrow}" Margin="0,0,0,6" />
+                        <c:SettingRow Label="Email" Description="[email]">
+                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" />
+                        </c:SettingRow>
+                        <c:SettingRow Label="Password" Description="Last changed [date]">
+                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" />
+                        </c:SettingRow>
+                        <c:SettingRow Label="Sign out" Description="Downloads stay on this PC." ShowDivider="False">
+                            <Button x:Name="SignOutButton" Content="Sign out" Style="{StaticResource SmallDangerButton}" Click="OnSignOut" />
+                        </c:SettingRow>
+
+                        <!-- Inline confirmation -->
+                        <Border x:Name="SignOutConfirm" Visibility="Collapsed" Margin="0,10,0,0" Padding="14" CornerRadius="12"
+                                Background="{StaticResource ErrorSoftBrush}" BorderBrush="{StaticResource ErrorBorderBrush}" BorderThickness="1">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Sign out of manga-dl on this PC?" FontSize="14" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Content="Sign out" Style="{StaticResource SmallDangerButton}" Click="OnConfirmSignOut" />
+                                    <Button Content="Cancel" Style="{StaticResource SmallGhostButton}" Click="OnCancelSignOut" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

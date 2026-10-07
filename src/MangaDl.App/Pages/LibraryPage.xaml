@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.LibraryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    xmlns:m="using:MangaDl.Core"
+    xmlns:h="using:MangaDl.Helpers"
+    Background="{StaticResource BgBrush}">
+
+    <Page.Resources>
+        <!-- Continue-reading card -->
+        <DataTemplate x:Key="ContinueTemplate" x:DataType="m:ContinueItem">
+            <Button Style="{StaticResource CardButton}" Click="OnResume" CornerRadius="16" AutomationProperties.Name="{x:Bind Manga.Title}">
+                <Border Background="{StaticResource SurfaceRaisedBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="16" Padding="12">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="56" Height="84" CornerRadius="8" Background="{x:Bind h:X.Hex(Manga.Cover)}" />
+                        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Manga.Title}" Style="{StaticResource ItemTitle}" />
+                            <TextBlock Text="{x:Bind Where}" Style="{StaticResource Caption}" />
+                            <c:MdProgress Value="{x:Bind Progress}" Height="4" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Button>
+        </DataTemplate>
+
+        <!-- Cover tile -->
+        <DataTemplate x:Key="CoverTemplate" x:DataType="m:Manga">
+            <Button Style="{StaticResource CardButton}" Click="OnOpenManga" AutomationProperties.Name="{x:Bind Title}">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid CornerRadius="12" Background="{x:Bind h:X.Hex(Cover)}">
+                        <Border Style="{StaticResource Badge}" Height="22" MinWidth="24" CornerRadius="11" Margin="8"
+                                HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="{x:Bind h:X.VisN(Unread)}">
+                            <TextBlock Text="{x:Bind h:X.Count(Unread)}" Style="{StaticResource BadgeText}" />
+                        </Border>
+                        <Border Width="24" Height="24" CornerRadius="12" Margin="8" Background="#99000000"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="{x:Bind h:X.Vis(Downloaded)}">
+                            <c:MdIcon Kind="Download" Size="13" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="{x:Bind Title}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}"
+                               TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer Style="{StaticResource PageScroller}">
+        <StackPanel Padding="40,28,40,40" Spacing="24">
+
+            <!-- Header -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="LIBRARY" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                <c:SearchField Grid.Column="1" Width="320" Placeholder="Search library   Ctrl K" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Content="Sort: Last read" Style="{StaticResource GhostButton}" />
+                <Button Grid.Column="3" Content="Update Library" Style="{StaticResource PrimaryButton}" Click="OnUpdateLibrary" />
+            </Grid>
+
+            <!-- Continue reading -->
+            <StackPanel Spacing="12">
+                <TextBlock Text="CONTINUE READING" Style="{StaticResource Eyebrow}" />
+                <ItemsRepeater ItemsSource="{x:Bind Continue}" ItemTemplate="{StaticResource ContinueTemplate}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout MinItemWidth="280" MinItemHeight="110" MinColumnSpacing="16" MinRowSpacing="16"
+                                           MaximumRowsOrColumns="3" ItemsStretch="Fill" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <!-- Categories -->
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <RadioButton Content="All · 42" GroupName="LibCategory" Style="{StaticResource ChipRadio}" IsChecked="True" />
+                <RadioButton Content="Reading" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
+                <RadioButton Content="Plan to read" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
+                <RadioButton Content="Completed" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
+                <RadioButton Content="Local files" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
+            </StackPanel>
+
+            <!-- Covers: 7 across at 1440px, reflows with the window -->
+            <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource CoverTemplate}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="140" MinItemHeight="250" MinColumnSpacing="20" MinRowSpacing="20" ItemsStretch="Uniform" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

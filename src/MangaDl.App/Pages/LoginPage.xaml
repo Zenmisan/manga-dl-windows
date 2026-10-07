@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{StaticResource BgBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Padding="64,72" Background="{StaticResource BloomBottomLeftBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,1,0">
+            <StackPanel VerticalAlignment="Bottom" Spacing="16">
+                <TextBlock Text="SIGN IN" Style="{StaticResource DisplayText}" FontSize="132" LineHeight="120" />
+                <TextBlock Text="Sync your library, history and backups between this computer, your phone and the web."
+                           Style="{StaticResource BodyMuted}" FontSize="17" LineHeight="26" MaxWidth="440" HorizontalAlignment="Left" />
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Column="1" Padding="96,72" MaxWidth="612" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="16">
+                <StackPanel>
+                    <TextBlock Text="Email" Style="{StaticResource FieldLabel}" />
+                    <TextBox PlaceholderText="you@example.com" Style="{StaticResource MdTextBox}" InputScope="EmailSmtpAddress" AutomationProperties.Name="Email" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Password" Style="{StaticResource FieldLabel}" />
+                    <PasswordBox PlaceholderText="Your password" Style="{StaticResource MdPasswordBox}" AutomationProperties.Name="Password" />
+                </StackPanel>
+                <Grid>
+                    <CheckBox Content="Stay signed in" IsChecked="True" Style="{StaticResource MdCheckBox}" FontSize="13" />
+                    <Button Content="Forgot password?" Style="{StaticResource LinkButton}" FontSize="13" HorizontalAlignment="Right" Click="OnForgot" />
+                </Grid>
+                <Button Content="Sign In" Style="{StaticResource PrimaryButtonLarge}" HorizontalAlignment="Stretch" Click="OnSignIn" />
+                <Button Content="Use Without Account" Style="{StaticResource GhostButtonLarge}" HorizontalAlignment="Stretch" Click="OnSignIn" />
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="No account?" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" />
+                    <Button Content="Create one" Style="{StaticResource LinkButton}" Click="OnCreate" />
+                </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>

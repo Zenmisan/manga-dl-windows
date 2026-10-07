@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.Settings.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{StaticResource BgBrush}">
+
+    <Grid Padding="40,28,40,0" RowSpacing="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="SETTINGS" Style="{StaticResource PageTitle}" />
+
+        <Grid Grid.Row="1" ColumnSpacing="32">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Section nav -->
+            <StackPanel Spacing="2">
+                <RadioButton x:Name="NavAccount" Tag="Account" Content="Account" GroupName="SettingsNav" Style="{StaticResource NavRadio}" Height="42" Padding="14,0" Click="OnSection" />
+                <RadioButton x:Name="NavGeneral" Tag="General" Content="General" GroupName="SettingsNav" Style="{StaticResource NavRadio}" Height="42" Padding="14,0" Click="OnSection" />
+                <RadioButton x:Name="NavReader" Tag="Reader" Content="Reader" GroupName="SettingsNav" Style="{StaticResource NavRadio}" Height="42" Padding="14,0" Click="OnSection" />
+                <RadioButton x:Name="NavLibrary" Tag="Library" Content="Library" GroupName="SettingsNav" Style="{StaticResource NavRadio}" Height="42" Padding="14,0" Click="OnSection" />
+                <RadioButton x:Name="NavTrackers" Tag="Trackers" Content="Trackers" GroupName="SettingsNav" Style="{StaticResource NavRadio}" Height="42" Padding="14,0" Click="OnSection" />
+                <RadioButton x:Name="NavSystem" Tag="System" Content="System &amp; backup" GroupName="SettingsNav" Style="{StaticResource NavRadio}" Height="42" Padding="14,0" Click="OnSection" />
+            </StackPanel>
+
+            <Frame x:Name="SectionFrame" Grid.Column="1" />
+        </Grid>
+    </Grid>
+</Page>

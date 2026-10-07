@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.BrowseSourcePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    xmlns:m="using:MangaDl.Core"
+    xmlns:h="using:MangaDl.Helpers"
+    Background="{StaticResource BgBrush}">
+
+    <Page.Resources>
+        <DataTemplate x:Key="CatalogCover" x:DataType="m:Manga">
+            <Button Style="{StaticResource CardButton}" Click="OnOpenManga" AutomationProperties.Name="{x:Bind Title}">
+                <Grid RowSpacing="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid CornerRadius="10" Background="{x:Bind h:X.Hex(Cover)}" Opacity="{x:Bind h:X.InLibraryOpacity(InLibrary)}" />
+                    <Border Margin="6" Padding="7,3" CornerRadius="6" Background="{StaticResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Visibility="{x:Bind h:X.Vis(InLibrary)}">
+                        <TextBlock Text="In Library" FontSize="10" FontWeight="ExtraBold" Foreground="{StaticResource WhiteBrush}" />
+                    </Border>
+                    <TextBlock Grid.Row="1" Text="{x:Bind Title}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer Style="{StaticResource PageScroller}">
+        <StackPanel Padding="40,24,40,40" Spacing="18">
+            <Button Content="Browse" Style="{StaticResource LinkButton}" Foreground="{StaticResource FgMutedBrush}" FontSize="13" HorizontalAlignment="Left" Padding="0,4" Click="OnBack" />
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TitleText" Text="MANGADEX" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                <c:SearchField x:Name="SourceSearch" Grid.Column="1" Width="300" Placeholder="Search MangaDex" VerticalAlignment="Center" Submitted="OnSearchSubmitted" />
+                <Button Grid.Column="2" Content="Open in Browser" Style="{StaticResource GhostButton}" VerticalAlignment="Center" />
+                <Button Grid.Column="3" Content="Filters · 2" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <RadioButton Content="Popular" GroupName="SourceTab" Style="{StaticResource ChipRadio}" IsChecked="True" />
+                <RadioButton Content="Latest" GroupName="SourceTab" Style="{StaticResource ChipRadio}" />
+                <Border Width="1" Height="24" Background="{StaticResource TrackBrush}" Margin="6,0" VerticalAlignment="Center" />
+                <Border x:Name="FantasyChip" Height="32" CornerRadius="16" Padding="12,0,4,0" Background="{StaticResource AccentMutedBrush}" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Fantasy" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentSoftBrush}" VerticalAlignment="Center" />
+                        <Button Style="{StaticResource IconButton}" Width="24" Height="24" CornerRadius="12" Foreground="{StaticResource AccentSoftBrush}"
+                                Tag="FantasyChip" Click="OnRemoveFilter" AutomationProperties.Name="Remove Fantasy filter">
+                            <c:MdIcon Kind="Close" Size="12" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <Border x:Name="OngoingChip" Height="32" CornerRadius="16" Padding="12,0,4,0" Background="{StaticResource AccentMutedBrush}" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Ongoing" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentSoftBrush}" VerticalAlignment="Center" />
+                        <Button Style="{StaticResource IconButton}" Width="24" Height="24" CornerRadius="12" Foreground="{StaticResource AccentSoftBrush}"
+                                Tag="OngoingChip" Click="OnRemoveFilter" AutomationProperties.Name="Remove Ongoing filter">
+                            <c:MdIcon Kind="Close" Size="12" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- 8 across at 1440px -->
+            <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource CatalogCover}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="120" MinItemHeight="205" MinColumnSpacing="18" MinRowSpacing="18" ItemsStretch="Uniform" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,34 @@
+name: Build & Verify Windows App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build MangaDl Solution
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        run: dotnet restore MangaDl.sln
+
+      - name: Build Solution (x64 Debug)
+        run: msbuild MangaDl.sln /p:Configuration=Debug /p:Platform=x64 /verbosity:minimal
+
+      - name: Run Core Tests
+        run: dotnet test test/MangaDl.Core.Tests/MangaDl.Core.Tests.csproj -c Debug

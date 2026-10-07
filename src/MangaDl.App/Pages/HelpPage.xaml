@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MangaDl.Pages.HelpPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:MangaDl.Controls"
+    Background="{StaticResource BgBrush}">
+
+    <Page.Resources>
+        <Style x:Key="FaqHeader" TargetType="Button" BasedOn="{StaticResource CardButton}">
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="MinHeight" Value="56" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer Style="{StaticResource PageScroller}">
+        <Grid Padding="40,28,40,40" ColumnSpacing="40" MaxWidth="1200" HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Spacing="18">
+                <TextBlock Text="HELP CENTER" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="FREQUENTLY ASKED" Style="{StaticResource Eyebrow}" Margin="0,8,0,0" />
+                <StackPanel x:Name="Faq">
+                    <StackPanel BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
+                        <Button Style="{StaticResource FaqHeader}" Tag="0" Click="OnToggle">
+                            <Grid>
+                                <TextBlock x:Name="Q0" Text="Where are downloads saved?" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
+                                <c:MdIcon x:Name="I0" Kind="ChevronUp" Size="18" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <TextBlock x:Name="A0" Text="As CBZ files with ComicInfo.xml. Change the folder in Settings › System › Download location."
+                                   Style="{StaticResource BodyMuted}" Margin="0,0,0,16" />
+                    </StackPanel>
+                    <StackPanel BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
+                        <Button Style="{StaticResource FaqHeader}" Tag="1" Click="OnToggle">
+                            <Grid>
+                                <TextBlock x:Name="Q1" Text="How do I add a source?" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
+                                <c:MdIcon x:Name="I1" Kind="ChevronDown" Size="18" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <TextBlock x:Name="A1" Visibility="Collapsed" Text="Open Browse › Extensions and install one, or connect Komga or Suwayomi in Settings › System."
+                                   Style="{StaticResource BodyMuted}" Margin="0,0,0,16" />
+                    </StackPanel>
+                    <StackPanel BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
+                        <Button Style="{StaticResource FaqHeader}" Tag="2" Click="OnToggle">
+                            <Grid>
+                                <TextBlock x:Name="Q2" Text="How does cloud sync work?" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
+                                <c:MdIcon x:Name="I2" Kind="ChevronDown" Size="18" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <TextBlock x:Name="A2" Visibility="Collapsed" Text="Sign in and your library, history and progress sync through your backend automatically."
+                                   Style="{StaticResource BodyMuted}" Margin="0,0,0,16" />
+                    </StackPanel>
+                    <StackPanel BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
+                        <Button Style="{StaticResource FaqHeader}" Tag="3" Click="OnToggle">
+                            <Grid>
+                                <TextBlock x:Name="Q3" Text="Why won’t a chapter load?" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
+                                <c:MdIcon x:Name="I3" Kind="ChevronDown" Size="18" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <TextBlock x:Name="A3" Visibility="Collapsed" Text="The source may be down or rate-limiting. Retry, or open it in the browser to check."
+                                   Style="{StaticResource BodyMuted}" Margin="0,0,0,16" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <Border Grid.Column="1" Style="{StaticResource FaintCard}" VerticalAlignment="Top" Margin="0,64,0,0">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="CONTACT SUPPORT" Style="{StaticResource EyebrowMuted}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <RadioButton Content="Bug Report" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" IsChecked="True" />
+                        <RadioButton Content="Feature Request" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                        <RadioButton Content="Account" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                    </StackPanel>
+                    <RadioButton Content="Source / Extension" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                    <StackPanel>
+                        <TextBlock Text="Message" Style="{StaticResource FieldLabel}" />
+                        <TextBox Style="{StaticResource MdTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="140" VerticalContentAlignment="Top" Padding="14,12"
+                                 PlaceholderText="What happened? Include the source and chapter if it's a loading issue." AutomationProperties.Name="Message" />
+                    </StackPanel>
+                    <Button Content="Send Message" Style="{StaticResource PrimaryButton}" Height="46" FontSize="14" HorizontalAlignment="Stretch" Click="OnSend" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="MangaDl.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="ms-appx:///Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--
+                Recolours the stock WinUI controls we still use (text boxes, password
+                boxes, check boxes, sliders, scroll bars) to the design tokens.
+            -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="SystemAccentColor">#FFDC2626</Color>
+                    <Color x:Key="SystemAccentColorLight1">#FFEF4444</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FFEF4444</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FFFCA5A5</Color>
+                    <Color x:Key="SystemAccentColorDark1">#FFB91C1C</Color>
+
+                    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#FFDC2626" />
+                    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E6DC2626" />
+                    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CCDC2626" />
+                    <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFFFF" />
+
+                    <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/InterVariable.ttf#Inter Variable</FontFamily>
+
+                    <SolidColorBrush x:Key="TextControlBackground" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#24FFFFFF" />
+                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#2EFFFFFF" />
+                    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#FFDC2626" />
+                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#24FFFFFF" />
+                    <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#FFDC2626" />
+                    <SolidColorBrush x:Key="TextControlForeground" Color="#FFFAFAFA" />
+                    <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#FFFAFAFA" />
+                    <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#FFFAFAFA" />
+                    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#73FFFFFF" />
+                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#73FFFFFF" />
+                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#73FFFFFF" />
+                    <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#80DC2626" />
+                    <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+
+                    <SolidColorBrush x:Key="SliderTrackFill" Color="#2EFFFFFF" />
+                    <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#2EFFFFFF" />
+                    <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#2EFFFFFF" />
+                    <SolidColorBrush x:Key="SliderTrackValueFill" Color="#FFDC2626" />
+                    <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#FFEF4444" />
+                    <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#FFDC2626" />
+                    <SolidColorBrush x:Key="SliderThumbBackground" Color="#FFFAFAFA" />
+                    <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="SliderOuterThumbBackground" Color="#FFFAFAFA" />
+
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#66FFFFFF" />
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="Transparent" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!--
+                Every TextBlock defaults to Inter. Colour and size are deliberately not
+                set here so text inside buttons and nav items inherits hover/selected colours.
+            -->
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource InterFont}" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
