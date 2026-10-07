@@ -23,6 +23,15 @@ public sealed partial class AccountSettingsPage : Page
     private void OnSyncNow(object sender, RoutedEventArgs e) =>
         Nav.Toast("Library and reading progress synced");
 
+    private void OnManageDevices(object sender, RoutedEventArgs e) =>
+        Nav.Toast("Current device: Windows PC (Active)");
+
+    private void OnChangeEmail(object sender, RoutedEventArgs e) =>
+        Nav.Toast("Verification email sent to update email address");
+
+    private void OnChangePassword(object sender, RoutedEventArgs e) =>
+        Nav.Go(typeof(ForgotPasswordPage));
+
     private void OnSignOut(object sender, RoutedEventArgs e) => SignOutConfirm.Visibility = Visibility.Visible;
 
     private void OnCancelSignOut(object sender, RoutedEventArgs e) => SignOutConfirm.Visibility = Visibility.Collapsed;

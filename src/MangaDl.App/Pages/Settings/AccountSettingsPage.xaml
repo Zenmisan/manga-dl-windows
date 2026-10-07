@@ -76,7 +76,7 @@
                         <TextBlock Text="Library, progress, categories and settings follow you across Android, Windows and Linux." Style="{StaticResource BodyMuted}" TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button Content="Sync now" Style="{StaticResource SuccessButton}" Click="OnSyncNow" />
-                            <Button Content="Manage devices" Style="{StaticResource GhostButton}" />
+                            <Button Content="Manage devices" Style="{StaticResource GhostButton}" Click="OnManageDevices" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -86,10 +86,10 @@
                     <StackPanel>
                         <TextBlock Text="SIGN-IN" Style="{StaticResource Eyebrow}" Margin="0,0,0,6" />
                         <c:SettingRow x:Name="EmailRow" Label="Email" Description="[email]">
-                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" />
+                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" Click="OnChangeEmail" />
                         </c:SettingRow>
                         <c:SettingRow Label="Password" Description="Last changed [date]">
-                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" />
+                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" Click="OnChangePassword" />
                         </c:SettingRow>
                         <c:SettingRow Label="Sign out" Description="Downloads stay on this PC." ShowDivider="False">
                             <Button x:Name="SignOutButton" Content="Sign out" Style="{StaticResource SmallDangerButton}" Click="OnSignOut" />

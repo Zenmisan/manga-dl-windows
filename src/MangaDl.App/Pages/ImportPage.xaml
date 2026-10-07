@@ -79,7 +79,7 @@
                         <TextBlock Text="TIPS" Style="{StaticResource EyebrowMuted}" />
                         <TextBlock Text="Name folders after the series. Files are sorted by volume and chapter numbers in their names."
                                    Style="{StaticResource Body}" FontSize="13" LineHeight="20" Foreground="{StaticResource FgSoftBrush}" />
-                        <Button Content="Read the import guide" Style="{StaticResource LinkButton}" FontSize="13" HorizontalAlignment="Left" Padding="0,4" />
+                        <Button Content="Read the import guide" Style="{StaticResource LinkButton}" FontSize="13" HorizontalAlignment="Left" Padding="0,4" Click="OnGuide" />
                     </StackPanel>
                 </Border>
             </StackPanel>

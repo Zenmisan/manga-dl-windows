@@ -43,8 +43,8 @@
                                 <TextBlock Text="Cache [n] MB" Style="{StaticResource Caption}" />
                             </StackPanel>
                         </StackPanel>
-                        <c:SettingRow Label="Download location" Description="C:\Users\[user]\Documents\manga-dl">
-                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" />
+                        <c:SettingRow x:Name="DownloadLocationRow" Label="Download location" Description="C:\Users\[user]\Documents\manga-dl">
+                            <Button Content="Change" Style="{StaticResource SmallGhostButton}" Click="OnChangeLocation" />
                         </c:SettingRow>
                         <c:SettingRow Label="Clear image cache" Description="Covers and pages you've read online." ShowDivider="False">
                             <Button Content="Clear" Style="{StaticResource SmallGhostButton}" Click="OnClearCache" />
@@ -60,7 +60,7 @@
                             <Button Content="Create" Style="{StaticResource SmallPrimaryButton}" Click="OnBackup" />
                         </c:SettingRow>
                         <c:SettingRow Label="Restore backup" Description="From a .mangadl or Tachiyomi backup file.">
-                            <Button Content="Restore" Style="{StaticResource SmallGhostButton}" />
+                            <Button Content="Restore" Style="{StaticResource SmallGhostButton}" Click="OnRestore" />
                         </c:SettingRow>
                         <c:SettingRow Label="Automatic backups" Description="Last backup [date]" ShowDivider="False">
                             <ComboBox SelectedIndex="2" MinWidth="130" CornerRadius="10">
@@ -99,7 +99,7 @@
                             </Border>
                         </c:SettingRow>
                         <c:SettingRow Label="Remote servers" Description="Add another manga-dl server to read from." ShowDivider="False">
-                            <Button Content="Add server" Style="{StaticResource SmallGhostButton}" />
+                            <Button Content="Add server" Style="{StaticResource SmallGhostButton}" Click="OnAddServer" />
                         </c:SettingRow>
                     </StackPanel>
                 </Border>
@@ -115,14 +115,14 @@
                         <Image Source="ms-appx:///Assets/Square44x44Logo.png" Width="48" Height="48" VerticalAlignment="Center" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="MANGA-DL" Style="{StaticResource DisplayText}" FontSize="22" />
-                            <TextBlock Text="Version [x.y.z] · update [x.y.z] ready to install" Style="{StaticResource Caption}" FontSize="13" />
+                            <TextBlock Text="Version 1.0.0 · up to date" Style="{StaticResource Caption}" FontSize="13" />
                             <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
                                 <ToggleButton x:Name="AutoInstall" Style="{StaticResource MdSwitch}" IsChecked="True" AutomationProperties.Name="Install updates automatically" />
                                 <TextBlock Text="Install updates automatically" FontSize="13" Foreground="{StaticResource FgSoftBrush}" VerticalAlignment="Center" />
                             </StackPanel>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <Button Content="Release notes" Style="{StaticResource GhostButton}" />
+                            <Button Content="Release notes" Style="{StaticResource GhostButton}" Click="OnReleaseNotes" />
                             <Button Content="Restart &amp; Install" Style="{StaticResource PrimaryButton}" Click="OnInstall" />
                         </StackPanel>
                     </Grid>

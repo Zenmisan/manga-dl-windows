@@ -23,7 +23,7 @@
                 <TextBlock Grid.Column="2" Text="{x:Bind Chapter}" Foreground="{StaticResource FgSoftBrush}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="3" Text="{x:Bind Source}" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8">
-                    <Button Content="Download" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" />
+                    <Button Content="Download" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" Click="OnDownloadChapter" />
                     <Button Content="Read" Style="{StaticResource SoftButton}" Height="36" CornerRadius="10" FontSize="12" Padding="14,0" Click="OnRead" />
                 </StackPanel>
             </Grid>
@@ -49,7 +49,7 @@
                     <TextBlock Text="UPDATES" Style="{StaticResource PageTitle}" />
                     <TextBlock Text="Last checked [time] · background sync every 30 min" Style="{StaticResource Caption}" FontSize="13" Margin="0,4,0,0" />
                 </StackPanel>
-                <Button Grid.Column="1" Content="Download All New" Style="{StaticResource GhostButton}" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Download All New" Style="{StaticResource GhostButton}" VerticalAlignment="Center" Click="OnDownloadAllNew" />
                 <Button Grid.Column="2" Content="Check Now" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Click="OnCheck" />
             </Grid>
             <ItemsRepeater ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource UpdateGroupTemplate}" />

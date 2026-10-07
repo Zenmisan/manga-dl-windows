@@ -14,7 +14,31 @@ public sealed partial class UpdatesPage : Page
     private void OnOpenManga(object sender, RoutedEventArgs e) =>
         Nav.Go(typeof(MangaDetailPage), (((FrameworkElement)sender).DataContext as UpdateItem)?.Manga);
 
-    private void OnRead(object sender, RoutedEventArgs e) => Nav.Go(typeof(ReaderPage));
+    private void OnRead(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is UpdateItem item)
+        {
+            Nav.Go(typeof(ReaderPage), item.Manga);
+        }
+        else
+        {
+            Nav.Go(typeof(ReaderPage));
+        }
+    }
+
+    private void OnDownloadChapter(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is UpdateItem item)
+        {
+            Nav.Toast($"Queued download for {item.Manga.Title} {item.Chapter}");
+        }
+    }
+
+    private void OnDownloadAllNew(object sender, RoutedEventArgs e)
+    {
+        var count = Groups.Sum(g => g.Items.Count);
+        Nav.Toast($"Queued {count} new chapters for download");
+    }
 
     private async void OnCheck(object sender, RoutedEventArgs e)
     {

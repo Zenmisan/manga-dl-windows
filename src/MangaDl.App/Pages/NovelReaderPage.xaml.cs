@@ -10,19 +10,19 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace MangaDl.Pages;
 
-public sealed record NovelChapter(string Name, bool IsCurrent, bool Read);
+public sealed record NovelChapter(string Id, string Name, bool IsCurrent, bool Read);
 
 public sealed partial class NovelReaderPage : Page
 {
     public ObservableCollection<NovelChapter> Chapters { get; } = new(
-        Enumerable.Range(8, 11).Select(n => new NovelChapter($"Ch. {n} · [title]", n == 12, n < 12)));
+        Enumerable.Range(1, 10).Select(n => new NovelChapter(n.ToString(), $"Ch. {n} · Chapter {n}", n == 1, n < 1)));
 
     private Manga? _currentNovel;
 
     public NovelReaderPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => Nav.SetTitle(_currentNovel != null ? $"{_currentNovel.Title} — Ch. 12" : "[Novel title] — Ch. 12");
+        Loaded += (_, _) => Nav.SetTitle(_currentNovel != null ? $"{_currentNovel.Title} — Ch. 1" : "[Novel title] — Ch. 1");
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -31,7 +31,8 @@ public sealed partial class NovelReaderPage : Page
         if (e.Parameter is Manga novel)
         {
             _currentNovel = novel;
-            Nav.SetTitle($"{novel.Title} — Ch. 12");
+            NovelTitleText.Text = novel.Title;
+            Nav.SetTitle($"{novel.Title}");
             await LoadNovelChaptersAsync();
         }
     }
@@ -41,6 +42,7 @@ public sealed partial class NovelReaderPage : Page
         if (_currentNovel == null) return;
         try
         {
+            NovelTitleText.Text = _currentNovel.Title;
             var detail = await AppServices.Extensions.GetMangaDetailAsync(_currentNovel.Source, _currentNovel.Id);
             if (detail != null && detail.Chapters.Count > 0)
             {
@@ -48,7 +50,12 @@ public sealed partial class NovelReaderPage : Page
                 for (var i = 0; i < detail.Chapters.Count; i++)
                 {
                     var ch = detail.Chapters[i];
-                    Chapters.Add(new NovelChapter(ch.Title ?? $"Ch. {ch.Number}", i == 0, false));
+                    Chapters.Add(new NovelChapter(ch.Id, ch.Title ?? $"Ch. {ch.Number}", i == 0, false));
+                }
+
+                if (Chapters.Count > 0)
+                {
+                    await LoadChapterTextAsync(Chapters[0]);
                 }
             }
         }
@@ -56,6 +63,81 @@ public sealed partial class NovelReaderPage : Page
         {
             AppLog.Warn("NovelReaderPage.LoadNovelChaptersAsync", ex);
             Nav.Toast("Couldn't load chapter list");
+        }
+    }
+
+    private async void OnChapterSelected(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is NovelChapter ch && _currentNovel != null)
+        {
+            await LoadChapterTextAsync(ch);
+        }
+    }
+
+    private async Task LoadChapterTextAsync(NovelChapter chapter)
+    {
+        if (_currentNovel == null) return;
+
+        NovelTitleText.Text = _currentNovel.Title;
+        NovelChapterText.Text = $" · {chapter.Name}";
+        ChapterHeading.Text = chapter.Name.ToUpperInvariant();
+        Nav.SetTitle($"{_currentNovel.Title} — {chapter.Name}");
+
+        for (var i = 0; i < Chapters.Count; i++)
+        {
+            var isCurr = Chapters[i].Id == chapter.Id;
+            if (Chapters[i].IsCurrent != isCurr)
+            {
+                Chapters[i] = Chapters[i] with { IsCurrent = isCurr };
+            }
+        }
+
+        P1.Text = "Loading chapter...";
+        P2.Text = string.Empty;
+        P3.Text = string.Empty;
+
+        try
+        {
+            var text = await AppServices.Extensions.GetChapterTextAsync(_currentNovel.Source, chapter.Id);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                var paragraphs = text.Split(new[] { "\r\n\r\n", "\n\n", "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (paragraphs.Length >= 3)
+                {
+                    P1.Text = paragraphs[0];
+                    P2.Text = paragraphs[1];
+                    P3.Text = string.Join("\n\n", paragraphs.Skip(2));
+                }
+                else if (paragraphs.Length == 2)
+                {
+                    P1.Text = paragraphs[0];
+                    P2.Text = paragraphs[1];
+                    P3.Text = string.Empty;
+                }
+                else if (paragraphs.Length == 1)
+                {
+                    P1.Text = paragraphs[0];
+                    P2.Text = string.Empty;
+                    P3.Text = string.Empty;
+                }
+            }
+            else
+            {
+                P1.Text = "[No content available for this chapter]";
+            }
+
+            _ = AppServices.Database.SaveProgressAsync(_currentNovel.Source, _currentNovel.Id, chapter.Id, 1.0, 1, true)
+                .ContinueWith(t => AppLog.Warn("NovelReaderPage.SaveProgressAsync", t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
+            _ = AppServices.Database.RecordHistoryAsync(_currentNovel.Source, _currentNovel.Id, _currentNovel.Title, chapter.Id, chapter.Name, _currentNovel.Cover)
+                .ContinueWith(t => AppLog.Warn("NovelReaderPage.RecordHistoryAsync", t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
+
+            Article?.ChangeView(0, 0, 1.0f);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("NovelReaderPage.LoadChapterTextAsync", ex);
+            P1.Text = "[Error loading chapter text. Check internet connection.]";
+            Nav.Toast("Couldn't load chapter text");
         }
     }
 

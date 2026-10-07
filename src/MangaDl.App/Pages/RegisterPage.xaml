@@ -60,7 +60,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <CheckBox x:Name="Terms" Content="I agree to the" IsChecked="True" Style="{StaticResource MdCheckBox}" FontSize="13" Checked="OnTermsChanged" Unchecked="OnTermsChanged" />
-                    <Button Content="Terms" Style="{StaticResource LinkButton}" FontSize="13" Margin="-6,0,0,0" />
+                    <Button Content="Terms" Style="{StaticResource LinkButton}" FontSize="13" Margin="-6,0,0,0" Click="OnTermsClick" />
                 </StackPanel>
                 <TextBlock x:Name="ErrorText" Style="{StaticResource Body}" Foreground="{StaticResource ErrorTextBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
                 <Button x:Name="CreateButton" Content="Create Account" Style="{StaticResource PrimaryButtonLarge}" HorizontalAlignment="Stretch" Click="OnCreate" />

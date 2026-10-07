@@ -33,4 +33,5 @@ public sealed partial class ImportPage : Page
     // (initialise with WinRT.Interop.InitializeWithWindow and the main window handle).
     private void OnChooseFiles(object sender, RoutedEventArgs e) => Nav.Toast("File picker opens here");
     private void OnChooseFolder(object sender, RoutedEventArgs e) => Nav.Toast("Folder picker opens here");
+    private void OnGuide(object sender, RoutedEventArgs e) => Nav.Go(typeof(HelpPage));
 }

@@ -38,7 +38,7 @@
                                     </StackPanel>
                                 </StackPanel>
                                 <TextBlock Grid.Row="1" Text="{x:Bind Description}" Style="{StaticResource BodyMuted}" FontSize="13" TextWrapping="Wrap" />
-                                <Button Grid.Row="2" Content="{x:Bind h:X.TrackerAction(Connected)}" Style="{x:Bind h:X.TrackerActionStyle(Connected)}" HorizontalAlignment="Left" />
+                                <Button Grid.Row="2" Content="{x:Bind h:X.TrackerAction(Connected)}" Style="{x:Bind h:X.TrackerActionStyle(Connected)}" HorizontalAlignment="Left" Click="OnTrackerAction" />
                             </Grid>
                         </Border>
                     </DataTemplate>

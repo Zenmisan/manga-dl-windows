@@ -100,7 +100,7 @@
                             <Button Content="Test connection" Style="{StaticResource GhostButton}" Click="OnTest" />
                             <StackPanel x:Name="TestResult" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Visibility="Collapsed">
                                 <c:MdIcon Kind="Check" Size="16" Foreground="{StaticResource SuccessTextBrush}" />
-                                <TextBlock Text="Connected · [latency] ms" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource SuccessTextBrush}" />
+                                <TextBlock x:Name="LatencyText" Text="Connected · [latency] ms" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource SuccessTextBrush}" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>

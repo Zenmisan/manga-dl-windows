@@ -44,12 +44,16 @@ public sealed partial class GeneralSettingsPage : Page
     {
         try
         {
-            TestResult.Visibility = Visibility.Visible;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             var ping = await AppServices.Http.FetchAsync("https://api.mangadex.org/ping");
+            sw.Stop();
+            TestResult.Visibility = Visibility.Visible;
+            LatencyText.Text = $"Connected · {sw.ElapsedMilliseconds} ms";
             Nav.Toast(ping.IsSuccess ? "Connection test successful" : "Ping completed");
         }
         catch
         {
+            TestResult.Visibility = Visibility.Collapsed;
             Nav.Toast("Connection failed");
         }
     }

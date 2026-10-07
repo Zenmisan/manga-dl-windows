@@ -114,7 +114,7 @@
                             </c:SettingRow.Below>
                         </c:SettingRow>
                         <c:SettingRow Label="Keyboard shortcuts" Description="← → turn pages · F fullscreen · Esc exit" ShowDivider="False">
-                            <Button Content="Customise" Style="{StaticResource SmallGhostButton}" />
+                            <Button Content="Customise" Style="{StaticResource SmallGhostButton}" Click="OnCustomiseShortcuts" />
                         </c:SettingRow>
                     </StackPanel>
                 </Border>

@@ -27,7 +27,7 @@
                 </StackPanel>
                 <TextBlock Grid.Column="2" Text="{x:Bind When}" FontSize="12" Foreground="{StaticResource FgFaintBrush}" TextAlignment="Right" VerticalAlignment="Center" />
                 <Button Grid.Column="3" Content="{x:Bind Action}" Style="{StaticResource SmallGhostButton}" FontWeight="Bold"
-                        Visibility="{x:Bind h:X.VisStr(Action)}" VerticalAlignment="Center" />
+                        Visibility="{x:Bind h:X.VisStr(Action)}" VerticalAlignment="Center" Click="OnNoticeAction" />
             </Grid>
         </DataTemplate>
     </Page.Resources>
@@ -36,15 +36,15 @@
         <StackPanel Padding="40,28,40,40" Spacing="18" MaxWidth="960" HorizontalAlignment="Left">
             <Grid>
                 <TextBlock Text="NOTIFICATIONS" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                <Button Content="Mark All Read" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <Button Content="Mark All Read" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Click="OnMarkAllRead" />
             </Grid>
             <Grid BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Content="All" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" IsChecked="True" />
-                    <RadioButton Content="Unread · 2" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
-                    <RadioButton Content="Chapters" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
-                    <RadioButton Content="Downloads" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
-                    <RadioButton Content="App" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" />
+                    <RadioButton Content="All" Tag="All" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" IsChecked="True" Click="OnFilterTab" />
+                    <RadioButton Content="Unread" Tag="Unread" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" Click="OnFilterTab" />
+                    <RadioButton Content="Chapters" Tag="Chapters" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" Click="OnFilterTab" />
+                    <RadioButton Content="Downloads" Tag="Downloads" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" Click="OnFilterTab" />
+                    <RadioButton Content="App" Tag="App" GroupName="NoticeTabs" Style="{StaticResource TabRadio}" Click="OnFilterTab" />
                 </StackPanel>
             </Grid>
             <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource NoticeRow}" Width="880" HorizontalAlignment="Left" />

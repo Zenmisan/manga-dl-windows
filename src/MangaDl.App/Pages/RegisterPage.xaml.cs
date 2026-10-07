@@ -77,6 +77,9 @@ public sealed partial class RegisterPage : Page
 
     private void OnSignIn(object sender, RoutedEventArgs e) => Nav.Go(typeof(LoginPage));
 
+    private void OnTermsClick(object sender, RoutedEventArgs e) =>
+        Nav.Toast("Terms of service: Free and open-source software under MIT.");
+
     private void ShowError(string message)
     {
         ErrorText.Text = message;

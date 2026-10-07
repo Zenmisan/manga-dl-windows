@@ -22,10 +22,10 @@
                     </Border>
                 </Border>
                 <StackPanel Grid.Column="1" Margin="8,16,0,0">
-                    <TextBlock Text="[Display name]" FontSize="30" FontWeight="Black" Foreground="{StaticResource FgBrush}" />
-                    <TextBlock Text="@[username] · reading since [date]" FontSize="14" Foreground="{StaticResource FgSubtleBrush}" Margin="0,2,0,0" />
+                    <TextBlock x:Name="DisplayNameText" Text="Reader" FontSize="30" FontWeight="Black" Foreground="{StaticResource FgBrush}" />
+                    <TextBlock x:Name="UsernameText" Text="@reader · Reading offline" FontSize="14" Foreground="{StaticResource FgSubtleBrush}" Margin="0,2,0,0" />
                 </StackPanel>
-                <Button Grid.Column="2" Content="Share" Style="{StaticResource GhostButton}" VerticalAlignment="Top" Margin="0,16,0,0" />
+                <Button Grid.Column="2" Content="Share" Style="{StaticResource GhostButton}" VerticalAlignment="Top" Margin="0,16,0,0" Click="OnShare" />
                 <Button Grid.Column="3" Content="Edit Profile" Style="{StaticResource PrimaryButton}" VerticalAlignment="Top" Margin="0,16,0,0" Click="OnEdit" />
             </Grid>
 
@@ -63,19 +63,19 @@
                         </Grid.ColumnDefinitions>
                         <Border CornerRadius="14" Background="{StaticResource SurfaceBrush}" Padding="14">
                             <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="[n]" Style="{StaticResource DisplayText}" FontSize="28" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="ChaptersCountText" Text="0" Style="{StaticResource DisplayText}" FontSize="28" HorizontalAlignment="Center" />
                                 <TextBlock Text="Chapters" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="1" CornerRadius="14" Background="{StaticResource SurfaceBrush}" Padding="14">
                             <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="[n]" Style="{StaticResource DisplayText}" FontSize="28" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="LibraryCountText" Text="0" Style="{StaticResource DisplayText}" FontSize="28" HorizontalAlignment="Center" />
                                 <TextBlock Text="Library" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="2" CornerRadius="14" Background="{StaticResource SurfaceBrush}" Padding="14">
                             <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="[n]" Style="{StaticResource DisplayText}" FontSize="28" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="StreakCountText" Text="5" Style="{StaticResource DisplayText}" FontSize="28" HorizontalAlignment="Center" />
                                 <TextBlock Text="Day streak" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                             </StackPanel>
                         </Border>

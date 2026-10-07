@@ -44,25 +44,25 @@
                 <Border Style="{StaticResource Card}" Background="{StaticResource SurfaceBrush}" Padding="18">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Chapters read" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgSubtleBrush}" />
-                        <TextBlock Text="[n]" Style="{StaticResource DisplayText}" FontSize="40" />
+                        <TextBlock x:Name="ChaptersReadValue" Text="142" Style="{StaticResource DisplayText}" FontSize="40" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="1" Style="{StaticResource Card}" Background="{StaticResource SurfaceBrush}" Padding="18">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Time reading" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgSubtleBrush}" />
-                        <TextBlock Text="[h]" Style="{StaticResource DisplayText}" FontSize="40" />
+                        <TextBlock x:Name="TimeReadingValue" Text="16h" Style="{StaticResource DisplayText}" FontSize="40" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="2" Style="{StaticResource Card}" Background="{StaticResource SurfaceBrush}" Padding="18">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Current streak" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgSubtleBrush}" />
-                        <TextBlock Text="[d]" Style="{StaticResource DisplayText}" FontSize="40" />
+                        <TextBlock x:Name="CurrentStreakValue" Text="5d" Style="{StaticResource DisplayText}" FontSize="40" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="3" Style="{StaticResource Card}" Background="{StaticResource SurfaceBrush}" Padding="18">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Reading pace" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgSubtleBrush}" />
-                        <TextBlock Text="[n]/wk" Style="{StaticResource DisplayText}" FontSize="40" />
+                        <TextBlock x:Name="ReadingPaceValue" Text="18/wk" Style="{StaticResource DisplayText}" FontSize="40" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -107,18 +107,18 @@
                         <StackPanel Spacing="6">
                             <Grid>
                                 <TextBlock Text="Monthly chapters" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" />
-                                <TextBlock Text="[x] / [goal]" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Right" />
+                                <TextBlock x:Name="MonthlyGoalValue" Text="16 / 25" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Right" />
                             </Grid>
                             <c:MdProgress Value="0.62" Height="6" />
                         </StackPanel>
                         <StackPanel Spacing="6">
                             <Grid>
                                 <TextBlock Text="Yearly manga" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" />
-                                <TextBlock Text="[x] / [goal]" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Right" />
+                                <TextBlock x:Name="YearlyGoalValue" Text="18 / 50" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Right" />
                             </Grid>
                             <c:MdProgress Value="0.35" Height="6" />
                         </StackPanel>
-                        <Button Content="Edit Goals" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" HorizontalAlignment="Left" />
+                        <Button Content="Edit Goals" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" HorizontalAlignment="Left" Click="OnEditGoals" />
                     </StackPanel>
                 </Border>
 
