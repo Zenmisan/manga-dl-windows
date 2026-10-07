@@ -17,6 +17,7 @@ public sealed partial class SearchPage : Page
         if (string.IsNullOrWhiteSpace(query)) return;
 
         SearchStatus.Text = $"Searching sources for \"{query}\"...";
+        SearchProgressSkeleton.Visibility = Visibility.Visible;
 
         try
         {
@@ -38,6 +39,31 @@ public sealed partial class SearchPage : Page
         catch (Exception ex)
         {
             SearchStatus.Text = $"Search error: {ex.Message}";
+        }
+        finally
+        {
+            SearchProgressSkeleton.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void OnResetFilters(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        SearchStatus.Text = "Filters reset";
+        Groups.Clear();
+        foreach (var g in Sample.SearchResults) Groups.Add(g);
+    }
+
+    private void OnApplyFilters(object sender, RoutedEventArgs e)
+    {
+        var text = SearchBox.Text?.Trim();
+        if (!string.IsNullOrEmpty(text))
+        {
+            OnSearchSubmitted(this, text);
+        }
+        else
+        {
+            Nav.Toast("Filters applied");
         }
     }
 
