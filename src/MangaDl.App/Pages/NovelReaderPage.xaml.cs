@@ -52,7 +52,11 @@ public sealed partial class NovelReaderPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("NovelReaderPage.LoadNovelChaptersAsync", ex);
+            Nav.Toast("Couldn't load chapter list");
+        }
     }
 
     private IEnumerable<TextBlock> Paragraphs => new[] { P1, P2, P3 }.Where(p => p is not null);

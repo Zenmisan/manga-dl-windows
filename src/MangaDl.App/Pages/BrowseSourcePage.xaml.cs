@@ -50,7 +50,11 @@ public sealed partial class BrowseSourcePage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("BrowseSourcePage.LoadPopularAsync", ex);
+            Nav.Toast($"Couldn't load {_sourceName}");
+        }
     }
 
     private async void OnSearchSubmitted(object? sender, string query)
@@ -80,7 +84,11 @@ public sealed partial class BrowseSourcePage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("BrowseSourcePage.OnSearchSubmitted", ex);
+            Nav.Toast($"Search failed on {_sourceName}");
+        }
     }
 
     private void OnRemoveFilter(object sender, RoutedEventArgs e)

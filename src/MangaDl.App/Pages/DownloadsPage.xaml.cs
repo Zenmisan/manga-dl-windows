@@ -51,7 +51,11 @@ public sealed partial class DownloadsPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("DownloadsPage.LoadDownloadsAsync", ex);
+            Nav.Toast("Couldn't load downloads");
+        }
     }
 
     private void OnDownloadUpdated(DownloadEntity entity)

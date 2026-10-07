@@ -58,7 +58,11 @@ public sealed partial class MangaDetailPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("MangaDetailPage.LoadChaptersAsync", ex);
+            Nav.Toast("Couldn't load chapters");
+        }
     }
 
     private async void OnLibraryToggled(object sender, RoutedEventArgs e)
@@ -86,7 +90,12 @@ public sealed partial class MangaDetailPage : Page
                 Nav.Toast($"Removed \"{_currentManga.Title}\" from library");
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("MangaDetailPage.OnLibraryToggled", ex);
+            SetInLibrary(!_inLibrary);
+            Nav.Toast("Couldn't update library");
+        }
     }
 
     private void SetInLibrary(bool value)

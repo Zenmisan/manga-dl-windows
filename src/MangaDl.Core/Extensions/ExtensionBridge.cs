@@ -30,7 +30,7 @@ public sealed class ExtensionBridge : IDisposable
     private void SetupEnvironment()
     {
         // 1. Console
-        _engine.SetValue("__log", new Action<string>(msg => System.Diagnostics.Debug.WriteLine($"[JS] {msg}")));
+        _engine.SetValue("__log", new Action<string>(msg => Console.WriteLine($"[JS] {msg}")));
         _engine.Execute(@"
             globalThis.console = {
                 log: function() { var args = Array.prototype.slice.call(arguments); __log(args.join(' ')); },
@@ -60,7 +60,35 @@ public sealed class ExtensionBridge : IDisposable
         _engine.SetValue("__nativeFetch", new Func<string, JsValue, object>(NativeFetchHandler));
         _engine.Execute(@"
             globalThis.apiFetch = function(url, options) {
-                return Promise.resolve(__nativeFetch(url, options || {}));
+                var res = __nativeFetch(url, options || {});
+                var parsed = null;
+                try {
+                    if (res.text) {
+                        var trimmed = (res.text + '').trim();
+                        if (trimmed.charAt(0) === '{' || trimmed.charAt(0) === '[') {
+                            parsed = JSON.parse(trimmed);
+                        }
+                    }
+                } catch (e) {
+                    __log('[JSON.parse failed] ' + e);
+                }
+
+                var out = {
+                    status: res.status,
+                    text: res.text,
+                    html: res.text,
+                    url: res.url,
+                    json: parsed
+                };
+
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    for (var k in parsed) {
+                        if (Object.prototype.hasOwnProperty.call(parsed, k) && !(k in out)) {
+                            out[k] = parsed[k];
+                        }
+                    }
+                }
+                return Promise.resolve(out);
             };
         ");
     }
@@ -96,54 +124,13 @@ public sealed class ExtensionBridge : IDisposable
 
         var result = _http.FetchAsync(url, method, headers, body).GetAwaiter().GetResult();
 
-        var dict = new Dictionary<string, object?>
+        return new Dictionary<string, object?>
         {
             ["status"] = result.StatusCode,
             ["text"] = result.Text,
-            ["html"] = result.Text,
             ["url"] = result.Url
         };
-
-        // Try parsing JSON so both res.json and direct property access work
-        try
-        {
-            var trimmed = result.Text.Trim();
-            if (trimmed.StartsWith("{") || trimmed.StartsWith("["))
-            {
-                using var doc = JsonDocument.Parse(trimmed);
-                var jsonParsed = JsonElementToClr(doc.RootElement);
-                dict["json"] = jsonParsed;
-
-                if (jsonParsed is Dictionary<string, object?> jsonDict)
-                {
-                    foreach (var (k, v) in jsonDict)
-                    {
-                        if (!dict.ContainsKey(k))
-                        {
-                            dict[k] = v;
-                        }
-                    }
-                }
-            }
-        }
-        catch
-        {
-            dict["json"] = null;
-        }
-
-        return dict;
     }
-
-    private static object? JsonElementToClr(JsonElement elem) => elem.ValueKind switch
-    {
-        JsonValueKind.Object => elem.EnumerateObject().ToDictionary(p => p.Name, p => JsonElementToClr(p.Value)),
-        JsonValueKind.Array => elem.EnumerateArray().Select(JsonElementToClr).ToList(),
-        JsonValueKind.String => elem.GetString(),
-        JsonValueKind.Number => elem.TryGetInt64(out var l) ? (object)l : elem.GetDouble(),
-        JsonValueKind.True => true,
-        JsonValueKind.False => false,
-        _ => null
-    };
 
     public async Task LoadScriptAsync(string jsSource)
     {
@@ -152,6 +139,21 @@ public sealed class ExtensionBridge : IDisposable
         {
             _engine.Execute(jsSource);
             _loaded = true;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    public bool HasFunction(string funcName)
+    {
+        _lock.Wait();
+        try
+        {
+            var js = $"(typeof extension !== 'undefined' && typeof extension['{funcName}'] === 'function')";
+            var val = _engine.Evaluate(js);
+            return val.IsBoolean() && val.AsBoolean();
         }
         finally
         {

@@ -79,10 +79,15 @@ public sealed partial class ReaderPage : Page
 
         try
         {
-            _ = AppServices.Database.SaveProgressAsync(_currentManga.Source, _currentManga.Id, "48", 48.0, _page, _page >= PageTotal);
-            _ = AppServices.Database.RecordHistoryAsync(_currentManga.Source, _currentManga.Id, _currentManga.Title, "48", $"Ch. 48 · page {_page} of {PageTotal}", _currentManga.Cover);
+            _ = AppServices.Database.SaveProgressAsync(_currentManga.Source, _currentManga.Id, "48", 48.0, _page, _page >= PageTotal)
+                .ContinueWith(t => AppLog.Warn("ReaderPage.SaveProgressAsync", t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
+            _ = AppServices.Database.RecordHistoryAsync(_currentManga.Source, _currentManga.Id, _currentManga.Title, "48", $"Ch. 48 · page {_page} of {PageTotal}", _currentManga.Cover)
+                .ContinueWith(t => AppLog.Warn("ReaderPage.RecordHistoryAsync", t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("ReaderPage.ShowPage", ex);
+        }
     }
 
     private void Go(int delta)

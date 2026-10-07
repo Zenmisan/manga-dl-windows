@@ -24,6 +24,10 @@ public sealed partial class UpdatesPage : Page
             var lib = await AppServices.Database.GetLibraryAsync();
             Nav.Toast($"Checked {lib.Count} titles for updates");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("UpdatesPage.OnCheck", ex);
+            Nav.Toast("Couldn't check for updates");
+        }
     }
 }

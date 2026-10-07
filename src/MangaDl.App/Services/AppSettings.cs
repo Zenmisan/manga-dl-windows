@@ -32,7 +32,10 @@ public sealed class AppSettings
                 if (loaded != null) return loaded;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("AppSettings.Load", ex);
+        }
 
         return new AppSettings();
     }
@@ -45,6 +48,9 @@ public sealed class AppSettings
             var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(SettingsFile, json);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("AppSettings.Save", ex);
+        }
     }
 }

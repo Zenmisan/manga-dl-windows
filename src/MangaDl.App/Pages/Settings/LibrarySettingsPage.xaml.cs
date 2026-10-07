@@ -42,7 +42,11 @@ public sealed partial class LibrarySettingsPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("LibrarySettingsPage.LoadCategoriesAsync", ex);
+            Nav.Toast("Couldn't load categories");
+        }
     }
 
     private void OnAdd(object sender, RoutedEventArgs e) => OpenEditor(null);
@@ -67,10 +71,15 @@ public sealed partial class LibrarySettingsPage : Page
             try
             {
                 await AppServices.Database.DeleteCategoryAsync(name.ToLowerInvariant().Replace(" ", "_"));
+                Nav.Toast($"Deleted \"{name}\"");
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AppLog.Warn("LibrarySettingsPage.OnDelete", ex);
+                Categories.Add(row);
+                Nav.Toast($"Couldn't delete \"{name}\"");
+            }
         }
-        Nav.Toast($"Deleted \"{name}\"");
     }
 
     private void OnSaveNew(object sender, RoutedEventArgs e) => Save();
@@ -94,12 +103,18 @@ public sealed partial class LibrarySettingsPage : Page
         }
         else
         {
-            Categories.Add(new CategoryRow(name, "0 manga"));
+            var row = new CategoryRow(name, "0 manga");
+            Categories.Add(row);
             try
             {
                 await AppServices.Database.AddCategoryAsync(name.ToLowerInvariant().Replace(" ", "_"), name);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AppLog.Warn("LibrarySettingsPage.Save", ex);
+                Categories.Remove(row);
+                Nav.Toast($"Couldn't add \"{name}\"");
+            }
         }
         Close();
     }

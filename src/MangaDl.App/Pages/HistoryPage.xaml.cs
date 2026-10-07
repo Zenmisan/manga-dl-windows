@@ -34,7 +34,11 @@ public sealed partial class HistoryPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("HistoryPage.LoadHistoryAsync", ex);
+            Nav.Toast("Couldn't load history");
+        }
     }
 
     private void OnResume(object sender, RoutedEventArgs e)

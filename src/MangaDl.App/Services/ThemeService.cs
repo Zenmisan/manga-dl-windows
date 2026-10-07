@@ -43,7 +43,10 @@ public static class ThemeService
             AppServices.Settings.AccentColor = accent.Name;
             AppServices.Settings.Save();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("ThemeService.SetAccent", ex);
+        }
     }
 
     private static Color WithAlpha(Color c, byte a) => Microsoft.UI.ColorHelper.FromArgb(a, c.R, c.G, c.B);

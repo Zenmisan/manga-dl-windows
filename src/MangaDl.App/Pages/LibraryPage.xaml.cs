@@ -51,7 +51,11 @@ public sealed partial class LibraryPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("LibraryPage.LoadLibraryAsync", ex);
+            Nav.Toast("Couldn't load library");
+        }
     }
 
     private void OnOpenManga(object sender, RoutedEventArgs e) =>

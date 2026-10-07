@@ -17,7 +17,10 @@ public partial class App : Application
         {
             await MangaDl.Services.AppServices.InitializeAsync();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            MangaDl.Services.AppLog.Warn("AppServices.InitializeAsync", ex);
+        }
 
         Window = new MainWindow();
         Window.Activate();

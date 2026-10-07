@@ -50,7 +50,11 @@ public sealed partial class ExtensionsPage : Page
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            AppLog.Warn("ExtensionsPage.LoadExtensions", ex);
+            Nav.Toast("Couldn't load sources");
+        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
