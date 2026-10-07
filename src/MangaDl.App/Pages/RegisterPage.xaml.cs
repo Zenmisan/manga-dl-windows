@@ -1,3 +1,4 @@
+using MangaDl.Core.Auth;
 using MangaDl.Helpers;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
@@ -29,7 +30,56 @@ public sealed partial class RegisterPage : Page
         CreateButton.IsEnabled = match && pw.Length > 0 && Terms.IsChecked == true;
     }
 
-    // TODO(backend): create the account.
-    private void OnCreate(object sender, RoutedEventArgs e) => Nav.Home();
+    private async void OnCreate(object sender, RoutedEventArgs e)
+    {
+        if (!AppServices.Settings.HasSupabase)
+        {
+            Nav.Home();
+            return;
+        }
+
+        var username = UsernameBox.Text.Trim();
+        var email = EmailBox.Text.Trim();
+        var password = Password.Password;
+
+        ErrorText.Visibility = Visibility.Collapsed;
+        CreateButton.IsEnabled = false;
+        try
+        {
+            var result = await AppServices.Auth.SignUpAsync(username, email, password);
+            if (result.Session is { } session)
+            {
+                CredentialStore.Save(session.AccessToken, session.RefreshToken);
+                AppServices.Settings.UserEmail = session.Email ?? email;
+                AppServices.Settings.UserId = session.UserId;
+                AppServices.Settings.Save();
+                Nav.Home();
+            }
+            else
+            {
+                ShowError(result.Message ?? "Check your email to confirm your account.");
+            }
+        }
+        catch (AuthException ex)
+        {
+            ShowError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("RegisterPage.OnCreate", ex);
+            ShowError("Couldn't reach the server. Check your connection.");
+        }
+        finally
+        {
+            Validate();
+        }
+    }
+
     private void OnSignIn(object sender, RoutedEventArgs e) => Nav.Go(typeof(LoginPage));
+
+    private void ShowError(string message)
+    {
+        ErrorText.Text = message;
+        ErrorText.Visibility = Visibility.Visible;
+    }
 }

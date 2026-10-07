@@ -1,3 +1,4 @@
+using MangaDl.Core.Auth;
 using MangaDl.Core.Database;
 using MangaDl.Core.Downloads;
 using MangaDl.Core.Extensions;
@@ -31,6 +32,11 @@ public static class AppServices
         Extensions,
         Http,
         Settings.DownloadPath);
+
+    public static SupabaseAuthService Auth { get; } = new(
+        Http,
+        Settings.SupabaseUrl ?? string.Empty,
+        Settings.SupabaseAnonKey ?? string.Empty);
 
     public static async Task InitializeAsync()
     {

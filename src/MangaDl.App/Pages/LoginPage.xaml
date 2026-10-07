@@ -22,18 +22,19 @@
         <StackPanel Grid.Column="1" Padding="96,72" MaxWidth="612" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="16">
                 <StackPanel>
                     <TextBlock Text="Email" Style="{StaticResource FieldLabel}" />
-                    <TextBox PlaceholderText="you@example.com" Style="{StaticResource MdTextBox}" InputScope="EmailSmtpAddress" AutomationProperties.Name="Email" />
+                    <TextBox x:Name="EmailBox" PlaceholderText="you@example.com" Style="{StaticResource MdTextBox}" InputScope="EmailSmtpAddress" AutomationProperties.Name="Email" />
                 </StackPanel>
                 <StackPanel>
                     <TextBlock Text="Password" Style="{StaticResource FieldLabel}" />
-                    <PasswordBox PlaceholderText="Your password" Style="{StaticResource MdPasswordBox}" AutomationProperties.Name="Password" />
+                    <PasswordBox x:Name="PasswordBox" PlaceholderText="Your password" Style="{StaticResource MdPasswordBox}" AutomationProperties.Name="Password" />
                 </StackPanel>
                 <Grid>
                     <CheckBox Content="Stay signed in" IsChecked="True" Style="{StaticResource MdCheckBox}" FontSize="13" />
                     <Button Content="Forgot password?" Style="{StaticResource LinkButton}" FontSize="13" HorizontalAlignment="Right" Click="OnForgot" />
                 </Grid>
-                <Button Content="Sign In" Style="{StaticResource PrimaryButtonLarge}" HorizontalAlignment="Stretch" Click="OnSignIn" />
-                <Button Content="Use Without Account" Style="{StaticResource GhostButtonLarge}" HorizontalAlignment="Stretch" Click="OnSignIn" />
+                <TextBlock x:Name="ErrorText" Style="{StaticResource Body}" Foreground="{StaticResource ErrorTextBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
+                <Button x:Name="SignInButton" Content="Sign In" Style="{StaticResource PrimaryButtonLarge}" HorizontalAlignment="Stretch" Click="OnSignIn" />
+                <Button Content="Use Without Account" Style="{StaticResource GhostButtonLarge}" HorizontalAlignment="Stretch" Click="OnGuest" />
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <TextBlock Text="No account?" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" />
                     <Button Content="Create one" Style="{StaticResource LinkButton}" Click="OnCreate" />

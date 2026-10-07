@@ -23,11 +23,11 @@
         <StackPanel Grid.Column="1" Padding="96,72" MaxWidth="612" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="14">
                 <StackPanel>
                     <TextBlock Text="Username" Style="{StaticResource FieldLabel}" />
-                    <TextBox Text="[username]" Style="{StaticResource MdTextBox}" AutomationProperties.Name="Username" />
+                    <TextBox x:Name="UsernameBox" Text="" Style="{StaticResource MdTextBox}" AutomationProperties.Name="Username" />
                 </StackPanel>
                 <StackPanel>
                     <TextBlock Text="Email" Style="{StaticResource FieldLabel}" />
-                    <TextBox PlaceholderText="you@example.com" Style="{StaticResource MdTextBox}" InputScope="EmailSmtpAddress" AutomationProperties.Name="Email" />
+                    <TextBox x:Name="EmailBox" PlaceholderText="you@example.com" Style="{StaticResource MdTextBox}" InputScope="EmailSmtpAddress" AutomationProperties.Name="Email" />
                 </StackPanel>
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
@@ -62,6 +62,7 @@
                     <CheckBox x:Name="Terms" Content="I agree to the" IsChecked="True" Style="{StaticResource MdCheckBox}" FontSize="13" Checked="OnTermsChanged" Unchecked="OnTermsChanged" />
                     <Button Content="Terms" Style="{StaticResource LinkButton}" FontSize="13" Margin="-6,0,0,0" />
                 </StackPanel>
+                <TextBlock x:Name="ErrorText" Style="{StaticResource Body}" Foreground="{StaticResource ErrorTextBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
                 <Button x:Name="CreateButton" Content="Create Account" Style="{StaticResource PrimaryButtonLarge}" HorizontalAlignment="Stretch" Click="OnCreate" />
                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                     <TextBlock Text="Have an account?" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" />

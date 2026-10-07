@@ -85,7 +85,7 @@
                 <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource FaintCard}">
                     <StackPanel>
                         <TextBlock Text="SIGN-IN" Style="{StaticResource Eyebrow}" Margin="0,0,0,6" />
-                        <c:SettingRow Label="Email" Description="[email]">
+                        <c:SettingRow x:Name="EmailRow" Label="Email" Description="[email]">
                             <Button Content="Change" Style="{StaticResource SmallGhostButton}" />
                         </c:SettingRow>
                         <c:SettingRow Label="Password" Description="Last changed [date]">

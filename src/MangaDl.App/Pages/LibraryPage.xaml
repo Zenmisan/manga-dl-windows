@@ -66,8 +66,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="LIBRARY" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                <c:SearchField Grid.Column="1" Width="320" Placeholder="Search library   Ctrl K" VerticalAlignment="Center" />
-                <Button Grid.Column="2" Content="Sort: Last read" Style="{StaticResource GhostButton}" />
+                <c:SearchField x:Name="SearchField" Grid.Column="1" Width="320" Placeholder="Search library   Ctrl K" VerticalAlignment="Center" Submitted="OnSearchSubmitted" />
+                <Button x:Name="SortButton" Grid.Column="2" Content="Sort: Last read" Style="{StaticResource GhostButton}" Click="OnSortClick" />
                 <Button Grid.Column="3" Content="Update Library" Style="{StaticResource PrimaryButton}" Click="OnUpdateLibrary" />
             </Grid>
 
@@ -84,11 +84,11 @@
 
             <!-- Categories -->
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <RadioButton Content="All · 42" GroupName="LibCategory" Style="{StaticResource ChipRadio}" IsChecked="True" />
-                <RadioButton Content="Reading" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
-                <RadioButton Content="Plan to read" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
-                <RadioButton Content="Completed" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
-                <RadioButton Content="Local files" GroupName="LibCategory" Style="{StaticResource ChipRadio}" />
+                <RadioButton x:Name="CategoryAll" Content="All" GroupName="LibCategory" Style="{StaticResource ChipRadio}" IsChecked="True" Checked="OnCategoryChecked" />
+                <RadioButton Content="Reading" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                <RadioButton Content="Plan to read" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                <RadioButton Content="Completed" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                <RadioButton Content="Local files" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
             </StackPanel>
 
             <!-- Covers: 7 across at 1440px, reflows with the window -->

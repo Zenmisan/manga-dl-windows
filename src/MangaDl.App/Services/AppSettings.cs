@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MangaDl.Services;
 
@@ -20,6 +21,16 @@ public sealed class AppSettings
     public string? BackendUrl { get; set; }
     public string? ApiKey { get; set; }
     public bool AutoCheckUpdates { get; set; } = true;
+
+    public string? SupabaseUrl { get; set; }
+    public string? SupabaseAnonKey { get; set; }
+    public string? UserEmail { get; set; }
+    public string? UserId { get; set; }
+
+    /// <summary>Mirrors the web app's `hasSupabase` check — when unset, auth pages fall
+    /// back to "local mode" (no account, straight into the app).</summary>
+    [JsonIgnore]
+    public bool HasSupabase => !string.IsNullOrWhiteSpace(SupabaseUrl) && !string.IsNullOrWhiteSpace(SupabaseAnonKey);
 
     public static AppSettings Load()
     {

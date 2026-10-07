@@ -6,7 +6,11 @@ namespace MangaDl.Pages.Settings;
 
 public sealed partial class AccountSettingsPage : Page
 {
-    public AccountSettingsPage() => InitializeComponent();
+    public AccountSettingsPage()
+    {
+        InitializeComponent();
+        Loaded += (_, _) => EmailRow.Description = AppServices.Settings.UserEmail ?? "Not signed in";
+    }
 
     private void OnViewProfile(object sender, RoutedEventArgs e) => Nav.Go(typeof(ProfilePage));
 
@@ -23,9 +27,18 @@ public sealed partial class AccountSettingsPage : Page
 
     private void OnCancelSignOut(object sender, RoutedEventArgs e) => SignOutConfirm.Visibility = Visibility.Collapsed;
 
-    private void OnConfirmSignOut(object sender, RoutedEventArgs e)
+    private async void OnConfirmSignOut(object sender, RoutedEventArgs e)
     {
+        var (accessToken, _) = CredentialStore.Load();
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            await AppServices.Auth.SignOutAsync(accessToken);
+        }
+        CredentialStore.Clear();
+
         AppServices.Settings.ApiKey = null;
+        AppServices.Settings.UserEmail = null;
+        AppServices.Settings.UserId = null;
         AppServices.Settings.Save();
         Nav.Go(typeof(LoginPage));
     }
