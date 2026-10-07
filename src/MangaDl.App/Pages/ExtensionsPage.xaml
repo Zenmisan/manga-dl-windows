@@ -28,7 +28,7 @@
                 <TextBlock Grid.Column="1" Text="{x:Bind Language}" FontSize="13" Foreground="{StaticResource FgSoftBrush}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="{x:Bind Version}" FontSize="13" Foreground="{StaticResource FgSoftBrush}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="3" Text="{x:Bind h:X.ExtStatus(State)}" FontSize="12" FontWeight="Bold" Foreground="{x:Bind h:X.ExtStatusColor(State)}" VerticalAlignment="Center" />
-                <Button Grid.Column="4" Content="{x:Bind h:X.ExtAction(State)}" Style="{x:Bind h:X.ExtActionStyle(State)}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <Button Grid.Column="4" Content="{x:Bind h:X.ExtAction(State)}" Style="{x:Bind h:X.ExtActionStyle(State)}" HorizontalAlignment="Right" VerticalAlignment="Center" Click="OnExtensionAction" />
             </Grid>
         </DataTemplate>
 
@@ -51,7 +51,7 @@
                 </StackPanel>
                 <Button Grid.Column="2" Content="Popular" Style="{StaticResource PillButton}" Click="OnOpenSource" />
                 <Button Grid.Column="3" Content="Latest" Style="{StaticResource PillButton}" Click="OnOpenSource" />
-                <Button Grid.Column="4" Style="{StaticResource IconButton}" Foreground="{StaticResource FgSubtleBrush}" AutomationProperties.Name="Pin source">
+                <Button Grid.Column="4" Style="{StaticResource IconButton}" Foreground="{StaticResource FgSubtleBrush}" Click="OnPinSource" AutomationProperties.Name="Pin source">
                     <c:MdIcon Kind="Pin" Size="18" />
                 </Button>
             </Grid>
@@ -124,8 +124,8 @@
                     <RadioButton Content="English" GroupName="ExtLang" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="14,0" IsChecked="True" />
                     <RadioButton Grid.Column="1" Content="All languages" GroupName="ExtLang" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="14,0" />
                     <ToggleButton Grid.Column="2" Content="Show 18+" Style="{StaticResource SmallChipToggle}" />
-                    <TextBlock Grid.Column="4" Text="Index: Keiyoushi · refreshed [time]" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <Button Grid.Column="5" Content="Update All · 2" Style="{StaticResource PrimaryButton}" Height="38" CornerRadius="10" />
+                    <TextBlock Grid.Column="4" Text="Index: Keiyoushi · refreshed just now" FontSize="13" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <Button Grid.Column="5" Content="Update All" Style="{StaticResource PrimaryButton}" Height="38" CornerRadius="10" Click="OnUpdateAll" />
                 </Grid>
                 <StackPanel>
                     <Grid Padding="12,8" ColumnSpacing="16">
