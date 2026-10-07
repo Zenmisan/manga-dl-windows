@@ -25,7 +25,7 @@
                         <TextBlock Text="{x:Bind When}" FontSize="12" Foreground="{StaticResource FgFaintBrush}" />
                     </StackPanel>
                     <Button Grid.Column="2" Style="{StaticResource IconButton}" Width="40" Height="40" Foreground="{StaticResource FgSubtleBrush}"
-                            VerticalAlignment="Center" AutomationProperties.Name="Remove from history">
+                            VerticalAlignment="Center" Click="OnDeleteItem" AutomationProperties.Name="Remove from history">
                         <c:MdIcon Kind="Close" Size="18" />
                     </Button>
                     <Button Grid.Column="3" Content="Resume" Style="{StaticResource PrimaryButton}" Height="40" CornerRadius="10" Padding="16,0"
@@ -44,15 +44,15 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="HISTORY" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                <c:SearchField Grid.Column="1" Width="300" Placeholder="Search history" VerticalAlignment="Center" />
-                <Button Grid.Column="2" Content="Clear History" Style="{StaticResource DangerButton}" VerticalAlignment="Center" />
+                <c:SearchField Grid.Column="1" Width="300" Placeholder="Search history" VerticalAlignment="Center" Submitted="OnSearchSubmitted" />
+                <Button Grid.Column="2" Content="Clear History" Style="{StaticResource DangerButton}" VerticalAlignment="Center" Click="OnClearHistory" />
             </Grid>
 
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <RadioButton Content="Today" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" />
-                <RadioButton Content="This week" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" IsChecked="True" />
-                <RadioButton Content="This month" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" />
-                <RadioButton Content="All time" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" />
+                <RadioButton Content="Today" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" Checked="OnRangeChecked" />
+                <RadioButton Content="This week" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" IsChecked="True" Checked="OnRangeChecked" />
+                <RadioButton Content="This month" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" Checked="OnRangeChecked" />
+                <RadioButton Content="All time" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" Checked="OnRangeChecked" />
             </StackPanel>
 
             <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource HistoryCard}">
