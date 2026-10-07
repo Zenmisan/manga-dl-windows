@@ -96,6 +96,68 @@ public sealed partial class BrowseSourcePage : Page
         if (FindName((string)((FrameworkElement)sender).Tag) is UIElement chip) chip.Visibility = Visibility.Collapsed;
     }
 
+    private void OnOpenBrowser(object sender, RoutedEventArgs e)
+    {
+        Nav.Toast($"Opening {_sourceName} in browser");
+        try
+        {
+            var url = _sourceId switch
+            {
+                "mangadex" => "https://mangadex.org",
+                "mangakakalot" => "https://mangakakalot.com",
+                "mangakatana" => "https://mangakatana.com",
+                _ => $"https://www.google.com/search?q={Uri.EscapeDataString(_sourceName)}"
+            };
+            _ = Windows.System.Launcher.LaunchUriAsync(new Uri(url));
+        }
+        catch {}
+    }
+
+    private void OnOpenFilters(object sender, RoutedEventArgs e) =>
+        Nav.Toast($"Filter settings for {_sourceName}");
+
+    private async void OnTabChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton rb && rb.Content is string label)
+        {
+            if (label == "Latest")
+            {
+                await LoadLatestAsync();
+            }
+            else
+            {
+                await LoadPopularAsync();
+            }
+        }
+    }
+
+    private async Task LoadLatestAsync()
+    {
+        try
+        {
+            var results = await AppServices.Extensions.GetPopularAsync(_sourceId, 1);
+            if (results.Count > 0)
+            {
+                Items.Clear();
+                foreach (var r in results.Reverse())
+                {
+                    Items.Add(new Manga(
+                        r.Id,
+                        r.Title,
+                        r.CoverUrl ?? "#1A2433",
+                        0,
+                        false,
+                        false,
+                        _sourceName));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("BrowseSourcePage.LoadLatestAsync", ex);
+        }
+    }
+
     private void OnOpenManga(object sender, RoutedEventArgs e) =>
         Nav.Go(typeof(MangaDetailPage), ((FrameworkElement)sender).DataContext as Manga);
 
