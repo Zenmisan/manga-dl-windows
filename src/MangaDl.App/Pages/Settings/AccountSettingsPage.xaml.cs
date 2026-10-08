@@ -29,11 +29,33 @@ public sealed partial class AccountSettingsPage : Page
 
             DisplayNameBox.Text = AppServices.Settings.DisplayName ?? "";
             BioBox.Text = AppServices.Settings.Bio ?? "";
+            AvatarUrlBox.Text = AppServices.Settings.AvatarUrl ?? "";
             BackendUrlBox.Text = AppServices.Settings.BackendUrl ?? "";
         };
     }
 
     private void OnViewProfile(object sender, RoutedEventArgs e) => Nav.Go(typeof(ProfilePage));
+
+    private void OnAvatarUrlChanged(object sender, TextChangedEventArgs e)
+    {
+        var url = AvatarUrlBox.Text.Trim();
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
+        {
+            try
+            {
+                AvatarPreview.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(uri);
+            }
+            catch (Exception ex)
+            {
+                AppLog.Warn("AccountSettingsPage.OnAvatarUrlChanged", ex);
+                AvatarPreview.Source = null;
+            }
+        }
+        else
+        {
+            AvatarPreview.Source = null;
+        }
+    }
 
     private async void OnSave(object sender, RoutedEventArgs e)
     {
@@ -42,6 +64,7 @@ public sealed partial class AccountSettingsPage : Page
         // native-app architecture). Backend sync below is a best-effort bonus.
         AppServices.Settings.DisplayName = DisplayNameBox.Text.Trim();
         AppServices.Settings.Bio = BioBox.Text.Trim();
+        AppServices.Settings.AvatarUrl = AvatarUrlBox.Text.Trim();
         AppServices.Settings.BackendUrl = BackendUrlBox.Text.Trim();
         AppServices.Settings.Save();
         AppServices.Http.BackendUrl = AppServices.Settings.BackendUrl ?? string.Empty;
@@ -64,7 +87,8 @@ public sealed partial class AccountSettingsPage : Page
             var body = JsonSerializer.Serialize(new
             {
                 display_name = AppServices.Settings.DisplayName,
-                bio = AppServices.Settings.Bio
+                bio = AppServices.Settings.Bio,
+                avatar_url = AppServices.Settings.AvatarUrl
             });
             var headers = new Dictionary<string, string>
             {

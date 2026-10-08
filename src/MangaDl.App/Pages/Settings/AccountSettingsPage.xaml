@@ -54,6 +54,19 @@
                             <TextBlock Text="Bio" Style="{StaticResource FieldLabel}" />
                             <TextBox x:Name="BioBox" Style="{StaticResource MdTextBox}" PlaceholderText="A short line about what you like to read" AcceptsReturn="True" TextWrapping="Wrap" Height="96" AutomationProperties.Name="Bio" />
                         </StackPanel>
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Avatar URL" Style="{StaticResource FieldLabel}" />
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="40" Height="40" CornerRadius="20" Background="{StaticResource SurfaceRaisedBrush}">
+                                    <Image x:Name="AvatarPreview" Stretch="UniformToFill" />
+                                </Border>
+                                <TextBox Grid.Column="1" x:Name="AvatarUrlBox" Style="{StaticResource MdTextBox}" PlaceholderText="https://example.com/avatar.png" AutomationProperties.Name="Avatar URL" TextChanged="OnAvatarUrlChanged" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
                         <c:SettingRow Label="Show reading activity" Description="Let others see what you're reading and your stats.">
                             <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
                         </c:SettingRow>
