@@ -47,12 +47,13 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="UPDATES" Style="{StaticResource PageTitle}" />
-                    <TextBlock Text="Last checked [time] · background sync every 30 min" Style="{StaticResource Caption}" FontSize="13" Margin="0,4,0,0" />
+                    <TextBlock x:Name="LastCheckedText" Text="Last checked [time] · background sync every 30 min" Style="{StaticResource Caption}" FontSize="13" Margin="0,4,0,0" />
                 </StackPanel>
                 <Button Grid.Column="1" Content="Download All New" Style="{StaticResource GhostButton}" VerticalAlignment="Center" Click="OnDownloadAllNew" />
-                <Button Grid.Column="2" Content="Check Now" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Click="OnCheck" />
+                <Button x:Name="CheckButton" Grid.Column="2" Content="Check Now" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Click="OnCheck" />
             </Grid>
-            <ItemsRepeater ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource UpdateGroupTemplate}" />
+            <TextBlock x:Name="EmptyStateText" Text="No new updates. Your library is up to date." Foreground="{StaticResource FgSoftBrush}" FontSize="14" Visibility="Collapsed" Margin="0,20,0,0" />
+            <ItemsRepeater x:Name="GroupsRepeater" ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource UpdateGroupTemplate}" />
         </StackPanel>
     </ScrollViewer>
 </Page>

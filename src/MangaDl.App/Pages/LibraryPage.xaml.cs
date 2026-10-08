@@ -168,8 +168,28 @@ public sealed partial class LibraryPage : Page
 
     private async void OnUpdateLibrary(object sender, RoutedEventArgs e)
     {
-        Nav.Toast($"Checking {_allManga.Count} manga for new chapters...");
-        await Task.Delay(500);
-        Nav.Toast("Library is up to date");
+        Nav.Toast("Checking library for new chapters...");
+        try
+        {
+            var result = await AppServices.UpdateChecker.CheckUpdatesAsync(
+                autoDownload: AppServices.Settings.AutoDownloadNew);
+
+            AppServices.Settings.LastUpdateCheck = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            AppServices.Settings.Save();
+
+            if (result.NewChaptersFound > 0)
+            {
+                Nav.Toast($"Found {result.NewChaptersFound} new chapters across {result.TotalChecked} titles!");
+            }
+            else
+            {
+                Nav.Toast("Library is up to date");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("LibraryPage.OnUpdateLibrary", ex);
+            Nav.Toast("Couldn't update library");
+        }
     }
 }
