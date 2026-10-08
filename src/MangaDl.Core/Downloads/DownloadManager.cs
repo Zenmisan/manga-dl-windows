@@ -140,6 +140,12 @@ public sealed class DownloadManager : IDisposable
         await _db.UpdateDownloadProgressAsync(item.Id, 0, 0, "downloading");
         DownloadProgressChanged?.Invoke(item);
 
+        if (_extensions.IsNovel(item.Provider))
+        {
+            await ExecuteNovelDownloadAsync(item, ct);
+            return;
+        }
+
         // 1. Fetch page image URLs
         var pageUrls = await _extensions.GetPagesAsync(item.Provider, item.ChapterId);
         if (pageUrls.Count == 0)
@@ -187,6 +193,44 @@ public sealed class DownloadManager : IDisposable
         item.Status = "completed";
         item.Progress = 100;
         await _db.UpdateDownloadProgressAsync(item.Id, 100, item.TotalPages, "completed");
+
+        DownloadCompleted?.Invoke(item);
+    }
+
+    /// <summary>Novels have no page images — one chapter's text becomes one EPUB,
+    /// matching web's buildNovelEpub exactly (same file layout, one EPUB per
+    /// chapter). Before this, EnqueueChapterAsync had no novel branch at all and
+    /// would hit the manga path above, which fails outright on a novel chapter
+    /// (GetPagesAsync returns nothing for a text-only source).</summary>
+    private async Task ExecuteNovelDownloadAsync(DownloadEntity item, CancellationToken ct)
+    {
+        var text = await _extensions.GetChapterTextAsync(item.Provider, item.ChapterId);
+        if (text == null || string.IsNullOrWhiteSpace(text.Content))
+        {
+            throw new InvalidOperationException($"No chapter text returned for chapter {item.ChapterId}");
+        }
+
+        item.TotalPages = 1;
+        await _db.UpdateDownloadProgressAsync(item.Id, 50, 1, "downloading");
+        DownloadProgressChanged?.Invoke(item);
+
+        var safeManga = FileNaming.SanitizeFileName(item.MangaTitle);
+        var safeChapter = FileNaming.SanitizeFileName(item.ChapterTitle ?? $"Ch_{item.ChapterNumber}");
+        var mangaFolder = Path.Combine(_baseDownloadDirectory, safeManga);
+        var epubPath = Path.Combine(mangaFolder, $"{safeChapter}.epub");
+
+        await NovelEpubBuilder.BuildEpubAsync(
+            epubPath,
+            item.MangaTitle,
+            item.ChapterTitle ?? $"Chapter {item.ChapterNumber}",
+            text.Content,
+            text.Format,
+            ct);
+
+        item.CbzPath = epubPath; // generic file pointer, same reuse as LocalImportService's novel chapters
+        item.Status = "completed";
+        item.Progress = 100;
+        await _db.UpdateDownloadProgressAsync(item.Id, 100, 1, "completed");
 
         DownloadCompleted?.Invoke(item);
     }
