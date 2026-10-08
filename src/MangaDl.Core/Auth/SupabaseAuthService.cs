@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using MangaDl.Core.Http;
 
@@ -30,16 +32,47 @@ public sealed class SupabaseAuthService
         return ParseSession(result) ?? throw new AuthException("Something went wrong. Try again.");
     }
 
-    /// <summary>Exchanges a Google id_token (from GoogleAuthService's loopback flow) for a
-    /// Supabase session. Supabase verifies the token's audience against whatever Client IDs
-    /// are configured under Authentication &gt; Providers &gt; Google &gt; Authorized Client IDs —
-    /// the Desktop client's id_token won't be accepted until it's added there.</summary>
-    public async Task<AuthSession> SignInWithGoogleIdTokenAsync(string idToken)
+    // ----------------------------------------------------
+    // OAuth providers (Google, etc) — hosted flow
+    // ----------------------------------------------------
+    // Supabase's own /auth/v1/authorize endpoint does the whole provider exchange
+    // server-side, using whatever client id/secret is already configured under
+    // Authentication > Providers in the Supabase dashboard (the same one the web
+    // app's "Continue with Google" button relies on). Windows never needs its own
+    // Google OAuth client or secret — it only needs to capture the redirect (via
+    // the loopback listener, same as the AniList/MAL tracker flows) and hand the
+    // resulting code back to Supabase. This is exactly what supabase-js's
+    // signInWithOAuth() + exchangeCodeForSession() do under the hood.
+
+    public static (string Verifier, string Challenge) GeneratePkceS256()
     {
-        var body = JsonSerializer.Serialize(new { provider = "google", id_token = idToken });
-        var result = await PostAsync("/auth/v1/token?grant_type=id_token", body, null);
-        return ParseSession(result) ?? throw new AuthException("Google sign-in didn't return a session.");
+        var bytes = new byte[64];
+        RandomNumberGenerator.Fill(bytes);
+        var verifier = Base64UrlEncode(bytes);
+        var challenge = Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
+        return (verifier, challenge);
     }
+
+    /// <summary>Builds the URL to open in the system browser. <paramref name="redirectUri"/>
+    /// should point at the loopback listener (e.g. http://localhost:5678/google-callback).</summary>
+    public string GetOAuthAuthorizeUrl(string provider, string redirectUri, string codeChallenge)
+    {
+        return $"{_url}/auth/v1/authorize?provider={Uri.EscapeDataString(provider)}" +
+               $"&redirect_to={Uri.EscapeDataString(redirectUri)}" +
+               $"&code_challenge={Uri.EscapeDataString(codeChallenge)}" +
+               "&code_challenge_method=S256";
+    }
+
+    /// <summary>Exchanges the code the loopback listener captured for a Supabase session.</summary>
+    public async Task<AuthSession> ExchangeOAuthCodeAsync(string code, string codeVerifier)
+    {
+        var body = JsonSerializer.Serialize(new { auth_code = code, code_verifier = codeVerifier });
+        var result = await PostAsync("/auth/v1/token?grant_type=pkce", body, null);
+        return ParseSession(result) ?? throw new AuthException("Sign-in didn't return a session.");
+    }
+
+    private static string Base64UrlEncode(byte[] data) =>
+        Convert.ToBase64String(data).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
     public async Task<AuthSignUpResult> SignUpAsync(string username, string email, string password)
     {

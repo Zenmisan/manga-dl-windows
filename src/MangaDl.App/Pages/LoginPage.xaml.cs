@@ -72,23 +72,14 @@ public sealed partial class LoginPage : Page
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(AppServices.Settings.GoogleClientSecret))
-        {
-            ShowError("Google sign-in isn't configured on this machine (missing client secret).");
-            return;
-        }
-
         _googleAuthorizing = true;
         ErrorText.Visibility = Visibility.Collapsed;
         GoogleButton.IsEnabled = false;
         try
         {
             Nav.Toast("Opening browser for Google sign-in...");
-            var (verifier, challenge) = GoogleAuthService.GeneratePkceS256();
-            var authUrl = GoogleAuthService.GetAuthUrl(
-                AppServices.Settings.GoogleClientId,
-                AppServices.Settings.GoogleRedirectUri,
-                challenge);
+            var (verifier, challenge) = SupabaseAuthService.GeneratePkceS256();
+            var authUrl = AppServices.Auth.GetOAuthAuthorizeUrl("google", AppServices.Settings.GoogleRedirectUri, challenge);
 
             var listenTask = AppServices.Loopback.WaitForAuthCodeAsync(TimeSpan.FromSeconds(120));
             await Windows.System.Launcher.LaunchUriAsync(new Uri(authUrl));
@@ -100,15 +91,7 @@ public sealed partial class LoginPage : Page
                 return;
             }
 
-            var idToken = await AppServices.GoogleAuth.ExchangeCodeForIdTokenAsync(
-                code, verifier, AppServices.Settings.GoogleClientId, AppServices.Settings.GoogleClientSecret, AppServices.Settings.GoogleRedirectUri);
-            if (string.IsNullOrEmpty(idToken))
-            {
-                ShowError("Google didn't return a valid token.");
-                return;
-            }
-
-            var session = await AppServices.Auth.SignInWithGoogleIdTokenAsync(idToken);
+            var session = await AppServices.Auth.ExchangeOAuthCodeAsync(code, verifier);
             CredentialStore.Save(session.AccessToken, session.RefreshToken);
             AppServices.Settings.UserEmail = session.Email;
             AppServices.Settings.UserId = session.UserId;
