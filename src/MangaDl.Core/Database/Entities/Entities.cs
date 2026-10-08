@@ -161,3 +161,32 @@ public sealed class HistoryEntity
     [Column("read_at")]
     public long ReadAt { get; set; }
 }
+
+[Table("tracker_binds")]
+public sealed class TrackerBindEntity
+{
+    [PrimaryKey]
+    [Column("id")]
+    public string Id { get; set; } = string.Empty; // "{provider}/{manga_id}/{tracker}"
+
+    [Column("provider")]
+    public string Provider { get; set; } = string.Empty;
+
+    [Column("manga_id")]
+    public string MangaId { get; set; } = string.Empty;
+
+    [Column("tracker")]
+    public string Tracker { get; set; } = string.Empty; // "AniList" | "MyAnimeList"
+
+    [Column("remote_id")]
+    public int RemoteId { get; set; }
+
+    [Column("remote_title")]
+    public string? RemoteTitle { get; set; }
+
+    [Column("last_chapter_read")]
+    public double LastChapterRead { get; set; }
+
+    [Column("updated_at")]
+    public long UpdatedAt { get; set; }
+}

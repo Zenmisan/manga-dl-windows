@@ -35,6 +35,7 @@ public sealed class MangaDatabase : IAsyncDisposable
             await _db.CreateTableAsync<CategoryEntity>();
             await _db.CreateTableAsync<LibraryCategoryEntity>();
             await _db.CreateTableAsync<HistoryEntity>();
+            await _db.CreateTableAsync<TrackerBindEntity>();
 
             // Ensure default categories exist
             var count = await _db.Table<CategoryEntity>().CountAsync();
