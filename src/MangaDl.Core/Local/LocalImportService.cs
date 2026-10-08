@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text;
 using MangaDl.Core.Database;
 using MangaDl.Core.Database.Entities;
 using MangaDl.Core.Downloads;
@@ -47,12 +48,14 @@ public sealed class LocalImportService
         var ext = Path.GetExtension(sourcePath);
         var name = Path.GetFileName(sourcePath);
 
+        if (ext.Equals(".epub", StringComparison.OrdinalIgnoreCase))
+        {
+            return await ImportEpubAsync(sourcePath, target);
+        }
+
         if (!ArchiveExtensions.Contains(ext))
         {
-            return new LocalImportResult(name, ext.TrimStart('.').ToUpperInvariant(), LocalImportStatus.Unsupported,
-                ext.Equals(".epub", StringComparison.OrdinalIgnoreCase)
-                    ? "EPUB import isn't supported yet"
-                    : "Unsupported format");
+            return new LocalImportResult(name, ext.TrimStart('.').ToUpperInvariant(), LocalImportStatus.Unsupported, "Unsupported format");
         }
 
         var chapterLabel = Path.GetFileNameWithoutExtension(sourcePath);
@@ -157,6 +160,71 @@ public sealed class LocalImportService
         catch (Exception ex)
         {
             return new LocalImportResult(displayName, "DIR", LocalImportStatus.Error, ex.Message);
+        }
+    }
+
+    /// <summary>EPUB chapters have no page images to zip into a CBZ — each chapter's
+    /// XHTML is written to its own file under the series folder instead, and the
+    /// existing DownloadEntity.CbzPath column (despite the name) just points at that
+    /// text file. NovelReaderPage reads it back the same way it reads any other
+    /// extension-provided chapter, just from disk instead of over the network.</summary>
+    private async Task<LocalImportResult> ImportEpubAsync(string sourcePath, LibraryEntity? target)
+    {
+        var displayName = Path.GetFileName(sourcePath);
+        try
+        {
+            var bytes = await File.ReadAllBytesAsync(sourcePath);
+            var book = EpubParser.Parse(bytes);
+            if (book.Chapters.Count == 0)
+            {
+                return new LocalImportResult(displayName, "EPUB", LocalImportStatus.Error, "No chapters found inside");
+            }
+
+            var provider = target?.Provider ?? Provider;
+            var seriesTitle = target?.Title ?? (string.IsNullOrWhiteSpace(book.Title) ? Path.GetFileNameWithoutExtension(sourcePath) : book.Title);
+            var mangaId = target?.MangaId ?? FileNaming.Slugify(seriesTitle);
+
+            var destDir = Path.Combine(_libraryRoot, FileNaming.SanitizeFileName(seriesTitle), "chapters");
+            Directory.CreateDirectory(destDir);
+
+            if (target is null)
+            {
+                await _db.AddToLibraryAsync(new LibraryEntity
+                {
+                    Provider = provider,
+                    MangaId = mangaId,
+                    Title = seriesTitle,
+                    Type = "novel"
+                });
+            }
+
+            for (var i = 0; i < book.Chapters.Count; i++)
+            {
+                var chapter = book.Chapters[i];
+                var chapterId = $"{i + 1:D4}";
+                var chapterPath = Path.Combine(destDir, $"{chapterId}.html");
+                await File.WriteAllTextAsync(chapterPath, chapter.Html, Encoding.UTF8);
+
+                await _db.EnqueueDownloadAsync(new DownloadEntity
+                {
+                    Provider = provider,
+                    MangaId = mangaId,
+                    MangaTitle = seriesTitle,
+                    ChapterId = chapterId,
+                    ChapterTitle = chapter.Title,
+                    ChapterNumber = i + 1,
+                    CbzPath = chapterPath,
+                    Status = "completed",
+                    Progress = 100,
+                    CompletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                });
+            }
+
+            return new LocalImportResult(displayName, "EPUB", LocalImportStatus.Done, $"Imported {book.Chapters.Count} chapters");
+        }
+        catch (Exception ex)
+        {
+            return new LocalImportResult(displayName, "EPUB", LocalImportStatus.Error, ex.Message);
         }
     }
 
