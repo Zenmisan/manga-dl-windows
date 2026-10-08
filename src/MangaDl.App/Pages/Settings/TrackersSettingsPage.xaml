@@ -34,7 +34,7 @@
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind Name}" FontSize="16" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" />
-                                        <TextBlock Text="{x:Bind h:X.TrackerState(Connected)}" FontSize="12" FontWeight="SemiBold" Foreground="{x:Bind h:X.TrackerStateColor(Connected)}" />
+                                        <TextBlock Text="{x:Bind h:X.TrackerState(Connected, Username)}" FontSize="12" FontWeight="SemiBold" Foreground="{x:Bind h:X.TrackerStateColor(Connected)}" />
                                     </StackPanel>
                                 </StackPanel>
                                 <TextBlock Grid.Row="1" Text="{x:Bind Description}" Style="{StaticResource BodyMuted}" FontSize="13" TextWrapping="Wrap" />
@@ -49,16 +49,16 @@
                 <StackPanel>
                     <TextBlock Text="SYNC" Style="{StaticResource Eyebrow}" Margin="0,0,0,6" />
                     <c:SettingRow Label="Update progress after reading" Description="Send the chapter number when you finish a chapter.">
-                        <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                        <ToggleButton x:Name="AutoSyncSwitch" Style="{StaticResource MdSwitch}" Click="OnSyncToggleClicked" />
                     </c:SettingRow>
                     <c:SettingRow Label="Mark as reading on first chapter">
-                        <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                        <ToggleButton x:Name="MarkReadingSwitch" Style="{StaticResource MdSwitch}" Click="OnSyncToggleClicked" />
                     </c:SettingRow>
                     <c:SettingRow Label="Mark as completed on last chapter">
-                        <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                        <ToggleButton x:Name="MarkCompletedSwitch" Style="{StaticResource MdSwitch}" Click="OnSyncToggleClicked" />
                     </c:SettingRow>
                     <c:SettingRow Label="Pull progress from trackers" Description="Mark chapters read here when a tracker is ahead." ShowDivider="False">
-                        <ToggleButton Style="{StaticResource MdSwitch}" />
+                        <ToggleButton x:Name="PullProgressSwitch" Style="{StaticResource MdSwitch}" Click="OnSyncToggleClicked" />
                     </c:SettingRow>
                 </StackPanel>
             </Border>

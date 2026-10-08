@@ -59,6 +59,35 @@ public static class AppServices
     public static TrackerService Trackers { get; } = new(Http);
     public static OAuthLoopbackListener Loopback { get; } = new(5678);
 
+    public static async Task SyncTrackerProgressAsync(
+        string provider,
+        string mangaId,
+        string mangaTitle,
+        double chapterNumber,
+        bool isCompleted)
+    {
+        if (!Settings.AutoSyncTrackers) return;
+        if (!Settings.AnilistConnected && !Settings.MalConnected) return;
+
+        try
+        {
+            await Trackers.SyncChapterProgressAsync(
+                Database,
+                provider,
+                mangaId,
+                mangaTitle,
+                chapterNumber,
+                isCompleted,
+                trackerKey => CredentialStore.LoadTrackerToken(trackerKey),
+                Settings.AutoSyncTrackers,
+                Settings.MarkTrackerReadingOnFirstChapter);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("AppServices.SyncTrackerProgressAsync", ex);
+        }
+    }
+
     public static async Task InitializeAsync()
     {
         // 1. Initialize SQLite tables
