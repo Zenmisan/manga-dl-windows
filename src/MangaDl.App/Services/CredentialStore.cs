@@ -53,4 +53,33 @@ public static class CredentialStore
             catch { /* not present */ }
         }
     }
+
+    public static void SaveTrackerToken(string trackerKey, string token)
+    {
+        var vault = new PasswordVault();
+        ClearTrackerToken(trackerKey);
+        vault.Add(new PasswordCredential(Resource, trackerKey, token));
+    }
+
+    public static string? LoadTrackerToken(string trackerKey)
+    {
+        var vault = new PasswordVault();
+        try
+        {
+            var cred = vault.Retrieve(Resource, trackerKey);
+            cred.RetrievePassword();
+            return cred.Password;
+        }
+        catch { return null; }
+    }
+
+    public static void ClearTrackerToken(string trackerKey)
+    {
+        var vault = new PasswordVault();
+        try
+        {
+            vault.Remove(vault.Retrieve(Resource, trackerKey));
+        }
+        catch { /* not present */ }
+    }
 }

@@ -29,7 +29,7 @@ public sealed partial class DownloadsPage : Page
     {
         try
         {
-            var dir = AppServices.Settings.DownloadDirectory;
+            var dir = AppServices.Settings.DownloadPath;
             FolderText.Text = string.IsNullOrEmpty(dir) ? "~/manga-library" : dir;
 
             var records = await AppServices.Database.GetDownloadsAsync();

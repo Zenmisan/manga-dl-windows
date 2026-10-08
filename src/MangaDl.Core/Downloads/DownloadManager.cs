@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using MangaDl.Core.Database;
 using MangaDl.Core.Database.Entities;
 using MangaDl.Core.Extensions;
 using MangaDl.Core.Http;
+using MangaDl.Core.Local;
 
 namespace MangaDl.Core.Downloads;
 
@@ -169,8 +169,8 @@ public sealed class DownloadManager : IDisposable
         }
 
         // 3. Assemble CBZ archive
-        var safeManga = SanitizeFileName(item.MangaTitle);
-        var safeChapter = SanitizeFileName(item.ChapterTitle ?? $"Ch_{item.ChapterNumber}");
+        var safeManga = FileNaming.SanitizeFileName(item.MangaTitle);
+        var safeChapter = FileNaming.SanitizeFileName(item.ChapterTitle ?? $"Ch_{item.ChapterNumber}");
         var mangaFolder = Path.Combine(_baseDownloadDirectory, safeManga);
         var cbzPath = Path.Combine(mangaFolder, $"{safeChapter}.cbz");
 
@@ -189,14 +189,6 @@ public sealed class DownloadManager : IDisposable
         await _db.UpdateDownloadProgressAsync(item.Id, 100, item.TotalPages, "completed");
 
         DownloadCompleted?.Invoke(item);
-    }
-
-    private static string SanitizeFileName(string name)
-    {
-        var invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-        var regex = new Regex($"[{Regex.Escape(invalid)}]");
-        var clean = regex.Replace(name, "_").Trim();
-        return string.IsNullOrEmpty(clean) ? "untitled" : clean;
     }
 
     public void Dispose()

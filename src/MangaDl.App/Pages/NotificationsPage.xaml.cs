@@ -42,7 +42,7 @@ public sealed partial class NotificationsPage : Page
             }
             else if (notice.Action == "Open Folder")
             {
-                Nav.Toast($"Opened: {AppServices.Settings.DownloadFolder}");
+                Nav.Toast($"Opened: {AppServices.Settings.DownloadPath}");
             }
             else if (notice.Action == "View")
             {

@@ -30,6 +30,25 @@ public sealed class AppSettings
     public string? UserEmail { get; set; }
     public string? UserId { get; set; }
 
+    // AniList Tracker Settings
+    public string AnilistClientId { get; set; } = "53109";
+    public string AnilistClientSecret { get; set; } = "7xKnM4QU77qtWWLXOw3V0rx1mvLnmriX9ZcI3Cki";
+    public string AnilistRedirectUri { get; set; } = "http://localhost:5678/mal-callback";
+    public string? AnilistUsername { get; set; }
+    public bool AnilistConnected { get; set; }
+
+    // MyAnimeList Tracker Settings
+    public string MalClientId { get; set; } = "4ee644500f513dd7887120b026b65f39";
+    public string MalRedirectUri { get; set; } = "http://localhost:5678/mal-callback";
+    public string? MalUsername { get; set; }
+    public bool MalConnected { get; set; }
+
+    // Tracker Sync Options
+    public bool AutoSyncTrackers { get; set; } = true;
+    public bool MarkTrackerCompletedOnFinish { get; set; } = true;
+    public bool MarkTrackerReadingOnFirstChapter { get; set; } = true;
+    public bool PullProgressFromTrackers { get; set; } = false;
+
     /// <summary>Mirrors the web app's `hasSupabase` check — when unset, auth pages fall
     /// back to "local mode" (no account, straight into the app).</summary>
     [JsonIgnore]

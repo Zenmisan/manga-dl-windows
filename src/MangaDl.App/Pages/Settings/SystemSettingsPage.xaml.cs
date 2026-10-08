@@ -13,14 +13,14 @@ public sealed partial class SystemSettingsPage : Page
         {
             if (DownloadLocationRow != null)
             {
-                DownloadLocationRow.Description = AppServices.Settings.DownloadFolder;
+                DownloadLocationRow.Description = AppServices.Settings.DownloadPath;
             }
         };
     }
 
     private void OnChangeLocation(object sender, RoutedEventArgs e)
     {
-        Nav.Toast($"Current download location: {AppServices.Settings.DownloadFolder}");
+        Nav.Toast($"Current download location: {AppServices.Settings.DownloadPath}");
     }
 
     private void OnClearCache(object sender, RoutedEventArgs e) => Nav.Toast("Image cache cleared");

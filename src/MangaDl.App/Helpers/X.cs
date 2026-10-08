@@ -136,7 +136,8 @@ public static class X
     };
 
     // Trackers
-    public static string TrackerState(bool connected) => connected ? "Signed in as [username]" : "Not connected";
+    public static string TrackerState(bool connected, string? username = null) =>
+        connected ? (!string.IsNullOrEmpty(username) ? $"Signed in as @{username}" : "Connected") : "Not connected";
     public static Brush TrackerStateColor(bool connected) => connected ? Res("SuccessTextBrush") : Res("FgSubtleBrush");
     public static Brush TrackerBorder(bool connected) => connected ? Res("SuccessLineBrush") : Res("DividerStrongBrush");
     public static string TrackerAction(bool connected) => connected ? "Log Out" : "Connect";

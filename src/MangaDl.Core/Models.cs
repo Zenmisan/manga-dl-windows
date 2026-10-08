@@ -50,7 +50,7 @@ public enum ExtensionState { UpdateAvailable, Installed, Available, Broken }
 
 public sealed record Extension(string Name, string Initial, string Color, string Language, string Version, ExtensionState State);
 
-public sealed record Tracker(string Name, string Short, string Color, string Description, bool Connected = false);
+public sealed record Tracker(string Name, string Short, string Color, string Description, bool Connected = false, string? Username = null);
 
 public sealed record ImportFile(string Name, string Ext, string Status, double Progress, string Kind);
 

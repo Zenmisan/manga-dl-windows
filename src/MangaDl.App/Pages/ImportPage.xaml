@@ -69,8 +69,8 @@
                 <Border Style="{StaticResource ListCard}" Background="{StaticResource Surface4Brush}" Padding="20" CornerRadius="16">
                     <StackPanel Spacing="4">
                         <TextBlock Text="IMPORT INTO" Style="{StaticResource Eyebrow}" Margin="0,0,0,8" />
-                        <RadioButton Content="New series per folder" GroupName="ImportDest" IsChecked="True" FontSize="14" />
-                        <RadioButton Content="Add to existing series" GroupName="ImportDest" FontSize="14" />
+                        <RadioButton x:Name="NewSeriesOption" Content="New series per folder" GroupName="ImportDest" IsChecked="True" FontSize="14" />
+                        <RadioButton x:Name="ExistingSeriesOption" Content="Add to existing series" GroupName="ImportDest" FontSize="14" />
                         <CheckBox Content="Read ComicInfo.xml" IsChecked="True" Style="{StaticResource MdCheckBox}" />
                     </StackPanel>
                 </Border>

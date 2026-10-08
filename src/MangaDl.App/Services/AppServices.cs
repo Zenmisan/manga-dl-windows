@@ -3,7 +3,9 @@ using MangaDl.Core.Database;
 using MangaDl.Core.Downloads;
 using MangaDl.Core.Extensions;
 using MangaDl.Core.Http;
+using MangaDl.Core.Local;
 using MangaDl.Core.Sync;
+using MangaDl.Core.Tracking;
 
 namespace MangaDl.Services;
 
@@ -39,6 +41,10 @@ public static class AppServices
         Settings.SupabaseUrl ?? AppSettings.DefaultSupabaseUrl,
         Settings.SupabaseAnonKey ?? AppSettings.DefaultSupabaseAnonKey);
 
+    public static LocalImportService LocalImport { get; } = new(
+        Database,
+        Settings.DownloadPath);
+
     public static SupabaseSyncService Sync { get; } = new(
         Http,
         Database,
@@ -49,6 +55,9 @@ public static class AppServices
             var (accessToken, _) = CredentialStore.Load();
             return (Settings.UserId, accessToken);
         });
+
+    public static TrackerService Trackers { get; } = new(Http);
+    public static OAuthLoopbackListener Loopback { get; } = new(5678);
 
     public static async Task InitializeAsync()
     {
