@@ -57,3 +57,15 @@ public sealed record ImportFile(string Name, string Ext, string Status, double P
 public sealed record SearchGroup(string Source, string Meta, IReadOnlyList<Manga> Results);
 
 public sealed record Bar(string Name, double Fraction);
+
+public sealed record ReaderNavigationArgs(
+    Manga Manga,
+    string? ChapterId = null,
+    string? ChapterTitle = null,
+    double ChapterNumber = 1.0,
+    int StartPage = 1);
+
+public sealed record MangaPageInfo(
+    int PageNumber,
+    string? ImageUrl = null,
+    byte[]? ImageBytes = null);

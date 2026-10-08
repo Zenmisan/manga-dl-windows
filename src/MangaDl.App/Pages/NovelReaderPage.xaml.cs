@@ -30,7 +30,14 @@ public sealed partial class NovelReaderPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is Manga novel)
+        if (e.Parameter is ReaderNavigationArgs args)
+        {
+            _currentNovel = args.Manga;
+            NovelTitleText.Text = args.Manga.Title;
+            Nav.SetTitle($"{args.Manga.Title}");
+            await LoadNovelChaptersAsync(args.ChapterId);
+        }
+        else if (e.Parameter is Manga novel)
         {
             _currentNovel = novel;
             NovelTitleText.Text = novel.Title;
@@ -39,7 +46,7 @@ public sealed partial class NovelReaderPage : Page
         }
     }
 
-    private async Task LoadNovelChaptersAsync()
+    private async Task LoadNovelChaptersAsync(string? targetChapterId = null)
     {
         if (_currentNovel == null) return;
         try
@@ -61,7 +68,8 @@ public sealed partial class NovelReaderPage : Page
                     {
                         Chapters.Add(new NovelChapter(local[i].ChapterId, local[i].ChapterTitle ?? $"Chapter {i + 1}", i == 0, false, local[i].ChapterNumber.ToString()));
                     }
-                    await LoadChapterTextAsync(Chapters[0]);
+                    var target = (!string.IsNullOrEmpty(targetChapterId) ? Chapters.FirstOrDefault(c => c.Id == targetChapterId || c.Number == targetChapterId) : null) ?? Chapters[0];
+                    await LoadChapterTextAsync(target);
                 }
                 return;
             }
@@ -78,7 +86,8 @@ public sealed partial class NovelReaderPage : Page
 
                 if (Chapters.Count > 0)
                 {
-                    await LoadChapterTextAsync(Chapters[0]);
+                    var target = (!string.IsNullOrEmpty(targetChapterId) ? Chapters.FirstOrDefault(c => c.Id == targetChapterId || c.Number == targetChapterId) : null) ?? Chapters[0];
+                    await LoadChapterTextAsync(target);
                 }
             }
         }

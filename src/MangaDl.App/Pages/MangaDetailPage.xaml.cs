@@ -190,11 +190,34 @@ public sealed partial class MangaDetailPage : Page
     private void OnTrack(object sender, RoutedEventArgs e) =>
         Nav.Go(typeof(Settings.TrackersSettingsPage));
 
-    private void OnResume(object sender, RoutedEventArgs e) =>
-        Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), _currentManga);
+    private void OnResume(object sender, RoutedEventArgs e)
+    {
+        var first = _allChapters.FirstOrDefault();
+        if (first != null)
+        {
+            double.TryParse(first.Number, out var num);
+            var args = new ReaderNavigationArgs(_currentManga, first.Number, first.Title, num > 0 ? num : 1.0);
+            Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), args);
+        }
+        else
+        {
+            Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), _currentManga);
+        }
+    }
 
-    private void OnOpenChapter(object sender, RoutedEventArgs e) =>
-        Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), _currentManga);
+    private void OnOpenChapter(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is Chapter ch)
+        {
+            double.TryParse(ch.Number, out var num);
+            var args = new ReaderNavigationArgs(_currentManga, ch.Number, ch.Title, num > 0 ? num : 1.0);
+            Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), args);
+        }
+        else
+        {
+            Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), _currentManga);
+        }
+    }
 
     private async void OnDownload(object sender, RoutedEventArgs e)
     {
