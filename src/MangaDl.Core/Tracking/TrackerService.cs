@@ -325,4 +325,115 @@ public sealed class TrackerService
         var res = await _http.FetchAsync($"{MalApiUrl}/manga/{malId}/my_list_status", "PUT", headers, form);
         return res.IsSuccess;
     }
+
+    // =========================================================================
+    // High-Level Synchronization
+    // =========================================================================
+
+    public async Task SyncChapterProgressAsync(
+        Database.MangaDatabase db,
+        string provider,
+        string mangaId,
+        string mangaTitle,
+        double chapterNumber,
+        bool isCompleted,
+        Func<string, string?> tokenProvider,
+        bool autoSyncEnabled = true,
+        bool markReadingOnFirstChapter = true)
+    {
+        if (!autoSyncEnabled) return;
+
+        try
+        {
+            var binds = await db.GetTrackerBindsAsync(provider, mangaId);
+
+            // 1. AniList
+            var anilistToken = tokenProvider("anilist_token");
+            if (!string.IsNullOrEmpty(anilistToken))
+            {
+                try
+                {
+                    var bind = binds.FirstOrDefault(b => b.Tracker.Equals("AniList", StringComparison.OrdinalIgnoreCase));
+                    if (bind == null && !string.IsNullOrWhiteSpace(mangaTitle))
+                    {
+                        var results = await SearchAnilistAsync(mangaTitle, anilistToken);
+                        if (results.Count > 0)
+                        {
+                            bind = new Database.Entities.TrackerBindEntity
+                            {
+                                Provider = provider,
+                                MangaId = mangaId,
+                                Tracker = "AniList",
+                                RemoteId = results[0].Id,
+                                RemoteTitle = results[0].Title,
+                                LastChapterRead = 0
+                            };
+                            await db.SaveTrackerBindAsync(bind);
+                        }
+                    }
+
+                    if (bind != null && (chapterNumber > bind.LastChapterRead || isCompleted))
+                    {
+                        var progress = (int)Math.Floor(chapterNumber);
+                        var ok = await UpdateAnilistProgressAsync(anilistToken, bind.RemoteId, progress, isCompleted);
+                        if (ok)
+                        {
+                            bind.LastChapterRead = Math.Max(bind.LastChapterRead, chapterNumber);
+                            await db.SaveTrackerBindAsync(bind);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[AniList Sync Error] {ex.Message}");
+                }
+            }
+
+            // 2. MyAnimeList
+            var malToken = tokenProvider("mal_token");
+            if (!string.IsNullOrEmpty(malToken))
+            {
+                try
+                {
+                    var bind = binds.FirstOrDefault(b => b.Tracker.Equals("MyAnimeList", StringComparison.OrdinalIgnoreCase));
+                    if (bind == null && !string.IsNullOrWhiteSpace(mangaTitle))
+                    {
+                        var results = await SearchMalAsync(mangaTitle, malToken);
+                        if (results.Count > 0)
+                        {
+                            bind = new Database.Entities.TrackerBindEntity
+                            {
+                                Provider = provider,
+                                MangaId = mangaId,
+                                Tracker = "MyAnimeList",
+                                RemoteId = results[0].Id,
+                                RemoteTitle = results[0].Title,
+                                LastChapterRead = 0
+                            };
+                            await db.SaveTrackerBindAsync(bind);
+                        }
+                    }
+
+                    if (bind != null && (chapterNumber > bind.LastChapterRead || isCompleted))
+                    {
+                        var progress = (int)Math.Floor(chapterNumber);
+                        var ok = await UpdateMalProgressAsync(malToken, bind.RemoteId, progress, isCompleted);
+                        if (ok)
+                        {
+                            bind.LastChapterRead = Math.Max(bind.LastChapterRead, chapterNumber);
+                            await db.SaveTrackerBindAsync(bind);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MAL Sync Error] {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[TrackerService.SyncChapterProgressAsync] {ex.Message}");
+        }
+    }
 }

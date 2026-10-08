@@ -121,8 +121,8 @@ public static class Sample
 
     public static IReadOnlyList<Tracker> Trackers { get; } =
     [
-        new("AniList", "AL", "#1E3A5F", "Sync status, score, chapters read and dates.", Connected: true),
-        new("MyAnimeList", "MAL", "#1F2C4F", "Sync manga status with MyAnimeList.", Connected: true),
+        new("AniList", "AL", "#1E3A5F", "Sync status, score, chapters read and dates."),
+        new("MyAnimeList", "MAL", "#1F2C4F", "Sync manga status with MyAnimeList."),
         new("Kitsu", "K", "#3B1F2E", "Sync manga progress with Kitsu."),
         new("MangaUpdates", "MU", "#2E2412", "Keep your MangaUpdates lists current."),
         new("Shikimori", "S", "#22222A", "Sync progress with Shikimori."),
