@@ -108,6 +108,15 @@ public class TachibkParserTests
     }
 
     [Fact]
+    public void DecodeTachibk_TruncatedVarint_ThrowsInvalidDataExceptionNotIndexOutOfRange()
+    {
+        // A tag byte with the continuation bit set (0x80) and nothing after it —
+        // the truncated-backup case the boundary guard exists for.
+        var truncated = new byte[] { 0x80 };
+        Assert.Throws<InvalidDataException>(() => TachibkParser.DecodeTachibk(truncated));
+    }
+
+    [Fact]
     public void DecodeTachibk_UngzippedInputAlsoWorks()
     {
         var manga = Concat(WriteString(2, "https://example.com/x"), WriteString(3, "No Gzip Here"));

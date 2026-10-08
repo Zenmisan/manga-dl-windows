@@ -43,7 +43,16 @@ public sealed partial class SystemSettingsPage : Page
         Nav.Toast("Restoring backup...");
         try
         {
-            var bytes = await File.ReadAllBytesAsync(file.Path);
+            // StorageFile stream APIs, not File.ReadAllBytesAsync(file.Path) — in a packaged
+            // (MSIX) build the picked file can be a virtualized/broker path that plain
+            // System.IO can't open directly.
+            byte[] bytes;
+            using (var stream = await file.OpenStreamForReadAsync())
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms);
+                bytes = ms.ToArray();
+            }
             var backup = TachibkParser.ParseTachiyomiBackup(bytes, file.Name);
             var summary = await AppServices.TachibkImport.ImportAsync(backup);
 

@@ -90,6 +90,66 @@ public class EpubImportTests : IAsyncLifetime
         return ms.ToArray();
     }
 
+    /// <summary>Same as BuildFakeEpub but the manifest href escapes one level up with
+    /// "../" from the OPF's own directory — a real-world EPUB authoring pattern
+    /// (OPF in OEBPS/, text files one level up) that a literal string-join won't
+    /// resolve against ZIP's literal path keys without normalizing ".." first.</summary>
+    private static byte[] BuildFakeEpubWithRelativeHrefs()
+    {
+        using var ms = new MemoryStream();
+        using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            void WriteEntry(string path, string content)
+            {
+                var entry = archive.CreateEntry(path);
+                using var writer = new StreamWriter(entry.Open(), Encoding.UTF8);
+                writer.Write(content);
+            }
+
+            WriteEntry("META-INF/container.xml", """
+                <?xml version="1.0"?>
+                <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
+                  <rootfiles>
+                    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+                  </rootfiles>
+                </container>
+                """);
+
+            WriteEntry("OEBPS/content.opf", """
+                <?xml version="1.0"?>
+                <package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+                  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Relative Href Novel</dc:title>
+                  </metadata>
+                  <manifest>
+                    <item id="ch1" href="../Text/chapter1.xhtml" media-type="application/xhtml+xml"/>
+                  </manifest>
+                  <spine>
+                    <itemref idref="ch1"/>
+                  </spine>
+                </package>
+                """);
+
+            // Note: lives at "Text/chapter1.xhtml" from the zip root, NOT under OEBPS/.
+            WriteEntry("Text/chapter1.xhtml", """
+                <html><head><title>Escaped Chapter</title></head>
+                <body><p>Reached via a relative ../ href.</p></body></html>
+                """);
+        }
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public void EpubParser_ResolvesRelativeDotDotHrefsAgainstOpfDirectory()
+    {
+        var book = EpubParser.Parse(BuildFakeEpubWithRelativeHrefs());
+
+        Assert.Equal("Relative Href Novel", book.Title);
+        var chapter = Assert.Single(book.Chapters);
+        Assert.Equal("Escaped Chapter", chapter.Title);
+        Assert.Contains("Reached via a relative", chapter.Html);
+    }
+
     [Fact]
     public void EpubParser_ExtractsTitleAndChaptersInSpineOrder()
     {

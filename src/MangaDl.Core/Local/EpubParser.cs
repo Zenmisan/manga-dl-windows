@@ -57,7 +57,10 @@ public static class EpubParser
             if (!manifest.TryGetValue(id, out var href)) continue;
 
             var path = Uri.UnescapeDataString(string.IsNullOrEmpty(opfDir) ? href : $"{opfDir}/{href}");
-            var entry = archive.GetEntry(path);
+            // Some EPUBs write manifest hrefs with "../" segments relative to the OPF's
+            // own directory (e.g. opfDir "OEBPS", href "../Text/ch1.xhtml") — ZIP entries
+            // are literal path keys, so ".." must be resolved before GetEntry, not left in.
+            var entry = archive.GetEntry(NormalizeZipPath(path)) ?? archive.GetEntry(path);
             if (entry is null) continue;
 
             using var reader = new StreamReader(entry.Open(), Encoding.UTF8);
@@ -66,6 +69,22 @@ public static class EpubParser
         }
 
         return new EpubBook(string.IsNullOrWhiteSpace(title) ? "Untitled" : title, chapters);
+    }
+
+    private static string NormalizeZipPath(string path)
+    {
+        var stack = new List<string>();
+        foreach (var segment in path.Split('/'))
+        {
+            if (segment.Length == 0 || segment == ".") continue;
+            if (segment == "..")
+            {
+                if (stack.Count > 0) stack.RemoveAt(stack.Count - 1);
+                continue;
+            }
+            stack.Add(segment);
+        }
+        return string.Join('/', stack);
     }
 
     private static string? ExtractChapterTitle(string html)

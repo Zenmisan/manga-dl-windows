@@ -22,6 +22,13 @@ public static class TachibkParser
         var shift = 0;
         while (true)
         {
+            // A corrupted/truncated backup could end mid-varint (trailing byte still
+            // has the continuation bit set) — fail with a clear, expected exception
+            // type instead of running off the end of the array or shifting past 64 bits.
+            if (pos >= data.Length || shift >= 64)
+            {
+                throw new InvalidDataException("Truncated or corrupt varint in backup file");
+            }
             var b = data[pos++];
             result |= (ulong)(b & 0x7F) << shift;
             if ((b & 0x80) == 0) return (result, pos);
