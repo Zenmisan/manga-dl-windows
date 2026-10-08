@@ -6,11 +6,23 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build Configuration'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Debug
 
 jobs:
   build:
-    name: Build MangaDl Solution
+    name: Build & Test Windows App
     runs-on: windows-latest
+
+    env:
+      BUILD_CONFIG: ${{ inputs.configuration || 'Release' }}
 
     steps:
       - name: Checkout repository
@@ -20,6 +32,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -27,8 +40,29 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore MangaDl.sln
 
-      - name: Build Solution (x64 Debug)
-        run: msbuild MangaDl.sln /p:Configuration=Debug /p:Platform=x64 /verbosity:minimal
+      - name: Run Core Tests (105 Test Cases)
+        run: dotnet test test/MangaDl.Core.Tests/MangaDl.Core.Tests.csproj -c ${{ env.BUILD_CONFIG }} --logger "trx;LogFileName=test-results.trx"
 
-      - name: Run Core Tests
-        run: dotnet test test/MangaDl.Core.Tests/MangaDl.Core.Tests.csproj -c Debug
+      - name: Build Solution (${{ env.BUILD_CONFIG }} x64)
+        run: msbuild MangaDl.sln /p:Configuration=${{ env.BUILD_CONFIG }} /p:Platform=x64 /verbosity:minimal
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-Results
+          path: test/MangaDl.Core.Tests/TestResults/test-results.trx
+          if-no-files-found: ignore
+
+      - name: Upload Built Windows App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MangaDl-Windows-x64-${{ env.BUILD_CONFIG }}
+          path: |
+            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/MangaDl.exe
+            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/MangaDl.dll
+            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/*.dll
+            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/resources.pri
+            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/Assets/
+            src/MangaDl.App/AppPackages/
+          if-no-files-found: warn
