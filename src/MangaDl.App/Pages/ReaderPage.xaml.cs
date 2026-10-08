@@ -91,6 +91,12 @@ public sealed partial class ReaderPage : Page
                 _currentManga.Title,
                 $"Ch. 48 · page {_page} of {PageTotal}",
                 isCompleted: _page >= PageTotal);
+            _ = AppServices.SyncTrackerProgressAsync(
+                _currentManga.Source,
+                _currentManga.Id,
+                _currentManga.Title,
+                48.0,
+                isCompleted: _page >= PageTotal);
         }
         catch (Exception ex)
         {
