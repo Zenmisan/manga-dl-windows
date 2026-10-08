@@ -108,7 +108,7 @@ public class EpubImportTests : IAsyncLifetime
         var epubPath = Path.Combine(_sourceDir, "My Fake Novel.epub");
         await File.WriteAllBytesAsync(epubPath, BuildFakeEpub());
 
-        var result = await _importer.ImportStandaloneFileAsync(epubPath);
+        var result = (await _importer.ImportStandaloneFileAsync(epubPath)).Single();
 
         Assert.Equal(LocalImportStatus.Done, result.Status);
 
@@ -140,7 +140,7 @@ public class EpubImportTests : IAsyncLifetime
         var badPath = Path.Combine(_sourceDir, "broken.epub");
         await File.WriteAllBytesAsync(badPath, ms.ToArray());
 
-        var result = await _importer.ImportStandaloneFileAsync(badPath);
+        var result = (await _importer.ImportStandaloneFileAsync(badPath)).Single();
 
         Assert.Equal(LocalImportStatus.Error, result.Status);
         Assert.Empty(await _db.GetLibraryAsync());

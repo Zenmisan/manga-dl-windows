@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text;
 using MangaDl.Core.Database;
 using MangaDl.Core.Database.Entities;
 using MangaDl.Core.Local;
@@ -46,25 +47,89 @@ public class LocalImportServiceTests : IAsyncLifetime
         }
     }
 
+    private static void WriteMultiChapterCbz(string path, params (string Dir, int ImageCount)[] chapters)
+    {
+        using var archive = ZipFile.Open(path, ZipArchiveMode.Create);
+        foreach (var (dir, count) in chapters)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var entry = archive.CreateEntry($"{dir}/{i:D3}.jpg");
+                using var stream = entry.Open();
+                stream.Write(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 });
+            }
+        }
+    }
+
     [Fact]
     public async Task StandaloneFile_ValidCbz_ImportsAndRegistersInDatabase()
     {
-        var cbzPath = Path.Combine(_sourceDir, "My Series Vol 1.cbz");
+        // No digits in the name at all, so ArchiveInspector finds nothing to parse out —
+        // series title is the plain filename, chapter falls back to "Chapter 1",
+        // matching web's archiveInspector.ts flat-archive behavior exactly.
+        var cbzPath = Path.Combine(_sourceDir, "My Series.cbz");
         WriteFakeCbz(cbzPath);
 
-        var result = await _importer.ImportStandaloneFileAsync(cbzPath);
+        var results = await _importer.ImportStandaloneFileAsync(cbzPath);
+        var result = Assert.Single(results);
 
         Assert.Equal(LocalImportStatus.Done, result.Status);
 
         var library = await _db.GetLibraryAsync();
         var entry = Assert.Single(library);
         Assert.Equal(LocalImportService.Provider, entry.Provider);
-        Assert.Equal("My Series Vol 1", entry.Title);
+        Assert.Equal("My Series", entry.Title);
 
         var downloads = await _db.GetDownloadsAsync();
         var download = Assert.Single(downloads);
+        Assert.Equal("Chapter 1", download.ChapterTitle);
         Assert.Equal("completed", download.Status);
         Assert.True(File.Exists(download.CbzPath));
+    }
+
+    [Fact]
+    public async Task StandaloneFile_FilenameWithChapterNumber_ParsesSeriesAndChapterTitle()
+    {
+        // Mirrors archiveInspector.ts's own worked example: "One_Piece_Chapter_1080.cbz"
+        // -> series "One Piece", chapter number 1080.
+        var cbzPath = Path.Combine(_sourceDir, "One_Piece_Chapter_1080.cbz");
+        WriteFakeCbz(cbzPath);
+
+        var results = await _importer.ImportStandaloneFileAsync(cbzPath);
+        var result = Assert.Single(results);
+        Assert.Equal(LocalImportStatus.Done, result.Status);
+
+        var library = await _db.GetLibraryAsync();
+        var entry = Assert.Single(library);
+        Assert.Equal("One Piece", entry.Title);
+
+        var download = Assert.Single(await _db.GetDownloadsAsync());
+        Assert.Equal(1080, download.ChapterNumber);
+        Assert.Equal("Chapter 1080", download.ChapterTitle);
+    }
+
+    [Fact]
+    public async Task StandaloneFile_MultiChapterArchive_SplitsIntoSeparateChapters()
+    {
+        // One zip, three subfolders — archiveInspector.ts's "MangaKatana 10-chapter
+        // subfolder format" pattern. Must become three chapters under one series,
+        // not one chapter.
+        var cbzPath = Path.Combine(_sourceDir, "Solo Leveling.cbz");
+        WriteMultiChapterCbz(cbzPath, ("Chapter 1", 2), ("Chapter 2", 3), ("Chapter 10", 1));
+
+        var results = await _importer.ImportStandaloneFileAsync(cbzPath);
+        Assert.Equal(3, results.Count);
+        Assert.All(results, r => Assert.Equal(LocalImportStatus.Done, r.Status));
+
+        var library = await _db.GetLibraryAsync();
+        var entry = Assert.Single(library);
+        Assert.Equal("Solo Leveling", entry.Title);
+
+        var downloads = (await _db.GetDownloadsAsync()).OrderBy(d => d.ChapterNumber).ToList();
+        Assert.Equal(3, downloads.Count);
+        // Natural sort must place "Chapter 2" before "Chapter 10" — ordinal sort would not.
+        Assert.Equal(new[] { 1.0, 2.0, 10.0 }, downloads.Select(d => d.ChapterNumber));
+        Assert.All(downloads, d => Assert.Equal(entry.MangaId, d.MangaId));
     }
 
     [Fact]
@@ -73,7 +138,8 @@ public class LocalImportServiceTests : IAsyncLifetime
         var pdfPath = Path.Combine(_sourceDir, "notes.pdf");
         await File.WriteAllTextAsync(pdfPath, "not a comic");
 
-        var result = await _importer.ImportStandaloneFileAsync(pdfPath);
+        var results = await _importer.ImportStandaloneFileAsync(pdfPath);
+        var result = Assert.Single(results);
 
         Assert.Equal(LocalImportStatus.Unsupported, result.Status);
         Assert.Empty(await _db.GetLibraryAsync());
@@ -85,7 +151,8 @@ public class LocalImportServiceTests : IAsyncLifetime
         var fakeZip = Path.Combine(_sourceDir, "broken.cbz");
         await File.WriteAllTextAsync(fakeZip, "this is not actually a zip file");
 
-        var result = await _importer.ImportStandaloneFileAsync(fakeZip);
+        var results = await _importer.ImportStandaloneFileAsync(fakeZip);
+        var result = Assert.Single(results);
 
         Assert.Equal(LocalImportStatus.Error, result.Status);
         Assert.Empty(await _db.GetLibraryAsync());
@@ -106,7 +173,7 @@ public class LocalImportServiceTests : IAsyncLifetime
 
         var library = await _db.GetLibraryAsync();
         var entry = Assert.Single(library);
-        Assert.Equal("Another Series", entry.Title);
+        Assert.Equal("Another Series", entry.Title); // folder name wins over each file's own parsed title
 
         var downloads = await _db.GetDownloadsAsync();
         Assert.Equal(2, downloads.Count);
@@ -145,10 +212,11 @@ public class LocalImportServiceTests : IAsyncLifetime
         });
         var target = (await _db.GetLibraryAsync()).Single();
 
-        var cbzPath = Path.Combine(_sourceDir, "Extra Chapter.cbz");
+        var cbzPath = Path.Combine(_sourceDir, "Extra Chapter 5.cbz");
         WriteFakeCbz(cbzPath);
 
-        var result = await _importer.ImportStandaloneFileAsync(cbzPath, target);
+        var results = await _importer.ImportStandaloneFileAsync(cbzPath, target);
+        var result = Assert.Single(results);
         Assert.Equal(LocalImportStatus.Done, result.Status);
 
         // Still exactly one library entry — the existing one, not a new "local" series.
@@ -157,11 +225,10 @@ public class LocalImportServiceTests : IAsyncLifetime
         Assert.Equal("mangadex", entry.Provider);
         Assert.Equal("solo-leveling", entry.MangaId);
 
-        var downloads = await _db.GetDownloadsAsync();
-        var download = Assert.Single(downloads);
+        var download = Assert.Single(await _db.GetDownloadsAsync());
         Assert.Equal("mangadex", download.Provider);
         Assert.Equal("solo-leveling", download.MangaId);
-        Assert.Equal("Extra Chapter", download.ChapterTitle);
+        Assert.Equal(5, download.ChapterNumber);
     }
 
     [Fact]
