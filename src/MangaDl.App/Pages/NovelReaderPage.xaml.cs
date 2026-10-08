@@ -139,6 +139,8 @@ public sealed partial class NovelReaderPage : Page
             _ = AppServices.Database.RecordHistoryAsync(_currentNovel.Source, _currentNovel.Id, _currentNovel.Title, chapter.Id, chapter.Name, _currentNovel.Cover)
                 .ContinueWith(t => AppLog.Warn("NovelReaderPage.RecordHistoryAsync", t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
             _ = AppServices.Sync.SyncChapterReadAsync(_currentNovel.Source, _currentNovel.Id, chapter.Id, 1, _currentNovel.Title, chapter.Name, isCompleted: true);
+            var chNum = double.TryParse(chapter.Number, out var parsedNum) ? parsedNum : 1.0;
+            _ = AppServices.SyncTrackerProgressAsync(_currentNovel.Source, _currentNovel.Id, _currentNovel.Title, chNum, isCompleted: true);
 
             Article?.ChangeView(0, 0, 1.0f);
         }
