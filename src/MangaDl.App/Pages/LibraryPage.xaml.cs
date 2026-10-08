@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using MangaDl.Core;
 using MangaDl.Core.Database.Entities;
+using MangaDl.Core.Local;
+using MangaDl.Dialogs;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -13,6 +15,9 @@ public sealed partial class LibraryPage : Page
     public ObservableCollection<ContinueItem> Continue { get; } = new(Sample.ContinueReading);
 
     private readonly List<Manga> _allManga = [];
+    private readonly List<CategoryEntity> _categories = [];
+    private readonly Dictionary<string, HashSet<string>> _mangaCategoryMap = new(StringComparer.OrdinalIgnoreCase);
+
     private int _sortMode; // 0 = Last read, 1 = Title A-Z, 2 = Unread
     private string _currentCategory = "All";
     private string _searchFilter = string.Empty;
@@ -28,10 +33,29 @@ public sealed partial class LibraryPage : Page
         try
         {
             var saved = await AppServices.Database.GetLibraryAsync();
+            var cats = await AppServices.Database.GetCategoriesAsync();
+            var libCats = await AppServices.Database.GetAllLibraryCategoriesAsync();
+
+            _categories.Clear();
+            _categories.AddRange(cats);
+
+            _mangaCategoryMap.Clear();
+            foreach (var lc in libCats)
+            {
+                if (!_mangaCategoryMap.TryGetValue(lc.LibraryId, out var set))
+                {
+                    set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    _mangaCategoryMap[lc.LibraryId] = set;
+                }
+                set.Add(lc.CategoryId);
+            }
+
             PopulateLibrary(saved);
 
             var history = await AppServices.Database.GetHistoryAsync(5);
             PopulateHistory(history);
+
+            PopulateCategoryChips();
 
             // Pull cloud library in background if user is authenticated
             if (!string.IsNullOrEmpty(AppServices.Settings.UserId))
@@ -87,7 +111,49 @@ public sealed partial class LibraryPage : Page
             _allManga.AddRange(Sample.Library);
         }
         ApplyFilters();
-        if (CategoryAll != null) CategoryAll.Content = $"All · {_allManga.Count}";
+    }
+
+    private void PopulateCategoryChips()
+    {
+        if (CategoriesStack == null) return;
+
+        CategoriesStack.Children.Clear();
+
+        var allRadio = new RadioButton
+        {
+            Content = $"All · {_allManga.Count}",
+            GroupName = "LibCategory",
+            Style = Application.Current.Resources.TryGetValue("ChipRadio", out var styleObj) ? (Style)styleObj : null,
+            IsChecked = string.Equals(_currentCategory, "All", StringComparison.OrdinalIgnoreCase),
+            Tag = "all"
+        };
+        allRadio.Checked += OnCategoryChecked;
+        CategoriesStack.Children.Add(allRadio);
+
+        foreach (var cat in _categories)
+        {
+            var slug = cat.Id;
+            var count = _allManga.Count(m =>
+            {
+                if (string.Equals(slug, "local_files", StringComparison.OrdinalIgnoreCase) && m.Source == LocalImportService.Provider)
+                {
+                    return true;
+                }
+                return _mangaCategoryMap.TryGetValue($"{m.Source}/{m.Id}", out var set) &&
+                       (set.Contains(slug) || set.Contains(cat.Name));
+            });
+
+            var rb = new RadioButton
+            {
+                Content = count > 0 ? $"{cat.Name} · {count}" : cat.Name,
+                GroupName = "LibCategory",
+                Style = Application.Current.Resources.TryGetValue("ChipRadio", out var st) ? (Style)st : null,
+                IsChecked = string.Equals(_currentCategory, cat.Name, StringComparison.OrdinalIgnoreCase),
+                Tag = cat.Id
+            };
+            rb.Checked += OnCategoryChecked;
+            CategoriesStack.Children.Add(rb);
+        }
     }
 
     private void PopulateHistory(List<HistoryEntity> history)
@@ -111,6 +177,24 @@ public sealed partial class LibraryPage : Page
         if (!string.IsNullOrWhiteSpace(_searchFilter))
         {
             filtered = filtered.Where(m => m.Title.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.Equals(_currentCategory, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(_currentCategory, "Local files", StringComparison.OrdinalIgnoreCase))
+            {
+                filtered = filtered.Where(m =>
+                    m.Source == LocalImportService.Provider ||
+                    (_mangaCategoryMap.TryGetValue($"{m.Source}/{m.Id}", out var set) &&
+                     (set.Contains("local_files") || set.Contains("local-files"))));
+            }
+            else
+            {
+                var slug = FileNaming.Slugify(_currentCategory);
+                filtered = filtered.Where(m =>
+                    _mangaCategoryMap.TryGetValue($"{m.Source}/{m.Id}", out var set) &&
+                    (set.Contains(slug) || set.Contains(_currentCategory)));
+            }
         }
 
         filtered = _sortMode switch
@@ -163,6 +247,62 @@ public sealed partial class LibraryPage : Page
         else
         {
             Nav.Go(typeof(ReaderPage), _allManga.FirstOrDefault() ?? Sample.HollowCrown);
+        }
+    }
+
+    private async void OnSetCategoriesContext(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        {
+            var saved = await CategoryDialogHelper.ShowAsync(XamlRoot, manga.Source, manga.Id, manga.Title);
+            if (saved)
+            {
+                await LoadLibraryAsync();
+                Nav.Toast($"Categories updated for \"{manga.Title}\"");
+            }
+        }
+    }
+
+    private void OnOpenMangaContext(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        {
+            Nav.Go(typeof(MangaDetailPage), manga);
+        }
+    }
+
+    private void OnResumeContext(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        {
+            var isNovel = AppServices.Extensions.FindExtension(manga.Source)?.Type == "novel";
+            Nav.Go(isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), manga);
+        }
+    }
+
+    private async void OnRemoveFromLibraryContext(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        {
+            try
+            {
+                await AppServices.Database.RemoveFromLibraryAsync(manga.Source, manga.Id);
+                var libEntity = new LibraryEntity
+                {
+                    Provider = manga.Source,
+                    MangaId = manga.Id,
+                    Title = manga.Title,
+                    CoverUrl = manga.Cover
+                };
+                _ = AppServices.Sync.SyncMangaSubscriptionAsync(libEntity, subscribed: false);
+                Nav.Toast($"Removed \"{manga.Title}\" from library");
+                await LoadLibraryAsync();
+            }
+            catch (Exception ex)
+            {
+                AppLog.Warn("LibraryPage.OnRemoveFromLibraryContext", ex);
+                Nav.Toast("Couldn't remove from library");
+            }
         }
     }
 
