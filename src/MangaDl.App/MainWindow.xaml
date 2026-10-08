@@ -172,7 +172,7 @@
                             <Border Width="32" Height="32" CornerRadius="16" Background="#FF2D1716">
                                 <TextBlock Text="U" FontSize="13" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <StackPanel VerticalAlignment="Center">
+                            <StackPanel VerticalAlignment="Center">ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
                                 <TextBlock Text="[Username]" FontSize="13" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
                                 <TextBlock Text="Synced · just now" FontSize="11" Foreground="{StaticResource FgSubtleBrush}" />
                             </StackPanel>
