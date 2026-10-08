@@ -18,7 +18,13 @@ public sealed class AppSettings
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         "Downloads",
         "manga-dl");
-    public string? BackendUrl { get; set; }
+    public const string DefaultBackendUrl = "https://manga-dl.onrender.com";
+
+    /// <summary>Defaults to the real production backend — same pattern as Supabase's
+    /// default below. Users only need to touch the Account Server field if they're
+    /// self-hosting their own backend instead; it isn't something that should need
+    /// manual entry to get cross-platform profile sync working out of the box.</summary>
+    public string? BackendUrl { get; set; } = DefaultBackendUrl;
     public string? ApiKey { get; set; }
     public bool AutoCheckUpdates { get; set; } = true;
 

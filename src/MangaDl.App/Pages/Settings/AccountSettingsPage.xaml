@@ -72,7 +72,8 @@
                         </c:SettingRow>
                         <StackPanel Spacing="6">
                             <TextBlock Text="Account server" Style="{StaticResource FieldLabel}" />
-                            <TextBox x:Name="BackendUrlBox" Style="{StaticResource MdTextBox}" PlaceholderText="https://api.manga-dl.app (leave blank to skip cross-platform profile/comments)" AutomationProperties.Name="Account server URL" />
+                            <TextBox x:Name="BackendUrlBox" Style="{StaticResource MdTextBox}" PlaceholderText="https://manga-dl.onrender.com" AutomationProperties.Name="Account server URL" />
+                            <TextBlock Text="Already set to the manga-dl server — only change this if you're self-hosting your own." Style="{StaticResource Caption}" FontSize="12" TextWrapping="Wrap" />
                         </StackPanel>
                         <TextBlock x:Name="BackendStatusText" Style="{StaticResource Caption}" FontSize="12" Visibility="Collapsed" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
