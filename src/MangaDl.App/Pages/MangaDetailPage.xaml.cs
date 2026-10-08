@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using MangaDl.Core;
 using MangaDl.Core.Database.Entities;
+using MangaDl.Core.Local;
 using MangaDl.Helpers;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
@@ -17,6 +18,7 @@ public sealed partial class MangaDetailPage : Page
     private Manga _currentManga = Sample.HollowCrown;
     private bool _inLibrary;
     private bool _newestFirst = true;
+    private bool _isNovel;
 
     public MangaDetailPage() => InitializeComponent();
 
@@ -34,8 +36,14 @@ public sealed partial class MangaDetailPage : Page
         TitleText.Text = _currentManga.Title.ToUpperInvariant();
         MetaText.Text = $"Ongoing · {_currentManga.Source}";
 
-        var inDb = await AppServices.Database.IsInLibraryAsync(_currentManga.Source, _currentManga.Id);
-        SetInLibrary(inDb || _currentManga.InLibrary);
+        var libraryEntry = await AppServices.Database.GetLibraryItemAsync(_currentManga.Source, _currentManga.Id);
+        SetInLibrary(libraryEntry != null || _currentManga.InLibrary);
+
+        // "local" is shared by both locally-imported manga and novels (LocalImportService),
+        // so unlike every other provider it can't be classified by source id alone —
+        // IsNovel(source) only knows about real extension providers. Fall back to the
+        // actual library row's Type when there is one.
+        _isNovel = libraryEntry?.Type == "novel" || AppServices.Extensions.IsNovel(_currentManga.Source);
 
         await LoadChaptersAsync();
     }
@@ -44,6 +52,33 @@ public sealed partial class MangaDetailPage : Page
     {
         try
         {
+            if (_currentManga.Source == LocalImportService.Provider)
+            {
+                var downloads = await AppServices.Database.GetDownloadsAsync();
+                var local = downloads
+                    .Where(d => d.Provider == LocalImportService.Provider && d.MangaId == _currentManga.Id)
+                    .OrderBy(d => d.ChapterNumber)
+                    .ToList();
+
+                _allChapters.Clear();
+                foreach (var d in local)
+                {
+                    _allChapters.Add(new Chapter(
+                        d.ChapterNumber.ToString(),
+                        d.ChapterTitle ?? $"Chapter {d.ChapterNumber}",
+                        "",
+                        "Local",
+                        "Downloaded",
+                        Read: false));
+                }
+                if (_allChapters.Count > 0)
+                {
+                    ApplyChapterFilters();
+                    ResumeText.Text = $"Resume {_allChapters.First().Number}";
+                }
+                return;
+            }
+
             var detail = await AppServices.Extensions.GetMangaDetailAsync(_currentManga.Source, _currentManga.Id);
             if (detail != null)
             {
@@ -120,7 +155,7 @@ public sealed partial class MangaDetailPage : Page
                 MangaId = _currentManga.Id,
                 Title = _currentManga.Title,
                 CoverUrl = _currentManga.Cover,
-                Type = AppServices.Extensions.IsNovel(_currentManga.Source) ? "novel" : "manga"
+                Type = _isNovel ? "novel" : "manga"
             };
 
             if (_inLibrary)
@@ -155,29 +190,11 @@ public sealed partial class MangaDetailPage : Page
     private void OnTrack(object sender, RoutedEventArgs e) =>
         Nav.Go(typeof(Settings.TrackersSettingsPage));
 
-    private void OnResume(object sender, RoutedEventArgs e)
-    {
-        if (AppServices.Extensions.IsNovel(_currentManga.Source))
-        {
-            Nav.Go(typeof(NovelReaderPage), _currentManga);
-        }
-        else
-        {
-            Nav.Go(typeof(ReaderPage), _currentManga);
-        }
-    }
+    private void OnResume(object sender, RoutedEventArgs e) =>
+        Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), _currentManga);
 
-    private void OnOpenChapter(object sender, RoutedEventArgs e)
-    {
-        if (AppServices.Extensions.IsNovel(_currentManga.Source))
-        {
-            Nav.Go(typeof(NovelReaderPage), _currentManga);
-        }
-        else
-        {
-            Nav.Go(typeof(ReaderPage), _currentManga);
-        }
-    }
+    private void OnOpenChapter(object sender, RoutedEventArgs e) =>
+        Nav.Go(_isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), _currentManga);
 
     private async void OnDownload(object sender, RoutedEventArgs e)
     {
