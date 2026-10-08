@@ -20,6 +20,17 @@
         </Grid>
 
         <StackPanel Grid.Column="1" Padding="96,72" MaxWidth="612" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="16">
+                <Button x:Name="GoogleButton" Content="Continue with Google" Style="{StaticResource GhostButtonLarge}" HorizontalAlignment="Stretch" Click="OnGoogleSignIn" />
+                <Grid Margin="0,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{StaticResource DividerBrush}" Height="1" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="OR" Style="{StaticResource EyebrowMuted}" Margin="12,0" />
+                    <Border Grid.Column="2" Background="{StaticResource DividerBrush}" Height="1" VerticalAlignment="Center" />
+                </Grid>
                 <StackPanel>
                     <TextBlock Text="Email" Style="{StaticResource FieldLabel}" />
                     <TextBox x:Name="EmailBox" PlaceholderText="you@example.com" Style="{StaticResource MdTextBox}" InputScope="EmailSmtpAddress" AutomationProperties.Name="Email" />

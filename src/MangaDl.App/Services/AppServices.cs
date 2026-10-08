@@ -58,6 +58,7 @@ public static class AppServices
 
     public static TrackerService Trackers { get; } = new(Http);
     public static OAuthLoopbackListener Loopback { get; } = new(5678);
+    public static GoogleAuthService GoogleAuth { get; } = new(Http);
 
     public static async Task SyncTrackerProgressAsync(
         string provider,

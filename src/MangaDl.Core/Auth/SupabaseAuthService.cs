@@ -30,6 +30,17 @@ public sealed class SupabaseAuthService
         return ParseSession(result) ?? throw new AuthException("Something went wrong. Try again.");
     }
 
+    /// <summary>Exchanges a Google id_token (from GoogleAuthService's loopback flow) for a
+    /// Supabase session. Supabase verifies the token's audience against whatever Client IDs
+    /// are configured under Authentication &gt; Providers &gt; Google &gt; Authorized Client IDs —
+    /// the Desktop client's id_token won't be accepted until it's added there.</summary>
+    public async Task<AuthSession> SignInWithGoogleIdTokenAsync(string idToken)
+    {
+        var body = JsonSerializer.Serialize(new { provider = "google", id_token = idToken });
+        var result = await PostAsync("/auth/v1/token?grant_type=id_token", body, null);
+        return ParseSession(result) ?? throw new AuthException("Google sign-in didn't return a session.");
+    }
+
     public async Task<AuthSignUpResult> SignUpAsync(string username, string email, string password)
     {
         var body = JsonSerializer.Serialize(new

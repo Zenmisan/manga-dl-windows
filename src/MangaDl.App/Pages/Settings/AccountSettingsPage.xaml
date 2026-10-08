@@ -54,10 +54,18 @@
                             <TextBlock Text="Bio" Style="{StaticResource FieldLabel}" />
                             <TextBox x:Name="BioBox" Style="{StaticResource MdTextBox}" PlaceholderText="A short line about what you like to read" AcceptsReturn="True" TextWrapping="Wrap" Height="96" AutomationProperties.Name="Bio" />
                         </StackPanel>
-                        <c:SettingRow Label="Show reading activity" Description="Let others see what you're reading and your stats." ShowDivider="False">
+                        <c:SettingRow Label="Show reading activity" Description="Let others see what you're reading and your stats.">
                             <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
                         </c:SettingRow>
-                        <Button Content="Save changes" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="OnSave" />
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Account server" Style="{StaticResource FieldLabel}" />
+                            <TextBox x:Name="BackendUrlBox" Style="{StaticResource MdTextBox}" PlaceholderText="https://api.manga-dl.app (leave blank to skip cross-platform profile/comments)" AutomationProperties.Name="Account server URL" />
+                        </StackPanel>
+                        <TextBlock x:Name="BackendStatusText" Style="{StaticResource Caption}" FontSize="12" Visibility="Collapsed" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Save changes" Style="{StaticResource PrimaryButton}" Click="OnSave" />
+                            <Button Content="Test connection" Style="{StaticResource GhostButton}" Click="OnTestBackend" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

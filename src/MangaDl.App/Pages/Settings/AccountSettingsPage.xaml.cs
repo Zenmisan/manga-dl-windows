@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MangaDl.Helpers;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -28,6 +29,7 @@ public sealed partial class AccountSettingsPage : Page
 
             DisplayNameBox.Text = AppServices.Settings.DisplayName ?? "";
             BioBox.Text = AppServices.Settings.Bio ?? "";
+            BackendUrlBox.Text = AppServices.Settings.BackendUrl ?? "";
         };
     }
 
@@ -40,7 +42,9 @@ public sealed partial class AccountSettingsPage : Page
         // native-app architecture). Backend sync below is a best-effort bonus.
         AppServices.Settings.DisplayName = DisplayNameBox.Text.Trim();
         AppServices.Settings.Bio = BioBox.Text.Trim();
+        AppServices.Settings.BackendUrl = BackendUrlBox.Text.Trim();
         AppServices.Settings.Save();
+        AppServices.Http.BackendUrl = AppServices.Settings.BackendUrl ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(AppServices.Settings.BackendUrl))
         {
@@ -75,6 +79,34 @@ public sealed partial class AccountSettingsPage : Page
             AppLog.Warn("AccountSettingsPage.OnSave", ex);
             Nav.Toast("Profile saved on this PC (sync failed)");
         }
+    }
+
+    private async void OnTestBackend(object sender, RoutedEventArgs e)
+    {
+        var url = BackendUrlBox.Text.Trim();
+        if (url.Length == 0)
+        {
+            ShowBackendStatus("Enter a server URL first.", success: false);
+            return;
+        }
+
+        try
+        {
+            var result = await AppServices.Http.FetchAsync(url.TrimEnd('/') + "/health");
+            ShowBackendStatus(result.IsSuccess ? "Connected." : $"Server responded with {result.StatusCode}.", result.IsSuccess);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("AccountSettingsPage.OnTestBackend", ex);
+            ShowBackendStatus("Couldn't reach that server.", success: false);
+        }
+    }
+
+    private void ShowBackendStatus(string message, bool success)
+    {
+        BackendStatusText.Text = message;
+        BackendStatusText.Foreground = X.Res(success ? "SuccessTextBrush" : "ErrorTextBrush");
+        BackendStatusText.Visibility = Visibility.Visible;
     }
 
     private async void OnSyncNow(object sender, RoutedEventArgs e)

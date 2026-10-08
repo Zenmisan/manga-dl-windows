@@ -45,6 +45,16 @@ public sealed class AppSettings
     public string? MalUsername { get; set; }
     public bool MalConnected { get; set; }
 
+    // Google Sign-In (Supabase identity, not a tracker). The client secret is
+    // intentionally NOT hardcoded here — GitHub's push protection recognizes and
+    // blocks commits containing a raw Google OAuth client secret. Set it once via
+    // the MANGADL_GOOGLE_CLIENT_SECRET environment variable (Load() below picks it
+    // up) — it then lives only in this machine's settings.json (outside the repo,
+    // in %LOCALAPPDATA%), never in source control.
+    public string GoogleClientId { get; set; } = "912012648755-b5dv82bhre9ccsig25e7863dma4e6t7l.apps.googleusercontent.com";
+    public string GoogleClientSecret { get; set; } = "";
+    public string GoogleRedirectUri { get; set; } = "http://localhost:5678/google-callback";
+
     // Tracker Sync Options
     public bool AutoSyncTrackers { get; set; } = true;
     public bool MarkTrackerCompletedOnFinish { get; set; } = true;
@@ -70,6 +80,8 @@ public sealed class AppSettings
                         loaded.SupabaseUrl = DefaultSupabaseUrl;
                     if (string.IsNullOrWhiteSpace(loaded.SupabaseAnonKey))
                         loaded.SupabaseAnonKey = DefaultSupabaseAnonKey;
+                    if (string.IsNullOrWhiteSpace(loaded.GoogleClientSecret))
+                        loaded.GoogleClientSecret = Environment.GetEnvironmentVariable("MANGADL_GOOGLE_CLIENT_SECRET") ?? "";
                     return loaded;
                 }
             }
@@ -79,7 +91,9 @@ public sealed class AppSettings
             AppLog.Warn("AppSettings.Load", ex);
         }
 
-        return new AppSettings();
+        var fresh = new AppSettings();
+        fresh.GoogleClientSecret = Environment.GetEnvironmentVariable("MANGADL_GOOGLE_CLIENT_SECRET") ?? "";
+        return fresh;
     }
 
     public void Save()
