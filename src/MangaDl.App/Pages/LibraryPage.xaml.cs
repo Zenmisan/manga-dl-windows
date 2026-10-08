@@ -250,9 +250,20 @@ public sealed partial class LibraryPage : Page
         }
     }
 
+    private static Manga? GetMangaFromContext(object sender)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is Manga m1) return m1;
+        if (sender is MenuFlyoutItem mfi)
+        {
+            if (mfi.DataContext is Manga m2) return m2;
+            if (mfi.Parent is MenuFlyout mf && mf.Target is FrameworkElement target && target.DataContext is Manga m3) return m3;
+        }
+        return null;
+    }
+
     private async void OnSetCategoriesContext(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        if (GetMangaFromContext(sender) is Manga manga)
         {
             var saved = await CategoryDialogHelper.ShowAsync(XamlRoot, manga.Source, manga.Id, manga.Title);
             if (saved)
@@ -265,7 +276,7 @@ public sealed partial class LibraryPage : Page
 
     private void OnOpenMangaContext(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        if (GetMangaFromContext(sender) is Manga manga)
         {
             Nav.Go(typeof(MangaDetailPage), manga);
         }
@@ -273,7 +284,7 @@ public sealed partial class LibraryPage : Page
 
     private void OnResumeContext(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        if (GetMangaFromContext(sender) is Manga manga)
         {
             var isNovel = AppServices.Extensions.FindExtension(manga.Source)?.Type == "novel";
             Nav.Go(isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), manga);
@@ -282,7 +293,7 @@ public sealed partial class LibraryPage : Page
 
     private async void OnRemoveFromLibraryContext(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is Manga manga)
+        if (GetMangaFromContext(sender) is Manga manga)
         {
             try
             {
