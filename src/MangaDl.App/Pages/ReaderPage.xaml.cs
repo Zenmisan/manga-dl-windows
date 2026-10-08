@@ -1,3 +1,4 @@
+using MangaDl.Core;
 using MangaDl.Helpers;
 using MangaDl.Services;
 using Microsoft.UI.Windowing;

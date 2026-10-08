@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using MangaDl.Core;
+using MangaDl.Core.Database.Entities;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
