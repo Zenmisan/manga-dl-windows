@@ -2,16 +2,21 @@ using System.Text.Json.Serialization;
 
 namespace MangaDl.Core.Sync;
 
-public sealed class SupabaseMangaRecord
+/// <summary>Matches frontend/src/lib/supabaseSubscriptions.ts's SupabaseSubscription
+/// interface exactly — this is the live web schema, not the legacy "manga" table.</summary>
+public sealed class SupabaseSubscriptionRecord
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty; // "{provider}/{mangaId}"
+
+    [JsonPropertyName("user_id")]
+    public string UserId { get; set; } = string.Empty;
 
     [JsonPropertyName("provider")]
     public string Provider { get; set; } = string.Empty;
 
-    [JsonPropertyName("provider_manga_id")]
-    public string ProviderMangaId { get; set; } = string.Empty;
+    [JsonPropertyName("manga_id")]
+    public string MangaId { get; set; } = string.Empty;
 
     [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
@@ -19,23 +24,11 @@ public sealed class SupabaseMangaRecord
     [JsonPropertyName("cover_url")]
     public string? CoverUrl { get; set; }
 
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = "manga";
 
-    [JsonPropertyName("status")]
-    public string? Status { get; set; }
-
-    [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
-
-    [JsonPropertyName("subscribed")]
-    public bool Subscribed { get; set; } = true;
-
-    [JsonPropertyName("user_id")]
-    public string? UserId { get; set; }
-
-    [JsonPropertyName("last_synced")]
-    public string? LastSynced { get; set; }
+    [JsonPropertyName("added_at")]
+    public string? AddedAt { get; set; }
 }
 
 public sealed class SupabaseReadTrackingRecord

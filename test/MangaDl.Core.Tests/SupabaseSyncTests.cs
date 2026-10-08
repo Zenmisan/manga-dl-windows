@@ -33,32 +33,30 @@ public class SupabaseSyncTests : IAsyncLifetime
     }
 
     [Fact]
-    public void TestMangaRecordSerialization()
+    public void TestSubscriptionRecordSerialization()
     {
-        var record = new SupabaseMangaRecord
+        var record = new SupabaseSubscriptionRecord
         {
-            Id = "mangadex:test-123:user-456",
+            Id = "mangadex/test-123",
+            UserId = "user-456",
             Provider = "mangadex",
-            ProviderMangaId = "test-123",
+            MangaId = "test-123",
             Title = "Chainsaw Man",
             CoverUrl = "https://example.com/cover.jpg",
-            Url = "https://mangadex.org/title/test-123",
-            Subscribed = true,
-            UserId = "user-456",
-            LastSynced = "2026-10-07T06:00:00Z"
+            Type = "manga",
+            AddedAt = "2026-10-07T06:00:00Z"
         };
 
         var json = JsonSerializer.Serialize(record);
-        Assert.Contains("\"provider_manga_id\":\"test-123\"", json);
+        Assert.Contains("\"id\":\"mangadex/test-123\"", json);
+        Assert.Contains("\"manga_id\":\"test-123\"", json);
         Assert.Contains("\"cover_url\":", json);
-        Assert.Contains("\"last_synced\":", json);
-        Assert.Contains("\"subscribed\":true", json);
+        Assert.Contains("\"added_at\":", json);
 
-        var deserialized = JsonSerializer.Deserialize<SupabaseMangaRecord>(json);
+        var deserialized = JsonSerializer.Deserialize<SupabaseSubscriptionRecord>(json);
         Assert.NotNull(deserialized);
         Assert.Equal("Chainsaw Man", deserialized.Title);
-        Assert.Equal("test-123", deserialized.ProviderMangaId);
-        Assert.True(deserialized.Subscribed);
+        Assert.Equal("test-123", deserialized.MangaId);
     }
 
     [Fact]
@@ -175,35 +173,33 @@ public class SupabaseSyncTests : IAsyncLifetime
     [Fact]
     public async Task TestPullLibraryEndToEnd()
     {
-        var remoteData = new List<SupabaseMangaRecord>
+        var remoteData = new List<SupabaseSubscriptionRecord>
         {
             new()
             {
-                Id = "mangadex:solo-1:user-1",
+                Id = "mangadex/solo-1",
+                UserId = "user-1",
                 Provider = "mangadex",
-                ProviderMangaId = "solo-1",
+                MangaId = "solo-1",
                 Title = "Solo Leveling",
                 CoverUrl = "https://example.com/solo.jpg",
-                Url = "https://mangadex.org/title/solo-1",
-                Subscribed = true,
-                UserId = "user-1"
+                Type = "manga"
             },
             new()
             {
-                Id = "novelbin:shadow-1:user-1",
+                Id = "novelbin/shadow-1",
+                UserId = "user-1",
                 Provider = "novelbin",
-                ProviderMangaId = "shadow-1",
+                MangaId = "shadow-1",
                 Title = "Shadow Slave",
                 CoverUrl = "https://example.com/shadow.jpg",
-                Url = "https://novelbin.com/b/shadow-1",
-                Subscribed = true,
-                UserId = "user-1"
+                Type = "novel"
             }
         };
 
         var handler = new MockHttpMessageHandler(req =>
         {
-            if (req.RequestUri!.PathAndQuery.Contains("/rest/v1/manga"))
+            if (req.RequestUri!.PathAndQuery.Contains("/rest/v1/subscriptions"))
             {
                 var content = JsonSerializer.Serialize(remoteData);
                 return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
@@ -324,11 +320,65 @@ public class SupabaseSyncTests : IAsyncLifetime
 
         var pushedLib = await sync.PushAllLibraryAsync("user-1", "token-1");
         Assert.Equal(1, pushedLib);
-        Assert.Contains(postedPaths, p => p.Contains("/rest/v1/manga"));
+        Assert.Contains(postedPaths, p => p.Contains("/rest/v1/subscriptions") && p.Contains("on_conflict=user_id,id"));
 
         var pushedTracking = await sync.PushAllReadTrackingAsync("user-1", "token-1");
         Assert.Equal(1, pushedTracking);
         Assert.Contains(postedPaths, p => p.Contains("/rest/v1/read_tracking"));
+    }
+
+    [Fact]
+    public async Task TestPushLibraryItem_Subscribe_UpsertsSubscriptionsWithSlashId()
+    {
+        string? capturedPath = null;
+        string? capturedBody = null;
+        var handler = new MockHttpMessageHandler(req =>
+        {
+            capturedPath = req.RequestUri!.PathAndQuery;
+            capturedBody = req.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        using var client = new HttpClient(handler);
+        var http = new HttpService(client);
+        var sync = new SupabaseSyncService(http, _db, "https://test.supabase.co", "test-key");
+
+        var item = new LibraryEntity { Provider = "mangadex", MangaId = "solo-1", Title = "Solo Leveling", Type = "manga" };
+        await sync.PushLibraryItemAsync("user-1", "token-1", item, subscribed: true);
+
+        Assert.NotNull(capturedPath);
+        Assert.Contains("/rest/v1/subscriptions", capturedPath);
+        Assert.Contains("on_conflict=user_id,id", capturedPath);
+        Assert.Contains("\"id\":\"mangadex/solo-1\"", capturedBody);
+        Assert.DoesNotContain("mangadex:solo-1:", capturedBody);
+    }
+
+    [Fact]
+    public async Task TestPushLibraryItem_Unsubscribe_DeletesByCompositeKey()
+    {
+        string? capturedMethod = null;
+        string? capturedPath = null;
+        var handler = new MockHttpMessageHandler(req =>
+        {
+            capturedMethod = req.Method.Method;
+            capturedPath = req.RequestUri!.PathAndQuery;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        });
+
+        using var client = new HttpClient(handler);
+        var http = new HttpService(client);
+        var sync = new SupabaseSyncService(http, _db, "https://test.supabase.co", "test-key");
+
+        var item = new LibraryEntity { Provider = "mangadex", MangaId = "solo-1", Title = "Solo Leveling", Type = "manga" };
+        await sync.PushLibraryItemAsync("user-1", "token-1", item, subscribed: false);
+
+        Assert.Equal("DELETE", capturedMethod);
+        Assert.Contains("/rest/v1/subscriptions", capturedPath);
+        Assert.Contains("id=eq.mangadex%2Fsolo-1", capturedPath);
+        Assert.Contains("user_id=eq.user-1", capturedPath);
     }
 
     private class MockHttpMessageHandler : HttpMessageHandler

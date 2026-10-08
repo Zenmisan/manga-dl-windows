@@ -128,27 +128,26 @@ public sealed class SupabaseSyncService
 
     public async Task<int> PullLibraryAsync(string userId, string accessToken)
     {
-        var path = $"/rest/v1/manga?user_id=eq.{Uri.EscapeDataString(userId)}&subscribed=eq.true&select=*";
+        var path = $"/rest/v1/subscriptions?user_id=eq.{Uri.EscapeDataString(userId)}&select=*";
         var res = await GetAsync(path, accessToken);
         if (!res.IsSuccess) return 0;
 
-        var items = JsonSerializer.Deserialize<List<SupabaseMangaRecord>>(res.Text) ?? new();
+        var items = JsonSerializer.Deserialize<List<SupabaseSubscriptionRecord>>(res.Text) ?? new();
         int count = 0;
         foreach (var remote in items)
         {
-            if (string.IsNullOrWhiteSpace(remote.Provider) || string.IsNullOrWhiteSpace(remote.ProviderMangaId))
+            if (string.IsNullOrWhiteSpace(remote.Provider) || string.IsNullOrWhiteSpace(remote.MangaId))
                 continue;
 
-            var existing = await _db.GetLibraryItemAsync(remote.Provider, remote.ProviderMangaId);
+            var existing = await _db.GetLibraryItemAsync(remote.Provider, remote.MangaId);
             var entity = new LibraryEntity
             {
-                Id = $"{remote.Provider}/{remote.ProviderMangaId}",
+                Id = $"{remote.Provider}/{remote.MangaId}",
                 Provider = remote.Provider,
-                MangaId = remote.ProviderMangaId,
+                MangaId = remote.MangaId,
                 Title = remote.Title,
                 CoverUrl = remote.CoverUrl,
-                Url = remote.Url,
-                Type = "manga",
+                Type = remote.Type,
                 AddedAt = existing?.AddedAt ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
@@ -220,22 +219,31 @@ public sealed class SupabaseSyncService
 
     public async Task PushLibraryItemAsync(string userId, string accessToken, LibraryEntity item, bool subscribed)
     {
-        var recordId = $"{item.Provider}:{item.MangaId}:{userId}";
-        var record = new SupabaseMangaRecord
+        var recordId = $"{item.Provider}/{item.MangaId}";
+
+        if (!subscribed)
+        {
+            // subscriptions has no "subscribed" flag — removing a manga from the
+            // library is a delete, matching web's removeSubscription.
+            var path = $"/rest/v1/subscriptions?user_id=eq.{Uri.EscapeDataString(userId)}&id=eq.{Uri.EscapeDataString(recordId)}";
+            await DeleteAsync(path, accessToken);
+            return;
+        }
+
+        var record = new SupabaseSubscriptionRecord
         {
             Id = recordId,
+            UserId = userId,
             Provider = item.Provider,
-            ProviderMangaId = item.MangaId,
+            MangaId = item.MangaId,
             Title = item.Title,
             CoverUrl = item.CoverUrl,
-            Url = item.Url ?? string.Empty,
-            Subscribed = subscribed,
-            UserId = userId,
-            LastSynced = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            Type = item.Type,
+            AddedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
         };
 
         var body = JsonSerializer.Serialize(record);
-        await PostUpsertAsync("/rest/v1/manga", body, accessToken);
+        await PostUpsertAsync("/rest/v1/subscriptions?on_conflict=user_id,id", body, accessToken);
     }
 
     public async Task PushChapterProgressAsync(
@@ -357,6 +365,16 @@ public sealed class SupabaseSyncService
             ["Authorization"] = $"Bearer {accessToken}"
         };
         return await _http.FetchAsync($"{_url}{path}", "GET", headers);
+    }
+
+    private async Task<HttpResponseResult> DeleteAsync(string path, string accessToken)
+    {
+        var headers = new Dictionary<string, string>
+        {
+            ["apikey"] = _anonKey,
+            ["Authorization"] = $"Bearer {accessToken}"
+        };
+        return await _http.FetchAsync($"{_url}{path}", "DELETE", headers);
     }
 
     private async Task<HttpResponseResult> PostUpsertAsync(string path, string body, string accessToken)
