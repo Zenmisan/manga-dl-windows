@@ -40,8 +40,9 @@ public sealed class AppSettings
     /// self-hosting their own backend instead; it isn't something that should need
     /// manual entry to get cross-platform profile sync working out of the box.</summary>
     public string? BackendUrl { get; set; } = DefaultBackendUrl;
-    public string? ApiKey { get; set; }
     public bool AutoCheckUpdates { get; set; } = true;
+    public long LastUpdateCheck { get; set; } = 0;
+    public bool AutoDownloadNew { get; set; } = false;
 
     public const string DefaultSupabaseUrl = "https://gyivwfweldwvzccbpgoz.supabase.co";
     public const string DefaultSupabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5aXZ3ZndlbGR3dnpjY2JwZ296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjg2NTUsImV4cCI6MjA5NTc0NDY1NX0.XcEJk1fyv-QxSehPUIeRR77ocIkPIZzDyc4DDfrr6XQ";

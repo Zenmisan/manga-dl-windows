@@ -7,6 +7,7 @@ using MangaDl.Core.Http;
 using MangaDl.Core.Local;
 using MangaDl.Core.Sync;
 using MangaDl.Core.Tracking;
+using MangaDl.Core.Updates;
 
 namespace MangaDl.Services;
 
@@ -48,6 +49,7 @@ public static class AppServices
 
     public static TachibkImportService TachibkImport { get; } = new(Database);
     public static MangadlBackupService Backup { get; } = new(Database);
+    public static UpdateCheckerService UpdateChecker { get; } = new(Database, Extensions, Downloads);
 
     public static SupabaseSyncService Sync { get; } = new(
         Http,
