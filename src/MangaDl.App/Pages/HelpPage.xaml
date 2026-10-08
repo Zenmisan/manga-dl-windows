@@ -71,17 +71,17 @@
                 <StackPanel Spacing="14">
                     <TextBlock Text="CONTACT SUPPORT" Style="{StaticResource EyebrowMuted}" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <RadioButton Content="Bug Report" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" IsChecked="True" />
-                        <RadioButton Content="Feature Request" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
-                        <RadioButton Content="Account" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                        <RadioButton x:Name="CatBug" Content="Bug Report" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" IsChecked="True" />
+                        <RadioButton x:Name="CatFeature" Content="Feature Request" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                        <RadioButton x:Name="CatAccount" Content="Account" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
                     </StackPanel>
-                    <RadioButton Content="Source / Extension" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
+                    <RadioButton x:Name="CatSource" Content="Source / Extension" GroupName="HelpCat" Style="{StaticResource ChipRadio}" Height="34" FontSize="12" Padding="12,0" />
                     <StackPanel>
                         <TextBlock Text="Message" Style="{StaticResource FieldLabel}" />
-                        <TextBox Style="{StaticResource MdTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="140" VerticalContentAlignment="Top" Padding="14,12"
+                        <TextBox x:Name="MessageBox" Style="{StaticResource MdTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="140" VerticalContentAlignment="Top" Padding="14,12"
                                  PlaceholderText="What happened? Include the source and chapter if it's a loading issue." AutomationProperties.Name="Message" />
                     </StackPanel>
-                    <Button Content="Send Message" Style="{StaticResource PrimaryButton}" Height="46" FontSize="14" HorizontalAlignment="Stretch" Click="OnSend" />
+                    <Button x:Name="SendMessageButton" Content="Send Message" Style="{StaticResource PrimaryButton}" Height="46" FontSize="14" HorizontalAlignment="Stretch" Click="OnSend" />
                 </StackPanel>
             </Border>
         </Grid>

@@ -3,11 +3,14 @@ using MangaDl.Services;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.System;
 
 namespace MangaDl.Pages;
 
 public sealed partial class HelpPage : Page
 {
+    private const string SupportEmail = "zenmisan@gmail.com";
+
     private int _open;
 
     public HelpPage() => InitializeComponent();
@@ -29,6 +32,44 @@ public sealed partial class HelpPage : Page
         }
     }
 
-    // TODO(backend): send the support message.
-    private void OnSend(object sender, RoutedEventArgs e) => Nav.Toast("Message sent — we'll reply by email");
+    /// <summary>No support-ticket API exists on the backend — this opens the user's
+    /// default mail client addressed to the same contact the web Landing page uses.</summary>
+    private async void OnSend(object sender, RoutedEventArgs e)
+    {
+        var message = MessageBox.Text.Trim();
+        if (message.Length == 0)
+        {
+            Nav.Toast("Write a message first");
+            return;
+        }
+
+        var category = CatBug.IsChecked == true ? "Bug Report"
+            : CatFeature.IsChecked == true ? "Feature Request"
+            : CatAccount.IsChecked == true ? "Account"
+            : CatSource.IsChecked == true ? "Source / Extension"
+            : "General";
+
+        var subject = Uri.EscapeDataString($"[manga-dl Windows] {category}");
+        var body = Uri.EscapeDataString(message);
+        var mailto = new Uri($"mailto:{SupportEmail}?subject={subject}&body={body}");
+
+        try
+        {
+            var launched = await Launcher.LaunchUriAsync(mailto);
+            if (launched)
+            {
+                MessageBox.Text = string.Empty;
+                Nav.Toast("Opened in your email app");
+            }
+            else
+            {
+                Nav.Toast($"No email app found. Message us at {SupportEmail}");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("HelpPage.OnSend", ex);
+            Nav.Toast($"Couldn't open email app. Message us at {SupportEmail}");
+        }
+    }
 }
