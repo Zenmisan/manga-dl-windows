@@ -11,9 +11,11 @@ public sealed record LocalImportResult(string Name, string Ext, LocalImportStatu
 
 /// <summary>
 /// Imports local CBZ/ZIP files (and folders of loose images) into the library —
-/// the "drop files to import" flow on ImportPage. Provider is fixed to "local"
-/// so these rows are distinguishable from scraped-source entries everywhere else
-/// (Library, Downloads, history all key off provider/mangaId already).
+/// the "drop files to import" flow on ImportPage. By default each import becomes
+/// its own new series under provider "local". Pass an existing <see cref="LibraryEntity"/>
+/// as the target to instead add the imported file(s) as chapters under that series
+/// (which may be under any provider, not just "local") — the "Add to existing series"
+/// destination option.
 /// </summary>
 public sealed class LocalImportService
 {
@@ -39,8 +41,8 @@ public sealed class LocalImportService
     }
 
     /// <summary>A standalone archive file, dropped or picked directly (not inside a folder).
-    /// Becomes its own one-chapter series.</summary>
-    public async Task<LocalImportResult> ImportStandaloneFileAsync(string sourcePath)
+    /// Becomes its own one-chapter series, unless <paramref name="target"/> is given.</summary>
+    public async Task<LocalImportResult> ImportStandaloneFileAsync(string sourcePath, LibraryEntity? target = null)
     {
         var ext = Path.GetExtension(sourcePath);
         var name = Path.GetFileName(sourcePath);
@@ -53,17 +55,22 @@ public sealed class LocalImportService
                     : "Unsupported format");
         }
 
-        var title = Path.GetFileNameWithoutExtension(sourcePath);
-        return await ImportArchiveAsChapterAsync(sourcePath, seriesTitle: title, chapterLabel: "Chapter 1", displayName: name);
+        var chapterLabel = Path.GetFileNameWithoutExtension(sourcePath);
+        var seriesTitle = target?.Title ?? chapterLabel;
+        if (target is null) chapterLabel = "Chapter 1";
+
+        return await ImportArchiveAsChapterAsync(sourcePath, seriesTitle, chapterLabel, name, target);
     }
 
-    /// <summary>A folder, dropped or picked. The folder name becomes the series.
-    /// Each archive file directly inside it becomes a chapter; if there are no
-    /// archive files but there are loose images, the whole folder becomes one chapter.</summary>
-    public async Task<List<LocalImportResult>> ImportFolderAsync(string folderPath)
+    /// <summary>A folder, dropped or picked. The folder name becomes the series (unless
+    /// <paramref name="target"/> is given). Each archive file directly inside it becomes
+    /// a chapter; if there are no archive files but there are loose images, the whole
+    /// folder becomes one chapter.</summary>
+    public async Task<List<LocalImportResult>> ImportFolderAsync(string folderPath, LibraryEntity? target = null)
     {
         var results = new List<LocalImportResult>();
-        var seriesTitle = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var folderName = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var seriesTitle = target?.Title ?? folderName;
 
         var archiveFiles = Directory.EnumerateFiles(folderPath)
             .Where(f => ArchiveExtensions.Contains(Path.GetExtension(f)))
@@ -75,7 +82,7 @@ public sealed class LocalImportService
             foreach (var file in archiveFiles)
             {
                 var chapterLabel = Path.GetFileNameWithoutExtension(file);
-                results.Add(await ImportArchiveAsChapterAsync(file, seriesTitle, chapterLabel, Path.GetFileName(file)));
+                results.Add(await ImportArchiveAsChapterAsync(file, seriesTitle, chapterLabel, Path.GetFileName(file), target));
             }
             return results;
         }
@@ -87,15 +94,15 @@ public sealed class LocalImportService
 
         if (imageFiles.Count > 0)
         {
-            results.Add(await ImportImagesAsChapterAsync(imageFiles, seriesTitle, chapterLabel: seriesTitle, displayName: seriesTitle + "/"));
+            results.Add(await ImportImagesAsChapterAsync(imageFiles, seriesTitle, chapterLabel: folderName, displayName: folderName + "/", target));
             return results;
         }
 
-        results.Add(new LocalImportResult(seriesTitle + "/", "DIR", LocalImportStatus.Unsupported, "No CBZ/ZIP files or images found"));
+        results.Add(new LocalImportResult(folderName + "/", "DIR", LocalImportStatus.Unsupported, "No CBZ/ZIP files or images found"));
         return results;
     }
 
-    private async Task<LocalImportResult> ImportArchiveAsChapterAsync(string sourcePath, string seriesTitle, string chapterLabel, string displayName)
+    private async Task<LocalImportResult> ImportArchiveAsChapterAsync(string sourcePath, string seriesTitle, string chapterLabel, string displayName, LibraryEntity? target)
     {
         try
         {
@@ -108,13 +115,12 @@ public sealed class LocalImportService
                 }
             }
 
-            var mangaId = FileNaming.Slugify(seriesTitle);
             var destDir = Path.Combine(_libraryRoot, FileNaming.SanitizeFileName(seriesTitle));
             Directory.CreateDirectory(destDir);
             var destPath = Path.Combine(destDir, FileNaming.SanitizeFileName(chapterLabel) + ".cbz");
             File.Copy(sourcePath, destPath, overwrite: true);
 
-            await RegisterImportAsync(seriesTitle, mangaId, chapterLabel, destPath);
+            await RegisterImportAsync(seriesTitle, chapterLabel, destPath, target);
             return new LocalImportResult(displayName, "CBZ", LocalImportStatus.Done, "Imported");
         }
         catch (InvalidDataException)
@@ -127,11 +133,10 @@ public sealed class LocalImportService
         }
     }
 
-    private async Task<LocalImportResult> ImportImagesAsChapterAsync(List<string> imageFiles, string seriesTitle, string chapterLabel, string displayName)
+    private async Task<LocalImportResult> ImportImagesAsChapterAsync(List<string> imageFiles, string seriesTitle, string chapterLabel, string displayName, LibraryEntity? target)
     {
         try
         {
-            var mangaId = FileNaming.Slugify(seriesTitle);
             var destDir = Path.Combine(_libraryRoot, FileNaming.SanitizeFileName(seriesTitle));
             Directory.CreateDirectory(destDir);
             var destPath = Path.Combine(destDir, FileNaming.SanitizeFileName(chapterLabel) + ".cbz");
@@ -146,7 +151,7 @@ public sealed class LocalImportService
 
             await CbzBuilder.BuildCbzAsync(destPath, seriesTitle, chapterLabel, "1", pageImages, extensions);
 
-            await RegisterImportAsync(seriesTitle, mangaId, chapterLabel, destPath);
+            await RegisterImportAsync(seriesTitle, chapterLabel, destPath, target);
             return new LocalImportResult(displayName, "DIR", LocalImportStatus.Done, "Imported");
         }
         catch (Exception ex)
@@ -155,19 +160,25 @@ public sealed class LocalImportService
         }
     }
 
-    private async Task RegisterImportAsync(string seriesTitle, string mangaId, string chapterLabel, string cbzPath)
+    private async Task RegisterImportAsync(string seriesTitle, string chapterLabel, string cbzPath, LibraryEntity? target)
     {
-        await _db.AddToLibraryAsync(new LibraryEntity
+        var provider = target?.Provider ?? Provider;
+        var mangaId = target?.MangaId ?? FileNaming.Slugify(seriesTitle);
+
+        if (target is null)
         {
-            Provider = Provider,
-            MangaId = mangaId,
-            Title = seriesTitle,
-            Type = "manga"
-        });
+            await _db.AddToLibraryAsync(new LibraryEntity
+            {
+                Provider = provider,
+                MangaId = mangaId,
+                Title = seriesTitle,
+                Type = "manga"
+            });
+        }
 
         await _db.EnqueueDownloadAsync(new DownloadEntity
         {
-            Provider = Provider,
+            Provider = provider,
             MangaId = mangaId,
             MangaTitle = seriesTitle,
             ChapterId = FileNaming.Slugify(chapterLabel),

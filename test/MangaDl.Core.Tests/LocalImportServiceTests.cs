@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using MangaDl.Core.Database;
+using MangaDl.Core.Database.Entities;
 using MangaDl.Core.Local;
 using Xunit;
 
@@ -130,6 +131,37 @@ public class LocalImportServiceTests : IAsyncLifetime
         Assert.True(File.Exists(download.CbzPath));
         using var archive = ZipFile.OpenRead(download.CbzPath!);
         Assert.Contains(archive.Entries, e => e.Name.EndsWith(".xml"));
+    }
+
+    [Fact]
+    public async Task StandaloneFile_WithTarget_AddsChapterUnderExistingSeriesInstead()
+    {
+        await _db.AddToLibraryAsync(new LibraryEntity
+        {
+            Provider = "mangadex",
+            MangaId = "solo-leveling",
+            Title = "Solo Leveling",
+            Type = "manga"
+        });
+        var target = (await _db.GetLibraryAsync()).Single();
+
+        var cbzPath = Path.Combine(_sourceDir, "Extra Chapter.cbz");
+        WriteFakeCbz(cbzPath);
+
+        var result = await _importer.ImportStandaloneFileAsync(cbzPath, target);
+        Assert.Equal(LocalImportStatus.Done, result.Status);
+
+        // Still exactly one library entry — the existing one, not a new "local" series.
+        var library = await _db.GetLibraryAsync();
+        var entry = Assert.Single(library);
+        Assert.Equal("mangadex", entry.Provider);
+        Assert.Equal("solo-leveling", entry.MangaId);
+
+        var downloads = await _db.GetDownloadsAsync();
+        var download = Assert.Single(downloads);
+        Assert.Equal("mangadex", download.Provider);
+        Assert.Equal("solo-leveling", download.MangaId);
+        Assert.Equal("Extra Chapter", download.ChapterTitle);
     }
 
     [Fact]

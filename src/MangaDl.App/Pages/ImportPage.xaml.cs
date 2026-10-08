@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using MangaDl.Core;
+using MangaDl.Core.Database.Entities;
 using MangaDl.Core.Local;
 using MangaDl.Helpers;
 using MangaDl.Services;
@@ -61,10 +62,11 @@ public sealed partial class ImportPage : Page
 
     private async Task ImportItemsAsync(IReadOnlyList<IStorageItem> items)
     {
+        LibraryEntity? target = null;
         if (ExistingSeriesOption.IsChecked == true)
         {
-            Nav.Toast("Adding to an existing series needs a picker that isn't built yet — pick \"New series per folder\" for now");
-            return;
+            target = await PickExistingSeriesAsync();
+            if (target is null) return; // user cancelled, or library is empty (toast already shown)
         }
 
         var importedSeries = 0;
@@ -75,14 +77,14 @@ public sealed partial class ImportPage : Page
         {
             if (item is StorageFile file)
             {
-                var result = await AppServices.LocalImport.ImportStandaloneFileAsync(file.Path);
+                var result = await AppServices.LocalImport.ImportStandaloneFileAsync(file.Path, target);
                 AddRow(result);
                 if (result.Status == LocalImportStatus.Done) { importedSeries++; importedChapters++; }
                 else if (result.Status == LocalImportStatus.Error) failed++;
             }
             else if (item is StorageFolder folder)
             {
-                var results = await AppServices.LocalImport.ImportFolderAsync(folder.Path);
+                var results = await AppServices.LocalImport.ImportFolderAsync(folder.Path, target);
                 foreach (var result in results)
                 {
                     AddRow(result);
@@ -103,6 +105,40 @@ public sealed partial class ImportPage : Page
         {
             Nav.Toast("Import failed — check the file list below");
         }
+    }
+
+    /// <summary>Lets the user pick which library series the import should add chapters
+    /// to. Built in code rather than XAML — this is the only page needing it.</summary>
+    private async Task<LibraryEntity?> PickExistingSeriesAsync()
+    {
+        var library = await AppServices.Database.GetLibraryAsync();
+        if (library.Count == 0)
+        {
+            Nav.Toast("Library is empty — nothing to add to yet");
+            return null;
+        }
+
+        var list = new ListView
+        {
+            SelectionMode = ListViewSelectionMode.Single,
+            ItemsSource = library,
+            DisplayMemberPath = "Title",
+            MaxHeight = 400
+        };
+
+        var dialog = new ContentDialog
+        {
+            Title = "Add to which series?",
+            Content = list,
+            PrimaryButtonText = "Add here",
+            CloseButtonText = "Cancel",
+            IsPrimaryButtonEnabled = false,
+            XamlRoot = XamlRoot
+        };
+        list.SelectionChanged += (_, _) => dialog.IsPrimaryButtonEnabled = list.SelectedItem is not null;
+
+        var result = await dialog.ShowAsync();
+        return result == ContentDialogResult.Primary ? list.SelectedItem as LibraryEntity : null;
     }
 
     private void AddRow(LocalImportResult result)

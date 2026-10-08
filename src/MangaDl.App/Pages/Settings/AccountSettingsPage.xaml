@@ -48,11 +48,11 @@
                         <TextBlock Text="PUBLIC PROFILE" Style="{StaticResource Eyebrow}" />
                         <StackPanel Spacing="6">
                             <TextBlock Text="Display name" Style="{StaticResource FieldLabel}" />
-                            <TextBox Style="{StaticResource MdTextBox}" PlaceholderText="[Display name]" AutomationProperties.Name="Display name" />
+                            <TextBox x:Name="DisplayNameBox" Style="{StaticResource MdTextBox}" PlaceholderText="[Display name]" AutomationProperties.Name="Display name" />
                         </StackPanel>
                         <StackPanel Spacing="6">
                             <TextBlock Text="Bio" Style="{StaticResource FieldLabel}" />
-                            <TextBox Style="{StaticResource MdTextBox}" PlaceholderText="A short line about what you like to read" AcceptsReturn="True" TextWrapping="Wrap" Height="96" AutomationProperties.Name="Bio" />
+                            <TextBox x:Name="BioBox" Style="{StaticResource MdTextBox}" PlaceholderText="A short line about what you like to read" AcceptsReturn="True" TextWrapping="Wrap" Height="96" AutomationProperties.Name="Bio" />
                         </StackPanel>
                         <c:SettingRow Label="Show reading activity" Description="Let others see what you're reading and your stats." ShowDivider="False">
                             <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />

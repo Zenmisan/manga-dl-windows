@@ -87,7 +87,7 @@ public sealed class HttpService : IDisposable
             }
         }
 
-        if (string.Equals(method, "POST", StringComparison.OrdinalIgnoreCase) && body != null)
+        if (body != null)
         {
             var contentType = headers != null && headers.TryGetValue("Content-Type", out var ctHeader)
                 ? ctHeader

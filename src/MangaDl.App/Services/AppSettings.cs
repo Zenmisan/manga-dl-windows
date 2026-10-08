@@ -29,6 +29,8 @@ public sealed class AppSettings
     public string? SupabaseAnonKey { get; set; } = DefaultSupabaseAnonKey;
     public string? UserEmail { get; set; }
     public string? UserId { get; set; }
+    public string? DisplayName { get; set; }
+    public string? Bio { get; set; }
 
     // AniList Tracker Settings
     public string AnilistClientId { get; set; } = "53109";

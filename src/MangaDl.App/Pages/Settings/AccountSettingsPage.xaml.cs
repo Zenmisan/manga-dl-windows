@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -24,15 +25,56 @@ public sealed partial class AccountSettingsPage : Page
                 UsernameEmailText.Text = "Guest / Offline mode";
                 ProfileNameText.Text = "Local Reader";
             }
+
+            DisplayNameBox.Text = AppServices.Settings.DisplayName ?? "";
+            BioBox.Text = AppServices.Settings.Bio ?? "";
         };
     }
 
     private void OnViewProfile(object sender, RoutedEventArgs e) => Nav.Go(typeof(ProfilePage));
 
-    private void OnSave(object sender, RoutedEventArgs e)
+    private async void OnSave(object sender, RoutedEventArgs e)
     {
+        // Local-first, same pattern as the rest of AppSettings — the app must stay
+        // fully usable with no backend configured (PROJECT.md's own rule for the
+        // native-app architecture). Backend sync below is a best-effort bonus.
+        AppServices.Settings.DisplayName = DisplayNameBox.Text.Trim();
+        AppServices.Settings.Bio = BioBox.Text.Trim();
         AppServices.Settings.Save();
-        Nav.Toast("Profile settings saved");
+
+        if (string.IsNullOrWhiteSpace(AppServices.Settings.BackendUrl))
+        {
+            Nav.Toast("Profile saved on this PC");
+            return;
+        }
+
+        var (accessToken, _) = CredentialStore.Load();
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            Nav.Toast("Profile saved on this PC (sign in to sync to your account)");
+            return;
+        }
+
+        try
+        {
+            var body = JsonSerializer.Serialize(new
+            {
+                display_name = AppServices.Settings.DisplayName,
+                bio = AppServices.Settings.Bio
+            });
+            var headers = new Dictionary<string, string>
+            {
+                ["Content-Type"] = "application/json",
+                ["Authorization"] = $"Bearer {accessToken}"
+            };
+            var result = await AppServices.Http.FetchAsync("/users/profile", "PUT", headers, body);
+            Nav.Toast(result.IsSuccess ? "Profile saved and synced" : "Profile saved on this PC (sync failed)");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("AccountSettingsPage.OnSave", ex);
+            Nav.Toast("Profile saved on this PC (sync failed)");
+        }
     }
 
     private async void OnSyncNow(object sender, RoutedEventArgs e)

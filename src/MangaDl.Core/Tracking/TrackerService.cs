@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -157,7 +158,10 @@ public sealed class TrackerService
                 results.Add(new TrackerSearchResult(id, title, chapters, cover, "AniList"));
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[WARN] TrackerService.SearchAnilistAsync: {ex}");
+        }
 
         return results;
     }
@@ -306,7 +310,10 @@ public sealed class TrackerService
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[WARN] TrackerService.SearchMalAsync: {ex}");
+        }
 
         return results;
     }
