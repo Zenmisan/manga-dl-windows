@@ -286,7 +286,7 @@ public sealed partial class LibraryPage : Page
     {
         if (GetMangaFromContext(sender) is Manga manga)
         {
-            var isNovel = AppServices.Extensions.FindExtension(manga.Source)?.Type == "novel";
+            var isNovel = AppServices.Extensions.IsNovel(manga.Source) || AppServices.Extensions.GetExtension(manga.Source)?.Type == "novel";
             Nav.Go(isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage), manga);
         }
     }

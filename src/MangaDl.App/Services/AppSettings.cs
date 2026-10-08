@@ -40,6 +40,7 @@ public sealed class AppSettings
     /// self-hosting their own backend instead; it isn't something that should need
     /// manual entry to get cross-platform profile sync working out of the box.</summary>
     public string? BackendUrl { get; set; } = DefaultBackendUrl;
+    public string? ApiKey { get; set; }
     public bool AutoCheckUpdates { get; set; } = true;
     public long LastUpdateCheck { get; set; } = 0;
     public bool AutoDownloadNew { get; set; } = false;

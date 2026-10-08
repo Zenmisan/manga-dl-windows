@@ -79,7 +79,7 @@ public sealed partial class UpdatesPage : Page
     {
         if (((FrameworkElement)sender).DataContext is UpdateItem item)
         {
-            var isNovel = AppServices.Extensions.FindExtension(item.Manga.Source)?.Type == "novel";
+            var isNovel = AppServices.Extensions.IsNovel(item.Manga.Source) || AppServices.Extensions.GetExtension(item.Manga.Source)?.Type == "novel";
             var targetType = isNovel ? typeof(NovelReaderPage) : typeof(ReaderPage);
 
             if (!string.IsNullOrEmpty(item.ChapterId))

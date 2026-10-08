@@ -70,9 +70,9 @@ public sealed partial class ExtensionsPage : Page
     private void OnTab(object sender, RoutedEventArgs e)
     {
         if (SourcesPanel is null || ExtensionsPanel is null || MigratePanel is null) return;
-        SourcesPanel.Visibility = X.Vis(sender == SourcesTab);
-        ExtensionsPanel.Visibility = X.Vis(sender == ExtensionsTab);
-        MigratePanel.Visibility = X.Vis(sender == MigrateTab);
+        SourcesPanel.Visibility = X.Vis(ReferenceEquals(sender, SourcesTab));
+        ExtensionsPanel.Visibility = X.Vis(ReferenceEquals(sender, ExtensionsTab));
+        MigratePanel.Visibility = X.Vis(ReferenceEquals(sender, MigrateTab));
     }
 
     private void OnSearch(object sender, RoutedEventArgs e) => Nav.Go(typeof(SearchPage));

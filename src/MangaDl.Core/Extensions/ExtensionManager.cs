@@ -84,6 +84,8 @@ public sealed class ExtensionManager : IDisposable
 
     public ExtensionMeta? GetExtension(string id) => _registry.TryGetValue(id, out var meta) ? meta : null;
 
+    public ExtensionMeta? FindExtension(string id) => GetExtension(id);
+
     public bool IsNovel(string id) => NovelSourceIds.Contains(id);
 
     public async Task<ExtensionBridge> GetBridgeAsync(string sourceId)

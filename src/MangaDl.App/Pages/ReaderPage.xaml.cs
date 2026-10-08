@@ -251,9 +251,9 @@ public sealed partial class ReaderPage : Page
     // ----- Layout -----
     private void OnLayoutChecked(object sender, RoutedEventArgs e)
     {
-        if (sender == WebtoonOption)
+        if (ReferenceEquals(sender, WebtoonOption))
             SetLayoutMode("webtoon");
-        else if (sender == SingleOption)
+        else if (ReferenceEquals(sender, SingleOption))
             SetLayoutMode("single");
         else
             SetLayoutMode("spread");
