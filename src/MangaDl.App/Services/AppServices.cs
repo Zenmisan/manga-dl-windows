@@ -1,4 +1,5 @@
 using MangaDl.Core.Auth;
+using MangaDl.Core.Backup;
 using MangaDl.Core.Database;
 using MangaDl.Core.Downloads;
 using MangaDl.Core.Extensions;
@@ -44,6 +45,8 @@ public static class AppServices
     public static LocalImportService LocalImport { get; } = new(
         Database,
         Settings.DownloadPath);
+
+    public static TachibkImportService TachibkImport { get; } = new(Database);
 
     public static SupabaseSyncService Sync { get; } = new(
         Http,
