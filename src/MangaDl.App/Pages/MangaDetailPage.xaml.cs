@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using MangaDl.Core;
 using MangaDl.Core.Database.Entities;
 using MangaDl.Core.Local;
+using MangaDl.Dialogs;
 using MangaDl.Helpers;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
@@ -186,6 +187,29 @@ public sealed partial class MangaDetailPage : Page
     }
 
     private void OnBack(object sender, RoutedEventArgs e) => Nav.Back();
+
+    private async void OnCategoriesClicked(object sender, RoutedEventArgs e)
+    {
+        if (_currentManga == null) return;
+        try
+        {
+            var saved = await CategoryDialogHelper.ShowAsync(
+                XamlRoot,
+                _currentManga.Source,
+                _currentManga.Id,
+                _currentManga.Title);
+
+            if (saved)
+            {
+                Nav.Toast($"Categories updated for \"{_currentManga.Title}\"");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("MangaDetailPage.OnCategoriesClicked", ex);
+            Nav.Toast("Couldn't update categories");
+        }
+    }
 
     private void OnTrack(object sender, RoutedEventArgs e) =>
         Nav.Go(typeof(Settings.TrackersSettingsPage));

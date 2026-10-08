@@ -56,6 +56,7 @@
                             </StackPanel>
                         </Button>
                         <Button x:Name="InLibrary" Content="In Library" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnLibraryToggled" />
+                        <Button x:Name="CategoriesButton" Content="Categories" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnCategoriesClicked" />
                         <Button Content="Track" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnTrack" />
                         <Button Content="Download" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnDownload" />
                         <Button Content="Migrate" Style="{StaticResource GhostButton}" Background="{StaticResource DarkChipBrush}" BorderThickness="0" Height="46" FontSize="14" Click="OnMigrate" />
