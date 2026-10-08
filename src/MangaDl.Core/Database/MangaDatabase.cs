@@ -290,6 +290,43 @@ public sealed class MangaDatabase : IAsyncDisposable
         return mappings.Select(x => x.CategoryId).ToList();
     }
 
+    // ----------------------------------------------------
+    // Tracker Binds
+    // ----------------------------------------------------
+
+    public async Task<List<TrackerBindEntity>> GetTrackerBindsAsync(string provider, string mangaId)
+    {
+        await InitializeAsync();
+        return await _db.Table<TrackerBindEntity>()
+            .Where(x => x.Provider == provider && x.MangaId == mangaId)
+            .ToListAsync();
+    }
+
+    public async Task<TrackerBindEntity?> GetTrackerBindAsync(string provider, string mangaId, string tracker)
+    {
+        await InitializeAsync();
+        var id = $"{provider}/{mangaId}/{tracker}";
+        return await _db.Table<TrackerBindEntity>().Where(x => x.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task SaveTrackerBindAsync(TrackerBindEntity bind)
+    {
+        await InitializeAsync();
+        if (string.IsNullOrEmpty(bind.Id))
+        {
+            bind.Id = $"{bind.Provider}/{bind.MangaId}/{bind.Tracker}";
+        }
+        bind.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(bind);
+    }
+
+    public async Task DeleteTrackerBindAsync(string provider, string mangaId, string tracker)
+    {
+        await InitializeAsync();
+        var id = $"{provider}/{mangaId}/{tracker}";
+        await _db.Table<TrackerBindEntity>().DeleteAsync(x => x.Id == id);
+    }
+
     public async ValueTask DisposeAsync()
     {
         await _db.CloseAsync();

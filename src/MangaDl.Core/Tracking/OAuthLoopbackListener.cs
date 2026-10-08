@@ -24,6 +24,7 @@ public sealed class OAuthLoopbackListener : IDisposable
     public async Task<string?> WaitForAuthCodeAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         var prefix = $"http://localhost:{_port}/";
+        Stop();
         _listener = new HttpListener();
         _listener.Prefixes.Add(prefix);
 
@@ -42,35 +43,48 @@ public sealed class OAuthLoopbackListener : IDisposable
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(timeout);
 
-            // Wait for context with cancellation support
-            var contextTask = _listener.GetContextAsync();
-            var completed = await Task.WhenAny(contextTask, Task.Delay(timeout, cts.Token));
-
-            if (completed != contextTask)
+            while (!cts.IsCancellationRequested)
             {
-                return null; // Timed out
+                // Wait for context with cancellation support
+                var contextTask = _listener.GetContextAsync();
+                var completed = await Task.WhenAny(contextTask, Task.Delay(timeout, cts.Token));
+
+                if (completed != contextTask)
+                {
+                    return null; // Timed out
+                }
+
+                var context = await contextTask;
+                var req = context.Request;
+                var resp = context.Response;
+
+                // Extract code and error from query string
+                var code = req.QueryString["code"];
+                var error = req.QueryString["error"];
+
+                // If this is a favicon or unrelated request without code or error, reply 204 and continue listening
+                if (string.IsNullOrEmpty(code) && string.IsNullOrEmpty(error))
+                {
+                    resp.StatusCode = (int)HttpStatusCode.NoContent;
+                    resp.Close();
+                    continue;
+                }
+
+                // Format a friendly response page for the user's browser
+                var html = GenerateResponseHtml(string.IsNullOrEmpty(error) && !string.IsNullOrEmpty(code));
+                var buffer = Encoding.UTF8.GetBytes(html);
+
+                resp.StatusCode = (int)HttpStatusCode.OK;
+                resp.ContentType = "text/html; charset=utf-8";
+                resp.ContentLength64 = buffer.Length;
+
+                await resp.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);
+                resp.OutputStream.Close();
+
+                return code;
             }
 
-            var context = await contextTask;
-            var req = context.Request;
-            var resp = context.Response;
-
-            // Extract code and error from query string
-            var code = req.QueryString["code"];
-            var error = req.QueryString["error"];
-
-            // Format a friendly response page for the user's browser
-            var html = GenerateResponseHtml(string.IsNullOrEmpty(error) && !string.IsNullOrEmpty(code));
-            var buffer = Encoding.UTF8.GetBytes(html);
-
-            resp.StatusCode = (int)HttpStatusCode.OK;
-            resp.ContentType = "text/html; charset=utf-8";
-            resp.ContentLength64 = buffer.Length;
-
-            await resp.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);
-            resp.OutputStream.Close();
-
-            return code;
+            return null;
         }
         finally
         {
