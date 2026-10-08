@@ -35,11 +35,17 @@ public class ArchiveInspectorTests
     }
 
     [Fact]
-    public void ParseArchiveFilename_SingleChapterExample_MatchesDocComment()
+    public void ParseArchiveFilename_SingleChapterExample_MatchesVerifiedRealBehaviorNotTheStaleComment()
     {
-        // "One_Piece_Chapter_1080.cbz" -> { seriesTitle: "One Piece", rangeStart: 1080, rangeEnd: 1080 }
+        // archiveInspector.ts's own doc comment claims this produces seriesTitle "One
+        // Piece" — verified against real Node that's wrong: the first regex needs \s
+        // between "Chapter" and the digits, but the actual separator here is "_", not
+        // whitespace, so it never matches "Chapter_1080" and falls through to the
+        // generic digit-boundary regex instead, which captures starting at the "_"
+        // right before "1080" — leaving "Chapter" attached to the series title.
+        // This is what the actual code does; ported faithfully, not against the comment.
         var meta = ArchiveInspector.ParseArchiveFilename("One_Piece_Chapter_1080.cbz");
-        Assert.Equal("One Piece", meta.SeriesTitle);
+        Assert.Equal("One Piece Chapter", meta.SeriesTitle);
         Assert.Equal(1080, meta.RangeStart);
         Assert.Equal(1080, meta.RangeEnd);
         Assert.False(meta.IsRange);

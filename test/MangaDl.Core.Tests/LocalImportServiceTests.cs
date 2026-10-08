@@ -90,8 +90,11 @@ public class LocalImportServiceTests : IAsyncLifetime
     [Fact]
     public async Task StandaloneFile_FilenameWithChapterNumber_ParsesSeriesAndChapterTitle()
     {
-        // Mirrors archiveInspector.ts's own worked example: "One_Piece_Chapter_1080.cbz"
-        // -> series "One Piece", chapter number 1080.
+        // archiveInspector.ts's doc comment claims "One_Piece_Chapter_1080.cbz" -> series
+        // "One Piece" — verified against real Node that's stale (see ArchiveInspectorTests
+        // for why); the real behavior keeps "Chapter" attached to the series title since
+        // the underscore separator isn't whitespace. Ported faithfully to match the
+        // actual regex, not the comment.
         var cbzPath = Path.Combine(_sourceDir, "One_Piece_Chapter_1080.cbz");
         WriteFakeCbz(cbzPath);
 
@@ -101,7 +104,7 @@ public class LocalImportServiceTests : IAsyncLifetime
 
         var library = await _db.GetLibraryAsync();
         var entry = Assert.Single(library);
-        Assert.Equal("One Piece", entry.Title);
+        Assert.Equal("One Piece Chapter", entry.Title);
 
         var download = Assert.Single(await _db.GetDownloadsAsync());
         Assert.Equal(1080, download.ChapterNumber);

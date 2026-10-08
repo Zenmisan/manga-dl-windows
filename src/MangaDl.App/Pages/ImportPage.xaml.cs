@@ -77,10 +77,14 @@ public sealed partial class ImportPage : Page
         {
             if (item is StorageFile file)
             {
-                var result = await AppServices.LocalImport.ImportStandaloneFileAsync(file.Path, target);
-                AddRow(result);
-                if (result.Status == LocalImportStatus.Done) { importedSeries++; importedChapters++; }
-                else if (result.Status == LocalImportStatus.Error) failed++;
+                var results = await AppServices.LocalImport.ImportStandaloneFileAsync(file.Path, target);
+                foreach (var result in results)
+                {
+                    AddRow(result);
+                    if (result.Status == LocalImportStatus.Error) failed++;
+                }
+                var done = results.Count(r => r.Status == LocalImportStatus.Done);
+                if (done > 0) { importedSeries++; importedChapters += done; }
             }
             else if (item is StorageFolder folder)
             {
