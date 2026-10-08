@@ -6,7 +6,13 @@ using Windows.UI;
 namespace MangaDl.Services;
 
 /// <summary>Accent options from Settings › General. Red is the brand default.</summary>
-public sealed record Accent(string Name, string Main, string Light, string Soft);
+public sealed record Accent(string Name, string Main, string Light, string Soft)
+{
+    public string Name { get; set; } = Name;
+    public string Main { get; set; } = Main;
+    public string Light { get; set; } = Light;
+    public string Soft { get; set; } = Soft;
+}
 
 public static class ThemeService
 {

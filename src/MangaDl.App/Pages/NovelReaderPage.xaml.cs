@@ -12,7 +12,14 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace MangaDl.Pages;
 
-public sealed record NovelChapter(string Id, string Name, bool IsCurrent, bool Read, string Number = "1");
+public sealed record NovelChapter(string Id, string Name, bool IsCurrent, bool Read, string Number = "1")
+{
+    public string Id { get; set; } = Id;
+    public string Name { get; set; } = Name;
+    public bool IsCurrent { get; set; } = IsCurrent;
+    public bool Read { get; set; } = Read;
+    public string Number { get; set; } = Number;
+}
 
 public sealed partial class NovelReaderPage : Page
 {

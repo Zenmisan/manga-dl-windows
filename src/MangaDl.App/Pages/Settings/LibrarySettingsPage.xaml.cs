@@ -7,7 +7,11 @@ using Windows.System;
 
 namespace MangaDl.Pages.Settings;
 
-public sealed record CategoryRow(string Name, string Count);
+public sealed record CategoryRow(string Name, string Count)
+{
+    public string Name { get; set; } = Name;
+    public string Count { get; set; } = Count;
+}
 
 public sealed partial class LibrarySettingsPage : Page
 {

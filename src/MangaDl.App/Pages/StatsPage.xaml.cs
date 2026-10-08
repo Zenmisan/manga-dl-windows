@@ -8,7 +8,10 @@ using Microsoft.UI.Xaml.Controls;
 namespace MangaDl.Pages;
 
 /// <summary>One day in the activity heatmap (0–3 intensity).</summary>
-public sealed record HeatDay(int Level);
+public sealed record HeatDay(int Level)
+{
+    public int Level { get; set; } = Level;
+}
 
 public sealed partial class StatsPage : Page
 {
