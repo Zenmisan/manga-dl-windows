@@ -241,6 +241,12 @@ public sealed class MangaDatabase : IAsyncDisposable
         await _db.Table<DownloadEntity>().DeleteAsync(x => x.Id == id);
     }
 
+    public async Task ClearCompletedDownloadsAsync()
+    {
+        await InitializeAsync();
+        await _db.Table<DownloadEntity>().DeleteAsync(x => x.Status == "completed");
+    }
+
     // ----------------------------------------------------
     // Categories
     // ----------------------------------------------------

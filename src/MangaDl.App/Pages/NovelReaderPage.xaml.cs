@@ -12,12 +12,12 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace MangaDl.Pages;
 
-public sealed record NovelChapter(string Id, string Name, bool IsCurrent, bool Read);
+public sealed record NovelChapter(string Id, string Name, bool IsCurrent, bool Read, string Number = "1");
 
 public sealed partial class NovelReaderPage : Page
 {
     public ObservableCollection<NovelChapter> Chapters { get; } = new(
-        Enumerable.Range(1, 10).Select(n => new NovelChapter(n.ToString(), $"Ch. {n} · Chapter {n}", n == 1, n < 1)));
+        Enumerable.Range(1, 10).Select(n => new NovelChapter(n.ToString(), $"Ch. {n} · Chapter {n}", n == 1, n < 1, n.ToString())));
 
     private Manga? _currentNovel;
 
@@ -59,7 +59,7 @@ public sealed partial class NovelReaderPage : Page
                     Chapters.Clear();
                     for (var i = 0; i < local.Count; i++)
                     {
-                        Chapters.Add(new NovelChapter(local[i].ChapterId, local[i].ChapterTitle ?? $"Chapter {i + 1}", i == 0, false));
+                        Chapters.Add(new NovelChapter(local[i].ChapterId, local[i].ChapterTitle ?? $"Chapter {i + 1}", i == 0, false, local[i].ChapterNumber.ToString()));
                     }
                     await LoadChapterTextAsync(Chapters[0]);
                 }
@@ -73,7 +73,7 @@ public sealed partial class NovelReaderPage : Page
                 for (var i = 0; i < detail.Chapters.Count; i++)
                 {
                     var ch = detail.Chapters[i];
-                    Chapters.Add(new NovelChapter(ch.Id, ch.Title ?? $"Ch. {ch.Number}", i == 0, false));
+                    Chapters.Add(new NovelChapter(ch.Id, ch.Title ?? $"Ch. {ch.Number}", i == 0, false, ch.Number));
                 }
 
                 if (Chapters.Count > 0)
