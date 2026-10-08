@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using MangaDl.Core;
+using MangaDl.Core.Extensions;
+using MangaDl.Core.Local;
 using MangaDl.Helpers;
 using MangaDl.Services;
 using Microsoft.UI.Xaml;
@@ -43,6 +45,27 @@ public sealed partial class NovelReaderPage : Page
         try
         {
             NovelTitleText.Text = _currentNovel.Title;
+
+            if (_currentNovel.Source == LocalImportService.Provider)
+            {
+                var downloads = await AppServices.Database.GetDownloadsAsync();
+                var local = downloads
+                    .Where(d => d.Provider == LocalImportService.Provider && d.MangaId == _currentNovel.Id)
+                    .OrderBy(d => d.ChapterNumber)
+                    .ToList();
+
+                if (local.Count > 0)
+                {
+                    Chapters.Clear();
+                    for (var i = 0; i < local.Count; i++)
+                    {
+                        Chapters.Add(new NovelChapter(local[i].ChapterId, local[i].ChapterTitle ?? $"Chapter {i + 1}", i == 0, false));
+                    }
+                    await LoadChapterTextAsync(Chapters[0]);
+                }
+                return;
+            }
+
             var detail = await AppServices.Extensions.GetMangaDetailAsync(_currentNovel.Source, _currentNovel.Id);
             if (detail != null && detail.Chapters.Count > 0)
             {
@@ -98,7 +121,19 @@ public sealed partial class NovelReaderPage : Page
 
         try
         {
-            var result = await AppServices.Extensions.GetChapterTextAsync(_currentNovel.Source, chapter.Id);
+            ChapterTextResult? result;
+            if (_currentNovel.Source == LocalImportService.Provider)
+            {
+                var download = await AppServices.Database.GetDownloadAsync(LocalImportService.Provider, _currentNovel.Id, chapter.Id);
+                var html = download?.CbzPath != null && File.Exists(download.CbzPath)
+                    ? await File.ReadAllTextAsync(download.CbzPath)
+                    : "";
+                result = new ChapterTextResult(html, "html");
+            }
+            else
+            {
+                result = await AppServices.Extensions.GetChapterTextAsync(_currentNovel.Source, chapter.Id);
+            }
             var text = result?.Content ?? string.Empty;
             if (result?.Format == "html" && !string.IsNullOrEmpty(text))
             {
