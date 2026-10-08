@@ -27,6 +27,9 @@ public sealed class LibraryEntity
     [Column("type")]
     public string Type { get; set; } = "manga"; // "manga" | "novel"
 
+    [Column("total_chapters")]
+    public int TotalChapters { get; set; }
+
     [Column("added_at")]
     public long AddedAt { get; set; }
 
@@ -190,3 +193,36 @@ public sealed class TrackerBindEntity
     [Column("updated_at")]
     public long UpdatedAt { get; set; }
 }
+
+[Table("new_chapters")]
+public sealed class NewChapterEntity
+{
+    [PrimaryKey]
+    [Column("id")]
+    public string Id { get; set; } = string.Empty; // "{provider}/{manga_id}/{chapter_id}"
+
+    [Column("manga_id")]
+    public string MangaId { get; set; } = string.Empty;
+
+    [Column("manga_title")]
+    public string MangaTitle { get; set; } = string.Empty;
+
+    [Column("cover_url")]
+    public string? CoverUrl { get; set; }
+
+    [Column("provider")]
+    public string Provider { get; set; } = string.Empty;
+
+    [Column("chapter_id")]
+    public string ChapterId { get; set; } = string.Empty;
+
+    [Column("chapter_title")]
+    public string ChapterTitle { get; set; } = string.Empty;
+
+    [Column("chapter_number")]
+    public double ChapterNumber { get; set; }
+
+    [Column("detected_at")]
+    public long DetectedAt { get; set; }
+}
+

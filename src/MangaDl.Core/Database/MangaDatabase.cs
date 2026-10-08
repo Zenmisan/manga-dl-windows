@@ -36,6 +36,7 @@ public sealed class MangaDatabase : IAsyncDisposable
             await _db.CreateTableAsync<LibraryCategoryEntity>();
             await _db.CreateTableAsync<HistoryEntity>();
             await _db.CreateTableAsync<TrackerBindEntity>();
+            await _db.CreateTableAsync<NewChapterEntity>();
 
             // Ensure default categories exist
             var count = await _db.Table<CategoryEntity>().CountAsync();
@@ -102,6 +103,19 @@ public sealed class MangaDatabase : IAsyncDisposable
         var id = $"{provider}/{mangaId}";
         await _db.Table<LibraryEntity>().DeleteAsync(x => x.Id == id);
         await _db.Table<LibraryCategoryEntity>().DeleteAsync(x => x.LibraryId == id);
+    }
+
+    public async Task UpdateTotalChaptersAsync(string provider, string mangaId, int totalChapters)
+    {
+        await InitializeAsync();
+        var id = $"{provider}/{mangaId}";
+        var item = await _db.Table<LibraryEntity>().Where(x => x.Id == id).FirstOrDefaultAsync();
+        if (item != null)
+        {
+            item.TotalChapters = totalChapters;
+            item.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            await _db.UpdateAsync(item);
+        }
     }
 
     // ----------------------------------------------------
@@ -343,6 +357,45 @@ public sealed class MangaDatabase : IAsyncDisposable
     {
         await InitializeAsync();
         return await _db.Table<LibraryCategoryEntity>().ToListAsync();
+    }
+
+    // ----------------------------------------------------
+    // New Chapters (Updates)
+    // ----------------------------------------------------
+
+    public async Task<List<NewChapterEntity>> GetNewChaptersAsync()
+    {
+        await InitializeAsync();
+        return await _db.Table<NewChapterEntity>().OrderByDescending(x => x.DetectedAt).ToListAsync();
+    }
+
+    public async Task SaveNewChaptersAsync(IEnumerable<NewChapterEntity> entries)
+    {
+        await InitializeAsync();
+        foreach (var entry in entries)
+        {
+            if (string.IsNullOrEmpty(entry.Id))
+            {
+                entry.Id = $"{entry.Provider}/{entry.MangaId}/{entry.ChapterId}";
+            }
+            if (entry.DetectedAt == 0)
+            {
+                entry.DetectedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            }
+            await _db.InsertOrReplaceAsync(entry);
+        }
+    }
+
+    public async Task RemoveNewChapterAsync(string id)
+    {
+        await InitializeAsync();
+        await _db.Table<NewChapterEntity>().DeleteAsync(x => x.Id == id);
+    }
+
+    public async Task ClearNewChaptersAsync()
+    {
+        await InitializeAsync();
+        await _db.DeleteAllAsync<NewChapterEntity>();
     }
 
     public async ValueTask DisposeAsync()

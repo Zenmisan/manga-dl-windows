@@ -23,7 +23,13 @@ public sealed record Chapter(
     string Status,
     bool Read = false);
 
-public sealed record UpdateItem(Manga Manga, string Chapter, string Source);
+public sealed record UpdateItem(
+    Manga Manga,
+    string Chapter,
+    string Source,
+    string? ChapterId = null,
+    double ChapterNumber = 0,
+    long DetectedAt = 0);
 
 public sealed record UpdateGroup(string Label, IReadOnlyList<UpdateItem> Items);
 

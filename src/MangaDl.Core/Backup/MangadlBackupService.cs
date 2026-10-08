@@ -106,6 +106,7 @@ public sealed class MangadlBackupService
                 Url = item.Url ?? "",
                 Type = item.Type ?? "manga",
                 AddedAt = item.AddedAt,
+                TotalChapters = item.TotalChapters,
                 Categories = cats,
             });
         }
@@ -199,6 +200,7 @@ public sealed class MangadlBackupService
                 CoverUrl = m.CoverUrl,
                 Url = m.Url,
                 Type = string.IsNullOrWhiteSpace(m.Type) ? "manga" : m.Type,
+                TotalChapters = m.TotalChapters,
                 AddedAt = m.AddedAt > 0 ? m.AddedAt : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
             mangaRestored++;
