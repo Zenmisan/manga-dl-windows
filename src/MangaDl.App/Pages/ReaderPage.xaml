@@ -150,11 +150,11 @@
                             </Grid>
                             <Grid MinHeight="44">
                                 <TextBlock Text="Crop borders" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
-                                <ToggleButton Style="{StaticResource MdSwitch}" HorizontalAlignment="Right" AutomationProperties.Name="Crop borders" />
+                                <ToggleButton x:Name="DrawerCropBorders" Style="{StaticResource MdSwitch}" HorizontalAlignment="Right" AutomationProperties.Name="Crop borders" />
                             </Grid>
                             <Grid MinHeight="44">
                                 <TextBlock Text="Tap zones" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
-                                <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" HorizontalAlignment="Right" AutomationProperties.Name="Tap zones" />
+                                <ToggleButton x:Name="DrawerTapZones" Style="{StaticResource MdSwitch}" IsChecked="True" HorizontalAlignment="Right" AutomationProperties.Name="Tap zones" />
                             </Grid>
                         </StackPanel>
 

@@ -31,19 +31,19 @@
                             <c:SettingRow.Below>
                                 <Border Background="{StaticResource SurfaceRaisedBrush}" CornerRadius="10" Padding="3" HorizontalAlignment="Left">
                                     <StackPanel Orientation="Horizontal">
-                                        <RadioButton Content="Left to right" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" IsChecked="True" />
-                                        <RadioButton Content="Right to left" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" />
-                                        <RadioButton Content="Vertical" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" />
-                                        <RadioButton Content="Webtoon" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" />
+                                        <RadioButton x:Name="ModeLtr" Content="Left to right" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" Checked="OnReadingModeChanged" />
+                                        <RadioButton x:Name="ModeRtl" Content="Right to left" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" Checked="OnReadingModeChanged" />
+                                        <RadioButton x:Name="ModeVertical" Content="Vertical" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" Checked="OnReadingModeChanged" />
+                                        <RadioButton x:Name="ModeWebtoon" Content="Webtoon" GroupName="ReadMode" Style="{StaticResource SegmentRadio}" Checked="OnReadingModeChanged" />
                                     </StackPanel>
                                 </Border>
                             </c:SettingRow.Below>
                         </c:SettingRow>
                         <c:SettingRow Label="Two-page spread" Description="Show pages side by side on wide windows.">
-                            <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                            <ToggleButton x:Name="TwoPageSpreadToggle" Style="{StaticResource MdSwitch}" Checked="OnTwoPageSpreadToggled" Unchecked="OnTwoPageSpreadToggled" />
                         </c:SettingRow>
                         <c:SettingRow Label="Crop borders" Description="Trim white or black margins around pages.">
-                            <ToggleButton Style="{StaticResource MdSwitch}" />
+                            <ToggleButton x:Name="CropBordersToggle" Style="{StaticResource MdSwitch}" Checked="OnCropBordersToggled" Unchecked="OnCropBordersToggled" />
                         </c:SettingRow>
                         <c:SettingRow Label="Webtoon side padding" Description="Narrow the strip on wide screens." ShowDivider="False">
                             <c:SettingRow.Below>
@@ -68,9 +68,9 @@
                             <c:SettingRow.Below>
                                 <Border Background="{StaticResource SurfaceRaisedBrush}" CornerRadius="10" Padding="3" HorizontalAlignment="Left">
                                     <StackPanel Orientation="Horizontal">
-                                        <RadioButton Content="Fit height" GroupName="ReadFit" Style="{StaticResource SegmentRadio}" IsChecked="True" />
-                                        <RadioButton Content="Fit width" GroupName="ReadFit" Style="{StaticResource SegmentRadio}" />
-                                        <RadioButton Content="Original" GroupName="ReadFit" Style="{StaticResource SegmentRadio}" />
+                                        <RadioButton x:Name="FitHeight" Content="Fit height" GroupName="ReadFit" Style="{StaticResource SegmentRadio}" Checked="OnPageFitChanged" />
+                                        <RadioButton x:Name="FitWidth" Content="Fit width" GroupName="ReadFit" Style="{StaticResource SegmentRadio}" Checked="OnPageFitChanged" />
+                                        <RadioButton x:Name="FitOriginal" Content="Original" GroupName="ReadFit" Style="{StaticResource SegmentRadio}" Checked="OnPageFitChanged" />
                                     </StackPanel>
                                 </Border>
                             </c:SettingRow.Below>
@@ -79,18 +79,18 @@
                             <c:SettingRow.Below>
                                 <Border Background="{StaticResource SurfaceRaisedBrush}" CornerRadius="10" Padding="3" HorizontalAlignment="Left">
                                     <StackPanel Orientation="Horizontal">
-                                        <RadioButton Content="Black" GroupName="ReadBg" Style="{StaticResource SegmentRadio}" IsChecked="True" />
-                                        <RadioButton Content="Gray" GroupName="ReadBg" Style="{StaticResource SegmentRadio}" />
-                                        <RadioButton Content="White" GroupName="ReadBg" Style="{StaticResource SegmentRadio}" />
+                                        <RadioButton x:Name="BgBlack" Content="Black" GroupName="ReadBg" Style="{StaticResource SegmentRadio}" Checked="OnBackgroundChanged" />
+                                        <RadioButton x:Name="BgGray" Content="Gray" GroupName="ReadBg" Style="{StaticResource SegmentRadio}" Checked="OnBackgroundChanged" />
+                                        <RadioButton x:Name="BgWhite" Content="White" GroupName="ReadBg" Style="{StaticResource SegmentRadio}" Checked="OnBackgroundChanged" />
                                     </StackPanel>
                                 </Border>
                             </c:SettingRow.Below>
                         </c:SettingRow>
                         <c:SettingRow Label="Show page number">
-                            <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                            <ToggleButton x:Name="ShowPageNumberToggle" Style="{StaticResource MdSwitch}" Checked="OnShowPageNumberToggled" Unchecked="OnShowPageNumberToggled" />
                         </c:SettingRow>
                         <c:SettingRow Label="Open in fullscreen" ShowDivider="False">
-                            <ToggleButton Style="{StaticResource MdSwitch}" />
+                            <ToggleButton x:Name="OpenFullscreenToggle" Style="{StaticResource MdSwitch}" Checked="OnOpenFullscreenToggled" Unchecked="OnOpenFullscreenToggled" />
                         </c:SettingRow>
                     </StackPanel>
                 </Border>
@@ -100,15 +100,15 @@
                     <StackPanel>
                         <TextBlock Text="CONTROLS" Style="{StaticResource Eyebrow}" Margin="0,0,0,6" />
                         <c:SettingRow Label="Click zones" Description="Click the left or right edge to turn pages.">
-                            <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                            <ToggleButton x:Name="ClickZonesToggle" Style="{StaticResource MdSwitch}" Checked="OnClickZonesToggled" Unchecked="OnClickZonesToggled" />
                         </c:SettingRow>
                         <c:SettingRow Label="Mouse wheel">
                             <c:SettingRow.Below>
                                 <Border Background="{StaticResource SurfaceRaisedBrush}" CornerRadius="10" Padding="3" HorizontalAlignment="Left">
                                     <StackPanel Orientation="Horizontal">
-                                        <RadioButton Content="Scroll" GroupName="ReadWheel" Style="{StaticResource SegmentRadio}" IsChecked="True" />
-                                        <RadioButton Content="Turn page" GroupName="ReadWheel" Style="{StaticResource SegmentRadio}" />
-                                        <RadioButton Content="Zoom" GroupName="ReadWheel" Style="{StaticResource SegmentRadio}" />
+                                        <RadioButton x:Name="WheelScroll" Content="Scroll" GroupName="ReadWheel" Style="{StaticResource SegmentRadio}" Checked="OnMouseWheelChanged" />
+                                        <RadioButton x:Name="WheelTurnPage" Content="Turn page" GroupName="ReadWheel" Style="{StaticResource SegmentRadio}" Checked="OnMouseWheelChanged" />
+                                        <RadioButton x:Name="WheelZoom" Content="Zoom" GroupName="ReadWheel" Style="{StaticResource SegmentRadio}" Checked="OnMouseWheelChanged" />
                                     </StackPanel>
                                 </Border>
                             </c:SettingRow.Below>
@@ -125,17 +125,17 @@
                         <TextBlock Text="IMAGE FILTERS" Style="{StaticResource Eyebrow}" Margin="0,0,0,6" />
                         <c:SettingRow Label="Brightness">
                             <c:SettingRow.Below>
-                                <Slider Minimum="-50" Maximum="50" Value="0" StepFrequency="5" AutomationProperties.Name="Brightness" />
+                                <Slider x:Name="BrightnessSlider" Minimum="-50" Maximum="50" Value="0" StepFrequency="5" AutomationProperties.Name="Brightness" ValueChanged="OnBrightnessChanged" />
                             </c:SettingRow.Below>
                         </c:SettingRow>
                         <c:SettingRow Label="Grayscale">
-                            <ToggleButton Style="{StaticResource MdSwitch}" />
+                            <ToggleButton x:Name="GrayscaleToggle" Style="{StaticResource MdSwitch}" Checked="OnGrayscaleToggled" Unchecked="OnGrayscaleToggled" />
                         </c:SettingRow>
                         <c:SettingRow Label="Invert colours">
-                            <ToggleButton Style="{StaticResource MdSwitch}" />
+                            <ToggleButton x:Name="InvertToggle" Style="{StaticResource MdSwitch}" Checked="OnInvertToggled" Unchecked="OnInvertToggled" />
                         </c:SettingRow>
                         <c:SettingRow Label="Sharpen scaled pages" ShowDivider="False">
-                            <ToggleButton Style="{StaticResource MdSwitch}" IsChecked="True" />
+                            <ToggleButton x:Name="SharpenToggle" Style="{StaticResource MdSwitch}" Checked="OnSharpenToggled" Unchecked="OnSharpenToggled" />
                         </c:SettingRow>
                     </StackPanel>
                 </Border>

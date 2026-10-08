@@ -31,22 +31,60 @@ public sealed partial class ReaderPage : Page
         Loaded += (_, _) =>
         {
             Nav.SetTitle($"{_currentManga.Title} — Ch. 48");
+            ApplyReaderPreferences();
             Focus(FocusState.Programmatic);
         };
+    }
+
+    private void ApplyReaderPreferences()
+    {
+        var s = AppServices.Settings;
+
+        // Background color
+        Background = s.ReaderBackground switch
+        {
+            "Gray" => new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 30, 30, 30)),
+            "White" => new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 245, 245, 245)),
+            _ => new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 10, 10, 10))
+        };
+
+        // Page number display
+        if (PageCount is not null)
+        {
+            PageCount.Visibility = s.ShowPageNumber ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // Fullscreen
+        if (s.OpenFullscreen)
+        {
+            var window = App.Window?.AppWindow;
+            if (window is not null && window.Presenter.Kind != AppWindowPresenterKind.FullScreen)
+            {
+                window.SetPresenter(AppWindowPresenterKind.FullScreen);
+            }
+        }
+
+        // Drawer toggles
+        if (DrawerCropBorders is not null) DrawerCropBorders.IsChecked = s.CropBorders;
+        if (DrawerTapZones is not null) DrawerTapZones.IsChecked = s.ClickZones;
+
+        SetSpread(_spread);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        _spread = AppServices.Settings.TwoPageSpread;
         if (e.Parameter is Manga m)
         {
             _currentManga = m;
         }
         else if (e.Parameter as string == "single")
         {
-            SetSpread(false);
-            SettingsToggle.IsChecked = false;
+            _spread = false;
+            if (SettingsToggle is not null) SettingsToggle.IsChecked = false;
         }
+        SetSpread(_spread);
     }
 
     // ----- Layout -----

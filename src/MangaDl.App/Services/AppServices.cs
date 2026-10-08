@@ -47,6 +47,7 @@ public static class AppServices
         Settings.DownloadPath);
 
     public static TachibkImportService TachibkImport { get; } = new(Database);
+    public static MangadlBackupService Backup { get; } = new(Database);
 
     public static SupabaseSyncService Sync { get; } = new(
         Http,

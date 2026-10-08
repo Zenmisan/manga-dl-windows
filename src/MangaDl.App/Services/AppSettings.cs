@@ -12,8 +12,23 @@ public sealed class AppSettings
     private static readonly string SettingsFile = Path.Combine(SettingsFolder, "settings.json");
 
     public string AccentColor { get; set; } = "Red";
-    public string ReaderMode { get; set; } = "Spread"; // "Spread" | "Single" | "Webtoon"
+
+    // Reader Settings
+    public string ReaderMode { get; set; } = "Right to left"; // "Left to right" | "Right to left" | "Vertical" | "Webtoon"
     public string ReadingDirection { get; set; } = "RTL"; // "RTL" | "LTR"
+    public bool TwoPageSpread { get; set; } = true;
+    public bool CropBorders { get; set; } = false;
+    public int WebtoonSidePadding { get; set; } = 15; // 0 - 40 %
+    public string PageFit { get; set; } = "Fit height"; // "Fit height" | "Fit width" | "Original"
+    public string ReaderBackground { get; set; } = "Black"; // "Black" | "Gray" | "White"
+    public bool ShowPageNumber { get; set; } = true;
+    public bool OpenFullscreen { get; set; } = false;
+    public bool ClickZones { get; set; } = true;
+    public string MouseWheelAction { get; set; } = "Scroll"; // "Scroll" | "Turn page" | "Zoom"
+    public int ImageBrightness { get; set; } = 0; // -50 - 50
+    public bool ImageGrayscale { get; set; } = false;
+    public bool ImageInvert { get; set; } = false;
+    public bool SharpenImages { get; set; } = true;
     public string DownloadPath { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         "Downloads",

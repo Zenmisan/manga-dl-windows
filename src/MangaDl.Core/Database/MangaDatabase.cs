@@ -333,6 +333,18 @@ public sealed class MangaDatabase : IAsyncDisposable
         await _db.Table<TrackerBindEntity>().DeleteAsync(x => x.Id == id);
     }
 
+    public async Task<List<TrackerBindEntity>> GetAllTrackerBindsAsync()
+    {
+        await InitializeAsync();
+        return await _db.Table<TrackerBindEntity>().ToListAsync();
+    }
+
+    public async Task<List<LibraryCategoryEntity>> GetAllLibraryCategoriesAsync()
+    {
+        await InitializeAsync();
+        return await _db.Table<LibraryCategoryEntity>().ToListAsync();
+    }
+
     public async ValueTask DisposeAsync()
     {
         await _db.CloseAsync();

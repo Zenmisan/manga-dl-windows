@@ -29,18 +29,18 @@
                     <StackPanel>
                         <TextBlock Text="STORAGE" Style="{StaticResource Eyebrow}" Margin="0,0,0,10" />
                         <Grid Margin="0,0,0,8">
-                            <TextBlock Text="[n] GB used" FontSize="20" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" />
-                            <TextBlock Text="of [n] GB free" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                            <TextBlock x:Name="StorageUsedText" Text="-- GB used" FontSize="20" FontWeight="ExtraBold" Foreground="{StaticResource FgBrush}" />
+                            <TextBlock x:Name="StorageFreeText" Text="of -- GB total" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
                         </Grid>
-                        <c:MdProgress Value="0.42" Height="8" />
+                        <c:MdProgress x:Name="StorageProgressBar" Value="0" Height="8" />
                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,10,0,6">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" />
-                                <TextBlock Text="Downloads [n] GB" Style="{StaticResource Caption}" />
+                                <TextBlock x:Name="DownloadsStorageText" Text="Downloads --" Style="{StaticResource Caption}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Ellipse Width="8" Height="8" Fill="{StaticResource FgFaintBrush}" VerticalAlignment="Center" />
-                                <TextBlock Text="Cache [n] MB" Style="{StaticResource Caption}" />
+                                <TextBlock x:Name="CacheStorageText" Text="Cache --" Style="{StaticResource Caption}" />
                             </StackPanel>
                         </StackPanel>
                         <c:SettingRow x:Name="DownloadLocationRow" Label="Download location" Description="C:\Users\[user]\Documents\manga-dl">
