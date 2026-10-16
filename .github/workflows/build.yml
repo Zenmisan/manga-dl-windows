@@ -46,6 +46,27 @@ jobs:
       - name: Build Solution (${{ env.BUILD_CONFIG }} x64)
         run: msbuild MangaDl.sln /p:Configuration=${{ env.BUILD_CONFIG }} /p:Platform=x64 /verbosity:minimal
 
+      - name: Publish Self-Contained Windows App
+        shell: pwsh
+        run: |
+          dotnet publish src/MangaDl.App/MangaDl.App.csproj -c ${{ env.BUILD_CONFIG }} -r win-x64 --self-contained true -o ./publish /p:Platform=x64
+          if (Test-Path "x64/${{ env.BUILD_CONFIG }}/MangaDl.Native.dll") {
+            Copy-Item "x64/${{ env.BUILD_CONFIG }}/MangaDl.Native.dll" -Destination "./publish/"
+          }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile Windows Setup Installer (.exe)
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue)?.Source
+          if (-not $iscc -or -not (Test-Path $iscc)) {
+            $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc installer/manga-dl.iss
+
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,15 +75,16 @@ jobs:
           path: test/MangaDl.Core.Tests/TestResults/test-results.trx
           if-no-files-found: ignore
 
-      - name: Upload Built Windows App Artifact
+      - name: Upload Windows Setup Installer (.exe)
         uses: actions/upload-artifact@v4
         with:
-          name: MangaDl-Windows-x64-${{ env.BUILD_CONFIG }}
-          path: |
-            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/MangaDl.exe
-            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/MangaDl.dll
-            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/*.dll
-            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/resources.pri
-            src/MangaDl.App/bin/x64/${{ env.BUILD_CONFIG }}/**/Assets/
-            src/MangaDl.App/AppPackages/
+          name: MangaDl-Setup-x64
+          path: installer_output/MangaDl-Setup-x64.exe
+          if-no-files-found: error
+
+      - name: Upload Portable Windows App (Self-Contained)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MangaDl-Windows-x64-Portable
+          path: ./publish/
           if-no-files-found: warn
