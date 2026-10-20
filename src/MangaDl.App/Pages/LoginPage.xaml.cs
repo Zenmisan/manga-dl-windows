@@ -78,7 +78,7 @@ public sealed partial class LoginPage : Page
         try
         {
             Nav.Toast("Opening browser for Google sign-in...");
-            var (verifier, challenge) = SupabaseAuthService.GeneratePkceS256();
+            var (verifier, challenge) = FirebaseAuthService.GeneratePkceS256();
             var authUrl = AppServices.Auth.GetOAuthAuthorizeUrl("google", AppServices.Settings.GoogleRedirectUri, challenge);
 
             var listenTask = AppServices.Loopback.WaitForAuthCodeAsync(TimeSpan.FromSeconds(120));

@@ -45,6 +45,14 @@ public sealed class AppSettings
     public long LastUpdateCheck { get; set; } = 0;
     public bool AutoDownloadNew { get; set; } = false;
 
+    public const string DefaultFirebaseApiKey = "AIzaSyDzw5OFZJ_r4uO_wtGK30c8i92qV_aaXbw";
+    public const string DefaultFirebaseProjectId = "z-manga-dl";
+    public const string DefaultFirebaseAuthDomain = "z-manga-dl.firebaseapp.com";
+
+    public string? FirebaseApiKey { get; set; } = DefaultFirebaseApiKey;
+    public string? FirebaseProjectId { get; set; } = DefaultFirebaseProjectId;
+    public string? FirebaseAuthDomain { get; set; } = DefaultFirebaseAuthDomain;
+
     public const string DefaultSupabaseUrl = "https://gyivwfweldwvzccbpgoz.supabase.co";
     public const string DefaultSupabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5aXZ3ZndlbGR3dnpjY2JwZ296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjg2NTUsImV4cCI6MjA5NTc0NDY1NX0.XcEJk1fyv-QxSehPUIeRR77ocIkPIZzDyc4DDfrr6XQ";
 

@@ -38,10 +38,9 @@ public static class AppServices
         Http,
         Settings.DownloadPath);
 
-    public static SupabaseAuthService Auth { get; } = new(
+    public static FirebaseAuthService Auth { get; } = new(
         Http,
-        Settings.SupabaseUrl ?? AppSettings.DefaultSupabaseUrl,
-        Settings.SupabaseAnonKey ?? AppSettings.DefaultSupabaseAnonKey);
+        Settings.FirebaseApiKey ?? AppSettings.DefaultFirebaseApiKey);
 
     public static LocalImportService LocalImport { get; } = new(
         Database,
