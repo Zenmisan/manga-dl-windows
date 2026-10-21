@@ -55,7 +55,20 @@
                 <RadioButton Content="All time" GroupName="HistoryRange" Style="{StaticResource ChipRadio}" Checked="OnRangeChecked" />
             </StackPanel>
 
-            <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource HistoryCard}">
+            <Grid x:Name="EmptyHistoryView" Visibility="Collapsed" Margin="0,32,0,32" HorizontalAlignment="Center">
+                <Border Background="{StaticResource SurfaceRaisedBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="18" Padding="32" MaxWidth="440">
+                    <StackPanel Spacing="14" HorizontalAlignment="Center">
+                        <Border Width="56" Height="56" CornerRadius="28" Background="{StaticResource DarkChipBrush}" HorizontalAlignment="Center">
+                            <c:MdIcon Kind="History" Size="24" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="No Reading History" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="Chapters you read will show up here so you can easily resume reading where you left off."
+                                   Style="{StaticResource BodyMuted}" TextAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <ItemsRepeater x:Name="HistoryList" ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource HistoryCard}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinItemWidth="420" MinItemHeight="110" MinColumnSpacing="12" MinRowSpacing="12"
                                        MaximumRowsOrColumns="2" ItemsStretch="Fill" />

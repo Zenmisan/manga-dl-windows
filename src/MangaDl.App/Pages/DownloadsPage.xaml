@@ -66,7 +66,19 @@
                         <RadioButton x:Name="TabFailed" Content="Failed" GroupName="DlTabs" Style="{StaticResource TabRadio}" Checked="OnTabChecked" />
                     </StackPanel>
                 </Grid>
-                <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource DownloadCard}">
+                <Grid x:Name="EmptyDownloadsView" Visibility="Collapsed" Margin="0,32,0,32" HorizontalAlignment="Center">
+                    <Border Background="{StaticResource SurfaceRaisedBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="18" Padding="32" MaxWidth="440">
+                        <StackPanel Spacing="14" HorizontalAlignment="Center">
+                            <Border Width="56" Height="56" CornerRadius="28" Background="{StaticResource DarkChipBrush}" HorizontalAlignment="Center">
+                                <c:MdIcon Kind="Download" Size="24" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="No Downloads in Queue" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" />
+                            <TextBlock Text="Downloaded chapters will appear here. You can download chapters from any manga's details page."
+                                       Style="{StaticResource BodyMuted}" TextAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                <ItemsRepeater x:Name="DownloadsList" ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource DownloadCard}">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="8" />
                     </ItemsRepeater.Layout>

@@ -168,6 +168,12 @@ public sealed class ExtensionManager : IDisposable
         return await bridge.GetPopularAsync(page);
     }
 
+    public async Task<IReadOnlyList<MangaSearchResult>> GetLatestAsync(string sourceId, int page = 1)
+    {
+        var bridge = await GetBridgeAsync(sourceId);
+        return await bridge.GetLatestAsync(page);
+    }
+
     public void Dispose()
     {
         foreach (var bridge in _bridges.Values)

@@ -9,7 +9,7 @@ namespace MangaDl.Pages;
 
 public sealed partial class DownloadsPage : Page
 {
-    public ObservableCollection<DownloadItem> Items { get; } = new(Sample.Downloads);
+    public ObservableCollection<DownloadItem> Items { get; } = new();
 
     private bool _paused;
 
@@ -59,7 +59,6 @@ public sealed partial class DownloadsPage : Page
             else
             {
                 _allDownloads.Clear();
-                _allDownloads.AddRange(Sample.Downloads);
             }
 
             UpdateTabCounters();
@@ -94,6 +93,13 @@ public sealed partial class DownloadsPage : Page
 
         Items.Clear();
         foreach (var item in filtered) Items.Add(item);
+
+        if (EmptyDownloadsView != null && DownloadsList != null)
+        {
+            var isEmpty = Items.Count == 0;
+            EmptyDownloadsView.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
+            DownloadsList.Visibility = isEmpty ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 
     private void OnTabChecked(object sender, RoutedEventArgs e)

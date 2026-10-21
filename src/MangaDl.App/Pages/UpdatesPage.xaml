@@ -52,6 +52,19 @@
                 <Button Grid.Column="1" Content="Download All New" Style="{StaticResource GhostButton}" VerticalAlignment="Center" Click="OnDownloadAllNew" />
                 <Button x:Name="CheckButton" Grid.Column="2" Content="Check Now" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Click="OnCheck" />
             </Grid>
+            <!-- Empty state when no updates -->
+            <Grid x:Name="EmptyUpdatesView" Visibility="Collapsed" Margin="0,32,0,32" HorizontalAlignment="Center">
+                <Border Background="{StaticResource SurfaceRaisedBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="18" Padding="32" MaxWidth="460">
+                    <StackPanel Spacing="14" HorizontalAlignment="Center">
+                        <Border Width="56" Height="56" CornerRadius="28" Background="{StaticResource DarkChipBrush}" HorizontalAlignment="Center">
+                            <c:MdIcon Kind="Updates" Size="24" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="All Caught Up!" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="No new chapters found for your library. Click 'Check Now' to scan your library sources."
+                                   Style="{StaticResource BodyMuted}" TextAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
             <TextBlock x:Name="EmptyStateText" Text="No new updates. Your library is up to date." Foreground="{StaticResource FgSoftBrush}" FontSize="14" Visibility="Collapsed" Margin="0,20,0,0" />
             <ItemsRepeater x:Name="GroupsRepeater" ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource UpdateGroupTemplate}" />
         </StackPanel>

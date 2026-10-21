@@ -36,13 +36,13 @@ public sealed partial class MainWindow : Window
         bar.ButtonPressedForegroundColor = Colors.White;
         AppWindow.SetIcon("Assets/AppIcon.ico");
 
-        // 1440×900 at the monitor's scale, with a sensible minimum.
+        // 1440×900 initial at the monitor's scale, with a flexible minimum for snapping and smaller screens.
         var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
         AppWindow.Resize(new SizeInt32((int)(1440 * scale), (int)(900 * scale)));
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
-            presenter.PreferredMinimumWidth = (int)(1100 * scale);
-            presenter.PreferredMinimumHeight = (int)(700 * scale);
+            presenter.PreferredMinimumWidth = (int)(600 * scale);
+            presenter.PreferredMinimumHeight = (int)(500 * scale);
         }
 
         _navItems = [NavLibrary, NavUpdates, NavHistory, NavBrowse, NavDownloads, NavStats, NavAllPages, NavNotifications, NavSettings, NavHelp];

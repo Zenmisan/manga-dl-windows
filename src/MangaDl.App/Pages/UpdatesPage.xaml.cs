@@ -31,20 +31,13 @@ public sealed partial class UpdatesPage : Page
                 Groups.Clear();
                 foreach (var g in grouped) Groups.Add(g);
                 EmptyStateText.Visibility = Visibility.Collapsed;
+                if (EmptyUpdatesView != null) EmptyUpdatesView.Visibility = Visibility.Collapsed;
             }
             else
             {
                 Groups.Clear();
-                if (AppServices.Settings.LastUpdateCheck == 0)
-                {
-                    // Fall back to sample data on pristine install before first check
-                    foreach (var g in Sample.Updates) Groups.Add(g);
-                    EmptyStateText.Visibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    EmptyStateText.Visibility = Visibility.Visible;
-                }
+                if (EmptyUpdatesView != null) EmptyUpdatesView.Visibility = Visibility.Visible;
+                if (EmptyStateText != null) EmptyStateText.Visibility = Visibility.Collapsed;
             }
         }
         catch (Exception ex)

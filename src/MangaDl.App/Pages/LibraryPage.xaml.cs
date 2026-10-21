@@ -11,8 +11,8 @@ namespace MangaDl.Pages;
 
 public sealed partial class LibraryPage : Page
 {
-    public ObservableCollection<Manga> Items { get; } = new(Sample.Library);
-    public ObservableCollection<ContinueItem> Continue { get; } = new(Sample.ContinueReading);
+    public ObservableCollection<Manga> Items { get; } = new();
+    public ObservableCollection<ContinueItem> Continue { get; } = new();
 
     private readonly List<Manga> _allManga = [];
     private readonly List<CategoryEntity> _categories = [];
@@ -92,23 +92,16 @@ public sealed partial class LibraryPage : Page
     private void PopulateLibrary(List<LibraryEntity> saved)
     {
         _allManga.Clear();
-        if (saved.Count > 0)
+        foreach (var s in saved)
         {
-            foreach (var s in saved)
-            {
-                _allManga.Add(new Manga(
-                    s.MangaId,
-                    s.Title,
-                    s.CoverUrl ?? "#1A2433",
-                    0,
-                    false,
-                    true,
-                    s.Provider));
-            }
-        }
-        else
-        {
-            _allManga.AddRange(Sample.Library);
+            _allManga.Add(new Manga(
+                s.MangaId,
+                s.Title,
+                s.CoverUrl ?? "#1A2433",
+                0,
+                false,
+                true,
+                s.Provider));
         }
         ApplyFilters();
     }
@@ -168,6 +161,10 @@ public sealed partial class LibraryPage : Page
                 Continue.Add(new ContinueItem(manga, h.ChapterTitle ?? h.ChapterId, 0.5));
             }
         }
+        if (ContinueSection != null)
+        {
+            ContinueSection.Visibility = Continue.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private void ApplyFilters()
@@ -206,7 +203,17 @@ public sealed partial class LibraryPage : Page
 
         Items.Clear();
         foreach (var m in filtered) Items.Add(m);
+
+        if (EmptyLibraryView != null && ItemsGrid != null)
+        {
+            var isEmpty = _allManga.Count == 0;
+            EmptyLibraryView.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
+            ItemsGrid.Visibility = isEmpty ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
+
+    private void OnBrowseSourcesClick(object sender, RoutedEventArgs e) => Nav.Go(typeof(ExtensionsPage));
+    private void OnImportFilesClick(object sender, RoutedEventArgs e) => Nav.Go(typeof(ImportPage));
 
     private void OnSearchSubmitted(object? sender, string query)
     {

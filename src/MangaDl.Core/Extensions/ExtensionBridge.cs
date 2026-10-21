@@ -327,6 +327,36 @@ public sealed class ExtensionBridge : IDisposable
         }
     }
 
+    public async Task<IReadOnlyList<MangaSearchResult>> GetLatestAsync(int page = 1)
+    {
+        await _lock.WaitAsync();
+        try
+        {
+            _engine.SetValue("__page", page);
+            _engine.Execute(@"
+                var __latestResult = [];
+                (async () => {
+                    try {
+                        if (typeof extension !== 'undefined' && typeof extension.getLatest === 'function') {
+                            __latestResult = await extension.getLatest(__page);
+                        } else if (typeof extension !== 'undefined' && typeof extension.getPopular === 'function') {
+                            __latestResult = await extension.getPopular(__page);
+                        }
+                    } catch (e) {
+                        __log('getLatest error: ' + e);
+                        __latestResult = [];
+                    }
+                })();
+            ");
+
+            return ParseSearchResults(_engine.GetValue("__latestResult"));
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     private static string SafeString(JsValue val, string fallback = "")
     {
         if (val.IsUndefined() || val.IsNull()) return fallback;
@@ -373,9 +403,34 @@ public sealed class ExtensionBridge : IDisposable
         var title = SafeString(obj.Get("title"), "Untitled");
         var desc = obj.Get("description");
         var cover = obj.Get("cover_url");
-        var author = obj.Get("author");
         var artist = obj.Get("artist");
         var status = obj.Get("status");
+
+        string? author = null;
+        var authorVal = obj.Get("author");
+        if (!authorVal.IsUndefined() && !authorVal.IsNull() && !string.IsNullOrWhiteSpace(authorVal.ToString()))
+        {
+            author = SafeString(authorVal);
+        }
+        else
+        {
+            var authorsVal = obj.Get("authors");
+            if (authorsVal is ObjectInstance aArr && aArr.IsArray())
+            {
+                var authorList = new List<string>();
+                var aLen = (int)aArr.Get("length").AsNumber();
+                for (var ai = 0; ai < aLen; ai++)
+                {
+                    var aItem = aArr.Get(ai.ToString());
+                    if (!aItem.IsUndefined() && !aItem.IsNull())
+                    {
+                        var s = SafeString(aItem);
+                        if (!string.IsNullOrWhiteSpace(s)) authorList.Add(s);
+                    }
+                }
+                if (authorList.Count > 0) author = string.Join(", ", authorList);
+            }
+        }
 
         var genres = new List<string>();
         var gVal = obj.Get("genres");
@@ -401,7 +456,10 @@ public sealed class ExtensionBridge : IDisposable
                     var cId = SafeString(cObj.Get("id"), $"{i + 1}");
                     var cNum = SafeString(cObj.Get("number"), $"{i + 1}");
                     var cTitle = SafeString(cObj.Get("title"), $"Chapter {cNum}");
-                    var cDate = SafeString(cObj.Get("date"), string.Empty);
+                    var dateVal = cObj.Get("date");
+                    var cDate = !dateVal.IsUndefined() && !dateVal.IsNull() && !string.IsNullOrWhiteSpace(dateVal.ToString())
+                        ? SafeString(dateVal)
+                        : SafeString(cObj.Get("published_at"), string.Empty);
                     var cScan = cObj.Get("scanlator");
                     var cUrl = cObj.Get("url");
 

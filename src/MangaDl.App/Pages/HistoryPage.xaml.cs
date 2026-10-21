@@ -9,7 +9,7 @@ namespace MangaDl.Pages;
 
 public sealed partial class HistoryPage : Page
 {
-    public ObservableCollection<HistoryItem> Items { get; } = new(Sample.History);
+    public ObservableCollection<HistoryItem> Items { get; } = new();
     private readonly List<HistoryItem> _allHistory = [];
     private string _searchFilter = string.Empty;
 
@@ -74,7 +74,7 @@ public sealed partial class HistoryPage : Page
         }
         else
         {
-            _allHistory.AddRange(Sample.History);
+            _allHistory.Clear();
         }
         ApplyFilters();
     }
@@ -89,6 +89,13 @@ public sealed partial class HistoryPage : Page
 
         Items.Clear();
         foreach (var h in filtered) Items.Add(h);
+
+        if (EmptyHistoryView != null && HistoryList != null)
+        {
+            var isEmpty = Items.Count == 0;
+            EmptyHistoryView.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
+            HistoryList.Visibility = isEmpty ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 
     private void OnSearchSubmitted(object? sender, string query)

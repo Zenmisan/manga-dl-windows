@@ -33,8 +33,8 @@ public sealed partial class StatsPage : Page
             var library = await AppServices.Database.GetLibraryAsync();
             var completed = await AppServices.Database.GetAllCompletedProgressAsync();
 
-            var totalChapters = Math.Max(completed.Count, history.Count > 0 ? history.Count : 142);
-            var hours = Math.Max(1, totalChapters * 7 / 60);
+            var totalChapters = Math.Max(completed.Count, history.Count);
+            var hours = totalChapters * 7 / 60;
 
             // Calculate reading streak
             var dates = history
@@ -64,7 +64,7 @@ public sealed partial class StatsPage : Page
             }
             else
             {
-                streak = history.Count > 0 ? 1 : 5;
+                streak = 0;
             }
 
             if (ChaptersReadValue != null) ChaptersReadValue.Text = totalChapters.ToString();

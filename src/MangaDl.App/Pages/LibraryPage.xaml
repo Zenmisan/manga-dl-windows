@@ -67,21 +67,21 @@
         <StackPanel Padding="40,28,40,40" Spacing="24">
 
             <!-- Header -->
-            <Grid ColumnSpacing="16">
+            <Grid ColumnSpacing="16" RowSpacing="12">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" MinWidth="120" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="LIBRARY" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                <c:SearchField x:Name="SearchField" Grid.Column="1" Width="320" Placeholder="Search library   Ctrl K" VerticalAlignment="Center" Submitted="OnSearchSubmitted" />
+                <c:SearchField x:Name="SearchField" Grid.Column="1" MaxWidth="320" Placeholder="Search library   Ctrl K" VerticalAlignment="Center" Submitted="OnSearchSubmitted" />
                 <Button x:Name="SortButton" Grid.Column="2" Content="Sort: Last read" Style="{StaticResource GhostButton}" Click="OnSortClick" />
                 <Button Grid.Column="3" Content="Update Library" Style="{StaticResource PrimaryButton}" Click="OnUpdateLibrary" />
             </Grid>
 
-            <!-- Continue reading -->
-            <StackPanel Spacing="12">
+            <!-- Continue reading (only shown when history exists) -->
+            <StackPanel x:Name="ContinueSection" Spacing="12">
                 <TextBlock Text="CONTINUE READING" Style="{StaticResource Eyebrow}" />
                 <ItemsRepeater ItemsSource="{x:Bind Continue}" ItemTemplate="{StaticResource ContinueTemplate}">
                     <ItemsRepeater.Layout>
@@ -92,16 +92,36 @@
             </StackPanel>
 
             <!-- Categories -->
-            <StackPanel x:Name="CategoriesStack" Orientation="Horizontal" Spacing="8">
-                <RadioButton x:Name="CategoryAll" Content="All" GroupName="LibCategory" Style="{StaticResource ChipRadio}" IsChecked="True" Checked="OnCategoryChecked" />
-                <RadioButton Content="Reading" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
-                <RadioButton Content="Plan to read" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
-                <RadioButton Content="Completed" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
-                <RadioButton Content="Local files" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
-            </StackPanel>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled">
+                <StackPanel x:Name="CategoriesStack" Orientation="Horizontal" Spacing="8">
+                    <RadioButton x:Name="CategoryAll" Content="All" GroupName="LibCategory" Style="{StaticResource ChipRadio}" IsChecked="True" Checked="OnCategoryChecked" />
+                    <RadioButton Content="Reading" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                    <RadioButton Content="Plan to read" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                    <RadioButton Content="Completed" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                    <RadioButton Content="Local files" GroupName="LibCategory" Style="{StaticResource ChipRadio}" Checked="OnCategoryChecked" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Empty state when library has no manga -->
+            <Grid x:Name="EmptyLibraryView" Visibility="Collapsed" Margin="0,32,0,32" HorizontalAlignment="Center">
+                <Border Background="{StaticResource SurfaceRaisedBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="20" Padding="36" MaxWidth="520">
+                    <StackPanel Spacing="16" HorizontalAlignment="Center">
+                        <Border Width="64" Height="64" CornerRadius="32" Background="{StaticResource DarkChipBrush}" HorizontalAlignment="Center">
+                            <c:MdIcon Kind="Library" Size="28" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Your Library is Empty" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="Explore online extensions to discover new series, or import your local CBZ and EPUB files to start reading."
+                                   Style="{StaticResource BodyMuted}" TextAlignment="Center" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" Margin="0,6,0,0">
+                            <Button Content="Browse Sources" Style="{StaticResource PrimaryButton}" Height="40" Padding="18,0" Click="OnBrowseSourcesClick" />
+                            <Button Content="Import Files" Style="{StaticResource GhostButton}" Height="40" Padding="18,0" Click="OnImportFilesClick" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <!-- Covers: 7 across at 1440px, reflows with the window -->
-            <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource CoverTemplate}">
+            <ItemsRepeater x:Name="ItemsGrid" ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource CoverTemplate}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinItemWidth="140" MinItemHeight="250" MinColumnSpacing="20" MinRowSpacing="20" ItemsStretch="Uniform" />
                 </ItemsRepeater.Layout>
