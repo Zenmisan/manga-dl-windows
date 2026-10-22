@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:m="using:MangaDl.Core"
     xmlns:h="using:MangaDl.Helpers"
+    xmlns:c="using:MangaDl.Controls"
     Background="{StaticResource BgBrush}">
 
     <Page.Resources>
