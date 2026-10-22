@@ -55,8 +55,8 @@
         <ScrollViewer Style="{StaticResource PageScroller}">
             <StackPanel Padding="40,28,32,40" Spacing="16">
                 <Grid>
-                    <c:SearchField x:Name="SearchBox" IsLarge="True" Text="crown" Placeholder="Search all sources" Submitted="OnSearchSubmitted" />
-                    <TextBlock x:Name="SearchStatus" Text="Searching sources" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,18,0" />
+                    <c:SearchField x:Name="SearchBox" IsLarge="True" Text="" Placeholder="Search all sources...   Press Enter" Submitted="OnSearchSubmitted" />
+                    <TextBlock x:Name="SearchStatus" Text="" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,18,0" />
                 </Grid>
                 <Grid BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
@@ -66,7 +66,21 @@
                     </StackPanel>
                 </Grid>
 
-                <ItemsRepeater ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource ResultGroup}" />
+                <!-- Prompt state when search box is empty -->
+                <Grid x:Name="EmptySearchView" Visibility="Visible" Margin="0,48,0,48" HorizontalAlignment="Center">
+                    <Border Background="{StaticResource SurfaceRaisedBrush}" BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="18" Padding="32" MaxWidth="440">
+                        <StackPanel Spacing="14" HorizontalAlignment="Center">
+                            <Border Width="56" Height="56" CornerRadius="28" Background="{StaticResource DarkChipBrush}" HorizontalAlignment="Center">
+                                <c:MdIcon Kind="Browse" Size="24" Foreground="{StaticResource FgSubtleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock x:Name="EmptySearchTitle" Text="Global Source Search" FontSize="18" FontWeight="Bold" Foreground="{StaticResource FgBrush}" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="EmptySearchSubtitle" Text="Type a title or author above to search across all your installed manga and novel sources simultaneously."
+                                       Style="{StaticResource BodyMuted}" TextAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <ItemsRepeater x:Name="GroupsRepeater" ItemsSource="{x:Bind Groups}" ItemTemplate="{StaticResource ResultGroup}" />
 
                 <!-- Still searching -->
                 <StackPanel x:Name="SearchProgressSkeleton" Visibility="Collapsed" Spacing="10">

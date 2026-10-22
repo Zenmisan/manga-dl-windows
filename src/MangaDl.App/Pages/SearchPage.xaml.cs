@@ -8,32 +8,51 @@ namespace MangaDl.Pages;
 
 public sealed partial class SearchPage : Page
 {
-    public ObservableCollection<SearchGroup> Groups { get; } = new(Sample.SearchResults);
+    public ObservableCollection<SearchGroup> Groups { get; } = new();
 
     public SearchPage() => InitializeComponent();
 
     private async void OnSearchSubmitted(object? sender, string query)
     {
-        if (string.IsNullOrWhiteSpace(query)) return;
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            Groups.Clear();
+            if (EmptySearchView != null)
+            {
+                EmptySearchView.Visibility = Visibility.Visible;
+                EmptySearchTitle.Text = "Global Source Search";
+                EmptySearchSubtitle.Text = "Type a title or author above to search across all your installed manga and novel sources simultaneously.";
+            }
+            SearchStatus.Text = string.Empty;
+            return;
+        }
 
         SearchStatus.Text = $"Searching sources for \"{query}\"...";
         SearchProgressSkeleton.Visibility = Visibility.Visible;
+        if (EmptySearchView != null) EmptySearchView.Visibility = Visibility.Collapsed;
 
         try
         {
-            var results = await AppServices.Extensions.GlobalSearchAsync(query);
+            var results = await AppServices.Extensions.GlobalSearchAsync(query, maxSources: 12);
+            Groups.Clear();
             if (results.Count > 0)
             {
-                Groups.Clear();
                 foreach (var g in results)
                 {
                     Groups.Add(g);
                 }
                 SearchStatus.Text = $"{results.Sum(g => g.Results.Count)} results across {results.Count} sources";
+                if (EmptySearchView != null) EmptySearchView.Visibility = Visibility.Collapsed;
             }
             else
             {
                 SearchStatus.Text = "No results found";
+                if (EmptySearchView != null)
+                {
+                    EmptySearchView.Visibility = Visibility.Visible;
+                    EmptySearchTitle.Text = "No Results Found";
+                    EmptySearchSubtitle.Text = $"We couldn't find any manga or novels matching \"{query}\". Try another keyword or check individual sources.";
+                }
             }
         }
         catch (Exception ex)
@@ -49,9 +68,14 @@ public sealed partial class SearchPage : Page
     private void OnResetFilters(object sender, RoutedEventArgs e)
     {
         SearchBox.Text = "";
-        SearchStatus.Text = "Filters reset";
+        SearchStatus.Text = "";
         Groups.Clear();
-        foreach (var g in Sample.SearchResults) Groups.Add(g);
+        if (EmptySearchView != null)
+        {
+            EmptySearchView.Visibility = Visibility.Visible;
+            EmptySearchTitle.Text = "Global Source Search";
+            EmptySearchSubtitle.Text = "Type a title or author above to search across all your installed manga and novel sources simultaneously.";
+        }
     }
 
     private void OnApplyFilters(object sender, RoutedEventArgs e)

@@ -329,7 +329,25 @@ public sealed partial class ReaderPage : Page
             }
             else if (!string.IsNullOrEmpty(page.ImageUrl))
             {
-                targetImage.Source = new BitmapImage(new Uri(page.ImageUrl));
+                if (page.ImageUrl.Contains("asura-descramble", StringComparison.OrdinalIgnoreCase) ||
+                    page.ImageUrl.Contains("#") ||
+                    page.ImageUrl.StartsWith("/"))
+                {
+                    var bytes = await AppServices.Http.FetchBytesAsync(page.ImageUrl);
+                    var bitmap = new BitmapImage();
+                    using var stream = new InMemoryRandomAccessStream();
+                    using (var writer = new DataWriter(stream.GetOutputStreamAt(0)))
+                    {
+                        writer.WriteBytes(bytes);
+                        await writer.StoreAsync();
+                    }
+                    await bitmap.SetSourceAsync(stream);
+                    targetImage.Source = bitmap;
+                }
+                else
+                {
+                    targetImage.Source = new BitmapImage(new Uri(page.ImageUrl));
+                }
             }
             else
             {

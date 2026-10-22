@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Web;
+using MangaDl.Core.Images;
 
 namespace MangaDl.Core.Http;
 
@@ -54,6 +55,14 @@ public sealed class HttpService : IDisposable
                 var ampIdx = queryPart.IndexOf('&');
                 var rawUrl = ampIdx >= 0 ? queryPart.Substring(0, ampIdx) : queryPart;
                 return HttpUtility.UrlDecode(rawUrl);
+            }
+        }
+
+        if (url.Contains("asura-descramble", StringComparison.OrdinalIgnoreCase))
+        {
+            if (AsuraDescrambler.TryParse(url, out var actualUrl, out _, out _, out _))
+            {
+                return actualUrl;
             }
         }
 
@@ -113,6 +122,12 @@ public sealed class HttpService : IDisposable
         string? referer = null,
         CancellationToken ct = default)
     {
+        if (AsuraDescrambler.TryParse(url, out var actualUrl, out var tiles, out var cols, out var rows))
+        {
+            var rawBytes = await FetchBytesAsync(actualUrl, referer ?? "https://asurascans.com/", ct);
+            return AsuraDescrambler.Descramble(rawBytes, tiles, cols, rows);
+        }
+
         var resolvedUrl = ResolveUrl(url);
         using var request = new HttpRequestMessage(HttpMethod.Get, resolvedUrl);
         if (!string.IsNullOrEmpty(referer))
