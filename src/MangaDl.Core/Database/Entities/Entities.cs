@@ -190,8 +190,40 @@ public sealed class TrackerBindEntity
     [Column("last_chapter_read")]
     public double LastChapterRead { get; set; }
 
+    [Column("score")]
+    public double Score { get; set; }
+
+    [Column("status")]
+    public string? Status { get; set; }
+
     [Column("updated_at")]
     public long UpdatedAt { get; set; }
+}
+
+[Table("bookmarks")]
+public sealed class BookmarkEntity
+{
+    [PrimaryKey]
+    [Column("id")]
+    public string Id { get; set; } = string.Empty; // "{provider}/{manga_id}/{chapter_id}"
+
+    [Column("provider")]
+    public string Provider { get; set; } = string.Empty;
+
+    [Column("manga_id")]
+    public string MangaId { get; set; } = string.Empty;
+
+    [Column("chapter_id")]
+    public string ChapterId { get; set; } = string.Empty;
+
+    [Column("chapter_number")]
+    public double ChapterNumber { get; set; }
+
+    [Column("chapter_title")]
+    public string? ChapterTitle { get; set; }
+
+    [Column("created_at")]
+    public long CreatedAt { get; set; }
 }
 
 [Table("new_chapters")]

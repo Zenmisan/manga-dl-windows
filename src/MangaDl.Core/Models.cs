@@ -35,7 +35,9 @@ public sealed record Chapter(
     string Released,
     string Group,
     string Status,
-    bool Read = false)
+    bool Read = false,
+    bool Bookmarked = false,
+    string? Id = null)
 {
     public string Number { get; set; } = Number;
     public string Title { get; set; } = Title;
@@ -43,6 +45,8 @@ public sealed record Chapter(
     public string Group { get; set; } = Group;
     public string Status { get; set; } = Status;
     public bool Read { get; set; } = Read;
+    public bool Bookmarked { get; set; } = Bookmarked;
+    public string? Id { get; set; } = Id;
 }
 
 public sealed record UpdateItem(

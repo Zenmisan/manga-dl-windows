@@ -12,16 +12,50 @@
         <DataTemplate x:Key="ChapterRow" x:DataType="m:Chapter">
             <Button Style="{StaticResource CardButton}" CornerRadius="0" Click="OnOpenChapter"
                     AutomationProperties.Name="{x:Bind Number}">
+                <Button.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Mark as Read" Click="OnMarkReadClicked">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE73E;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Mark as Unread" Click="OnMarkUnreadClicked">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE73A;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Mark Previous as Read" Click="OnMarkPreviousReadClicked">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE8B7;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="{x:Bind h:X.BookmarkMenuText(Bookmarked)}" Click="OnBookmarkChapterClicked">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE734;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Download Chapter" Click="OnDownloadChapterClicked">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE896;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </Button.ContextFlyout>
                 <Grid MinHeight="48" Padding="12,0" ColumnSpacing="16" Opacity="{x:Bind h:X.ReadOpacity(Read)}"
                       BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="72" />
                         <ColumnDefinition Width="2*" />
                         <ColumnDefinition Width="*" MinWidth="80" MaxWidth="140" />
                         <ColumnDefinition Width="*" MinWidth="80" MaxWidth="140" />
                         <ColumnDefinition Width="84" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{x:Bind Number}" FontWeight="Bold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="{x:Bind Number}" FontWeight="Bold" Foreground="{StaticResource FgBrush}" VerticalAlignment="Center" />
+                        <c:MdIcon Kind="BookmarkFilled" Size="12" Foreground="{StaticResource BookmarkGoldBrush}"
+                                  Visibility="{x:Bind h:X.BookmarkVisibility(Bookmarked)}" VerticalAlignment="Center" />
+                    </StackPanel>
                     <TextBlock Grid.Column="1" Text="{x:Bind Title}" Foreground="{StaticResource FgBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="2" Text="{x:Bind Released}" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="3" Text="{x:Bind Group}" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
@@ -81,11 +115,17 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="ChapterCountText" Text="Chapters" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
-                <ToggleButton x:Name="FilterUnread" Grid.Column="1" Content="Unread" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
-                <ToggleButton x:Name="FilterDownloaded" Grid.Column="2" Content="Downloaded" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
-                <Button x:Name="SortChaptersButton" Grid.Column="3" Content="Newest first" Style="{StaticResource PillButton}" Click="OnSortChapters" />
+                <ComboBox x:Name="GroupFilterComboBox" Grid.Column="1" PlaceholderText="All Groups"
+                          MinWidth="130" Height="32" FontSize="12" VerticalAlignment="Center"
+                          SelectionChanged="OnGroupFilterChanged" />
+                <ToggleButton x:Name="FilterUnread" Grid.Column="2" Content="Unread" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
+                <ToggleButton x:Name="FilterDownloaded" Grid.Column="3" Content="Downloaded" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
+                <ToggleButton x:Name="FilterBookmarked" Grid.Column="4" Content="Bookmarked" Style="{StaticResource SmallChipToggle}" Click="OnFilterChanged" />
+                <Button x:Name="SortChaptersButton" Grid.Column="5" Content="Newest first" Style="{StaticResource PillButton}" Click="OnSortChapters" />
             </Grid>
 
             <!-- Chapter table -->

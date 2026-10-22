@@ -37,6 +37,7 @@ public sealed class MangaDatabase : IAsyncDisposable
             await _db.CreateTableAsync<HistoryEntity>();
             await _db.CreateTableAsync<TrackerBindEntity>();
             await _db.CreateTableAsync<NewChapterEntity>();
+            await _db.CreateTableAsync<BookmarkEntity>();
 
             // Ensure default categories exist
             var count = await _db.Table<CategoryEntity>().CountAsync();
@@ -165,6 +166,51 @@ public sealed class MangaDatabase : IAsyncDisposable
     {
         await InitializeAsync();
         return await _db.Table<ProgressEntity>().Where(x => x.Completed == 1).ToListAsync();
+    }
+
+    public async Task DeleteProgressAsync(string provider, string mangaId, string chapterId)
+    {
+        await InitializeAsync();
+        var id = $"{provider}/{mangaId}/{chapterId}";
+        await _db.Table<ProgressEntity>().DeleteAsync(x => x.Id == id);
+        await _db.Table<HistoryEntity>().DeleteAsync(x => x.Id == id);
+    }
+
+    public async Task MarkChaptersReadAsync(string provider, string mangaId, IEnumerable<(string ChapterId, double ChapterNumber, string? Title)> chapters, string? coverUrl = null, string? mangaTitle = null)
+    {
+        await InitializeAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        foreach (var ch in chapters)
+        {
+            var prog = new ProgressEntity
+            {
+                Id = $"{provider}/{mangaId}/{ch.ChapterId}",
+                Provider = provider,
+                MangaId = mangaId,
+                ChapterId = ch.ChapterId,
+                ChapterNumber = ch.ChapterNumber,
+                Page = 1,
+                Completed = 1,
+                ReadAt = now
+            };
+            await _db.InsertOrReplaceAsync(prog);
+
+            if (!string.IsNullOrEmpty(mangaTitle))
+            {
+                var hist = new HistoryEntity
+                {
+                    Id = $"{provider}/{mangaId}/{ch.ChapterId}",
+                    Provider = provider,
+                    MangaId = mangaId,
+                    MangaTitle = mangaTitle,
+                    ChapterId = ch.ChapterId,
+                    ChapterTitle = ch.Title,
+                    CoverUrl = coverUrl,
+                    ReadAt = now
+                };
+                await _db.InsertOrReplaceAsync(hist);
+            }
+        }
     }
 
     // ----------------------------------------------------
@@ -396,6 +442,56 @@ public sealed class MangaDatabase : IAsyncDisposable
     {
         await InitializeAsync();
         await _db.DeleteAllAsync<NewChapterEntity>();
+    }
+
+    // ----------------------------------------------------
+    // Bookmarks
+    // ----------------------------------------------------
+
+    public async Task AddBookmarkAsync(BookmarkEntity bookmark)
+    {
+        await InitializeAsync();
+        if (string.IsNullOrEmpty(bookmark.Id))
+        {
+            bookmark.Id = $"{bookmark.Provider}/{bookmark.MangaId}/{bookmark.ChapterId}";
+        }
+        if (bookmark.CreatedAt == 0)
+        {
+            bookmark.CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+        await _db.InsertOrReplaceAsync(bookmark);
+    }
+
+    public async Task RemoveBookmarkAsync(string provider, string mangaId, string chapterId)
+    {
+        await InitializeAsync();
+        var id = $"{provider}/{mangaId}/{chapterId}";
+        await _db.Table<BookmarkEntity>().DeleteAsync(x => x.Id == id);
+    }
+
+    public async Task<bool> IsBookmarkedAsync(string provider, string mangaId, string chapterId)
+    {
+        await InitializeAsync();
+        var id = $"{provider}/{mangaId}/{chapterId}";
+        var count = await _db.Table<BookmarkEntity>().Where(x => x.Id == id).CountAsync();
+        return count > 0;
+    }
+
+    public async Task<List<BookmarkEntity>> GetBookmarksAsync(string provider, string mangaId)
+    {
+        await InitializeAsync();
+        return await _db.Table<BookmarkEntity>()
+            .Where(x => x.Provider == provider && x.MangaId == mangaId)
+            .OrderBy(x => x.ChapterNumber)
+            .ToListAsync();
+    }
+
+    public async Task<List<BookmarkEntity>> GetAllBookmarksAsync()
+    {
+        await InitializeAsync();
+        return await _db.Table<BookmarkEntity>()
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
     }
 
     public async ValueTask DisposeAsync()

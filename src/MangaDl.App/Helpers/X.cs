@@ -33,6 +33,8 @@ public static class X
     public static string Upper(string s) => s.ToUpperInvariant();
     public static double ReadOpacity(bool read) => read ? 0.5 : 1.0;
     public static double InLibraryOpacity(bool inLibrary) => inLibrary ? 0.55 : 1.0;
+    public static Visibility BookmarkVisibility(bool bookmarked) => bookmarked ? Visibility.Visible : Visibility.Collapsed;
+    public static string BookmarkMenuText(bool bookmarked) => bookmarked ? "Remove Bookmark" : "Bookmark Chapter";
 
     // Notifications
     public static Brush NoticeIconBg(NoticeKind k) => k switch

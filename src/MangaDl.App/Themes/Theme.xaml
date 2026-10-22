@@ -58,6 +58,7 @@
     <SolidColorBrush x:Key="AccentFaintBrush" Color="#14DC2626" />
     <SolidColorBrush x:Key="AccentWashBrush" Color="#0DDC2626" />
     <SolidColorBrush x:Key="AccentNavBrush" Color="#2EDC2626" />
+    <SolidColorBrush x:Key="BookmarkGoldBrush" Color="#FFF59E0B" />
 
     <!-- ===================== Status ===================== -->
     <SolidColorBrush x:Key="SuccessBrush" Color="#FF16A34A" />

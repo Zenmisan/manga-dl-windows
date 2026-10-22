@@ -53,10 +53,27 @@ public sealed partial class MangaDetailPage : Page
     {
         try
         {
+            var progressList = await AppServices.Database.GetMangaProgressAsync(_currentManga.Source, _currentManga.Id);
+            var readChapterIds = progressList.Where(p => p.Completed == 1).Select(p => p.ChapterId).ToHashSet();
+            var readChapterNums = progressList.Where(p => p.Completed == 1).Select(p => p.ChapterNumber).ToHashSet();
+
+            var bookmarkList = await AppServices.Database.GetBookmarksAsync(_currentManga.Source, _currentManga.Id);
+            var bookmarkedIds = bookmarkList.Select(b => b.ChapterId).ToHashSet();
+            var bookmarkedNums = bookmarkList.Select(b => b.ChapterNumber).ToHashSet();
+
+            var allDownloads = await AppServices.Database.GetDownloadsAsync();
+            var downloadedIds = allDownloads
+                .Where(d => d.Provider == _currentManga.Source && d.MangaId == _currentManga.Id && d.Status == "completed")
+                .Select(d => d.ChapterId)
+                .ToHashSet();
+            var downloadedNums = allDownloads
+                .Where(d => d.Provider == _currentManga.Source && d.MangaId == _currentManga.Id && d.Status == "completed")
+                .Select(d => d.ChapterNumber)
+                .ToHashSet();
+
             if (_currentManga.Source == LocalImportService.Provider)
             {
-                var downloads = await AppServices.Database.GetDownloadsAsync();
-                var local = downloads
+                var local = allDownloads
                     .Where(d => d.Provider == LocalImportService.Provider && d.MangaId == _currentManga.Id)
                     .OrderBy(d => d.ChapterNumber)
                     .ToList();
@@ -64,19 +81,23 @@ public sealed partial class MangaDetailPage : Page
                 _allChapters.Clear();
                 foreach (var d in local)
                 {
+                    var chId = d.ChapterId ?? d.ChapterNumber.ToString();
+                    var isRead = readChapterIds.Contains(chId) || readChapterNums.Contains(d.ChapterNumber);
+                    var isBookmarked = bookmarkedIds.Contains(chId) || bookmarkedNums.Contains(d.ChapterNumber);
+
                     _allChapters.Add(new Chapter(
                         d.ChapterNumber.ToString(),
                         d.ChapterTitle ?? $"Chapter {d.ChapterNumber}",
                         "",
                         "Local",
                         "Downloaded",
-                        Read: false));
+                        Read: isRead,
+                        Bookmarked: isBookmarked,
+                        Id: chId));
                 }
-                if (_allChapters.Count > 0)
-                {
-                    ApplyChapterFilters();
-                    ResumeText.Text = $"Resume {_allChapters.First().Number}";
-                }
+                PopulateGroupFilters();
+                ApplyChapterFilters();
+                UpdateResumeButton();
                 return;
             }
 
@@ -93,16 +114,24 @@ public sealed partial class MangaDetailPage : Page
                     _allChapters.Clear();
                     foreach (var ch in detail.Chapters)
                     {
+                        double.TryParse(ch.Number, out var cNum);
+                        var isRead = readChapterIds.Contains(ch.Id) || (cNum > 0 && readChapterNums.Contains(cNum));
+                        var isBookmarked = bookmarkedIds.Contains(ch.Id) || (cNum > 0 && bookmarkedNums.Contains(cNum));
+                        var isDownloaded = downloadedIds.Contains(ch.Id) || (cNum > 0 && downloadedNums.Contains(cNum));
+
                         _allChapters.Add(new Chapter(
                             ch.Number,
                             ch.Title,
                             ch.Released,
                             ch.Scanlator ?? _currentManga.Source,
-                            "Download",
-                            Read: false));
+                            isDownloaded ? "Downloaded" : "Download",
+                            Read: isRead,
+                            Bookmarked: isBookmarked,
+                            Id: ch.Id));
                     }
+                    PopulateGroupFilters();
                     ApplyChapterFilters();
-                    ResumeText.Text = $"Resume {_allChapters.First().Number}";
+                    UpdateResumeButton();
                 }
             }
         }
@@ -113,9 +142,46 @@ public sealed partial class MangaDetailPage : Page
         }
     }
 
+    private void PopulateGroupFilters()
+    {
+        var groups = _allChapters
+            .Select(c => c.Group)
+            .Where(g => !string.IsNullOrWhiteSpace(g))
+            .Distinct()
+            .OrderBy(g => g)
+            .ToList();
+
+        GroupFilterComboBox.Items.Clear();
+        GroupFilterComboBox.Items.Add("All Groups");
+        foreach (var g in groups) GroupFilterComboBox.Items.Add(g);
+        GroupFilterComboBox.SelectedIndex = 0;
+    }
+
+    private void UpdateResumeButton()
+    {
+        var unread = _allChapters
+            .Where(c => !c.Read)
+            .OrderBy(c => double.TryParse(c.Number, out var n) ? n : 999999)
+            .FirstOrDefault();
+
+        if (unread != null)
+        {
+            ResumeText.Text = $"Resume Ch. {unread.Number}";
+        }
+        else if (_allChapters.Count > 0)
+        {
+            ResumeText.Text = $"Read Ch. {_allChapters.First().Number}";
+        }
+    }
+
     private void ApplyChapterFilters()
     {
         var filtered = _allChapters.AsEnumerable();
+
+        if (GroupFilterComboBox?.SelectedItem is string selectedGroup && selectedGroup != "All Groups")
+        {
+            filtered = filtered.Where(ch => ch.Group == selectedGroup);
+        }
 
         if (FilterUnread?.IsChecked == true)
         {
@@ -127,12 +193,21 @@ public sealed partial class MangaDetailPage : Page
             filtered = filtered.Where(ch => ch.Status == "Downloaded");
         }
 
-        filtered = _newestFirst ? filtered.OrderByDescending(ch => ch.Number) : filtered.OrderBy(ch => ch.Number);
+        if (FilterBookmarked?.IsChecked == true)
+        {
+            filtered = filtered.Where(ch => ch.Bookmarked);
+        }
+
+        filtered = _newestFirst 
+            ? filtered.OrderByDescending(ch => double.TryParse(ch.Number, out var n) ? n : 0) 
+            : filtered.OrderBy(ch => double.TryParse(ch.Number, out var n) ? n : 0);
 
         Chapters.Clear();
         foreach (var ch in filtered) Chapters.Add(ch);
         ChapterCountText.Text = $"{Chapters.Count} chapters";
     }
+
+    private void OnGroupFilterChanged(object sender, SelectionChangedEventArgs e) => ApplyChapterFilters();
 
     private void OnFilterChanged(object sender, RoutedEventArgs e) => ApplyChapterFilters();
 
@@ -211,8 +286,144 @@ public sealed partial class MangaDetailPage : Page
         }
     }
 
-    private void OnTrack(object sender, RoutedEventArgs e) =>
-        Nav.Go(typeof(Settings.TrackersSettingsPage));
+    private async void OnTrack(object sender, RoutedEventArgs e)
+    {
+        if (_currentManga == null) return;
+        try
+        {
+            await TrackerBindingDialogHelper.ShowAsync(XamlRoot, _currentManga);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("MangaDetailPage.OnTrack", ex);
+            Nav.Toast("Couldn't open tracker settings");
+        }
+    }
+
+    private async void OnMarkReadClicked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not Chapter ch) return;
+        double.TryParse(ch.Number, out var chNum);
+        var chId = ch.Id ?? ch.Number;
+
+        await AppServices.Database.MarkChaptersReadAsync(
+            _currentManga.Source,
+            _currentManga.Id,
+            [(chId, chNum, ch.Title)],
+            _currentManga.Cover,
+            _currentManga.Title);
+
+        _ = AppServices.SyncTrackerProgressAsync(
+            _currentManga.Source,
+            _currentManga.Id,
+            _currentManga.Title,
+            chNum > 0 ? chNum : 1.0,
+            isCompleted: false);
+
+        ch.Read = true;
+        ApplyChapterFilters();
+        UpdateResumeButton();
+        Nav.Toast($"Marked Chapter {ch.Number} as read");
+    }
+
+    private async void OnMarkUnreadClicked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not Chapter ch) return;
+        var chId = ch.Id ?? ch.Number;
+
+        await AppServices.Database.DeleteProgressAsync(_currentManga.Source, _currentManga.Id, chId);
+
+        ch.Read = false;
+        ApplyChapterFilters();
+        UpdateResumeButton();
+        Nav.Toast($"Marked Chapter {ch.Number} as unread");
+    }
+
+    private async void OnMarkPreviousReadClicked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not Chapter ch) return;
+        double.TryParse(ch.Number, out var targetNum);
+        if (targetNum <= 0) return;
+
+        var toMark = _allChapters
+            .Where(c => double.TryParse(c.Number, out var n) && n <= targetNum)
+            .Select(c => (c.Id ?? c.Number, double.TryParse(c.Number, out var n) ? n : 0, (string?)c.Title))
+            .ToList();
+
+        if (toMark.Count == 0) return;
+
+        await AppServices.Database.MarkChaptersReadAsync(
+            _currentManga.Source,
+            _currentManga.Id,
+            toMark,
+            _currentManga.Cover,
+            _currentManga.Title);
+
+        _ = AppServices.SyncTrackerProgressAsync(
+            _currentManga.Source,
+            _currentManga.Id,
+            _currentManga.Title,
+            targetNum,
+            isCompleted: false);
+
+        foreach (var c in _allChapters)
+        {
+            if (double.TryParse(c.Number, out var n) && n <= targetNum)
+            {
+                c.Read = true;
+            }
+        }
+
+        ApplyChapterFilters();
+        UpdateResumeButton();
+        Nav.Toast($"Marked {toMark.Count} previous chapters as read");
+    }
+
+    private async void OnBookmarkChapterClicked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not Chapter ch) return;
+        double.TryParse(ch.Number, out var chNum);
+        var chId = ch.Id ?? ch.Number;
+
+        if (ch.Bookmarked)
+        {
+            await AppServices.Database.RemoveBookmarkAsync(_currentManga.Source, _currentManga.Id, chId);
+            ch.Bookmarked = false;
+            Nav.Toast($"Removed bookmark from Chapter {ch.Number}");
+        }
+        else
+        {
+            await AppServices.Database.AddBookmarkAsync(new BookmarkEntity
+            {
+                Provider = _currentManga.Source,
+                MangaId = _currentManga.Id,
+                ChapterId = chId,
+                ChapterNumber = chNum,
+                ChapterTitle = ch.Title
+            });
+            ch.Bookmarked = true;
+            Nav.Toast($"Bookmarked Chapter {ch.Number}");
+        }
+
+        ApplyChapterFilters();
+    }
+
+    private async void OnDownloadChapterClicked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not Chapter ch) return;
+        double.TryParse(ch.Number, out var num);
+        var chId = ch.Id ?? ch.Number;
+
+        await AppServices.Downloads.EnqueueChapterAsync(
+            _currentManga.Source,
+            _currentManga.Id,
+            _currentManga.Title,
+            chId,
+            ch.Title,
+            num);
+
+        Nav.Toast($"Queued Chapter {ch.Number} for download");
+    }
 
     private void OnResume(object sender, RoutedEventArgs e)
     {
