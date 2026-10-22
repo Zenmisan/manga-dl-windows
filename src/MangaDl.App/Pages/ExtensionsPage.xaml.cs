@@ -11,15 +11,19 @@ namespace MangaDl.Pages;
 /// <summary>Browse: Sources, Extensions and Migrate tabs. Pass "sources" or "migrate" to open a tab.</summary>
 public sealed partial class ExtensionsPage : Page
 {
-    public Source LastUsed { get; } = Sample.LastUsedSource;
-    public ObservableCollection<Source> Sources { get; } = new(Sample.Sources);
-    public ObservableCollection<Extension> Extensions { get; } = new(Sample.Extensions);
-    public IReadOnlyList<Manga> Library { get; } = Sample.Library.Take(8).ToList();
+    public Source LastUsed { get; private set; } = new("MangaDex", "EN · Built-in", "M", "#FF6B6B");
+    public ObservableCollection<Source> Sources { get; } = [];
+    public ObservableCollection<Extension> Extensions { get; } = [];
+    public ObservableCollection<Manga> Library { get; } = [];
 
     public ExtensionsPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => LoadExtensions();
+        Loaded += async (_, _) =>
+        {
+            LoadExtensions();
+            await LoadLibraryForMigrationAsync();
+        };
     }
 
     private void LoadExtensions()
@@ -48,12 +52,41 @@ public sealed partial class ExtensionsPage : Page
                         meta.Version,
                         ExtensionState.Installed));
                 }
+
+                if (Sources.Count > 0)
+                {
+                    LastUsed = Sources[0];
+                    Bindings.Update();
+                }
             }
         }
         catch (Exception ex)
         {
             AppLog.Warn("ExtensionsPage.LoadExtensions", ex);
             Nav.Toast("Couldn't load sources");
+        }
+    }
+
+    private async Task LoadLibraryForMigrationAsync()
+    {
+        try
+        {
+            var entities = await AppServices.Database.GetLibraryAsync();
+            Library.Clear();
+            foreach (var item in entities)
+            {
+                Library.Add(new Manga(
+                    item.MangaId,
+                    item.Title,
+                    item.CoverUrl ?? "#262626",
+                    item.Provider,
+                    item.TotalChapters > 0 ? $"{item.TotalChapters} ch" : "Ongoing",
+                    true));
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("ExtensionsPage.LoadLibraryForMigrationAsync", ex);
         }
     }
 
@@ -78,7 +111,50 @@ public sealed partial class ExtensionsPage : Page
     private void OnSearch(object sender, RoutedEventArgs e) => Nav.Go(typeof(SearchPage));
     private void OnOpenSource(object sender, RoutedEventArgs e) => Nav.Go(typeof(BrowseSourcePage), (((FrameworkElement)sender).DataContext as Source)?.Name);
 
-    private void OnMigrate(object sender, RoutedEventArgs e) => Nav.Toast("Pick a target source to migrate to");
+    private async void OnMigrate(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not Manga manga) return;
+
+        var registered = AppServices.Extensions.GetExtensions();
+        var sourcesList = registered
+            .Where(s => !string.Equals(s.Id, manga.Source, StringComparison.OrdinalIgnoreCase))
+            .Select(s => s.Name)
+            .ToList();
+
+        var combo = new ComboBox
+        {
+            ItemsSource = sourcesList,
+            SelectedIndex = 0,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(0, 8, 0, 0)
+        };
+
+        var panel = new StackPanel { Width = 360, Spacing = 6 };
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"Select target source to search and migrate \"{manga.Title}\":",
+            TextWrapping = TextWrapping.Wrap,
+            FontSize = 13
+        });
+        panel.Children.Add(combo);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Migrate Manga",
+            Content = panel,
+            PrimaryButtonText = "Search Source",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            Nav.Go(typeof(SearchPage), manga.Title);
+            Nav.Toast($"Searching for \"{manga.Title}\" to migrate...");
+        }
+    }
 
     private void OnExtensionAction(object sender, RoutedEventArgs e)
     {

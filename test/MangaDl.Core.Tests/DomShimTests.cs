@@ -136,6 +136,27 @@ public class DomShimTests
     }
 
     [Fact]
+    public void DomElement_UnquotedAttributeSelectors_SanitizedAndMatched()
+    {
+        var html = @"<div class=""gallery"">
+            <img src=""http://cdn.example.com/cover.jpg"" alt=""Cover"" />
+            <a href=""/series/solo-leveling/1"">Read Chapter</a>
+            <a href=""/other/info"">Other</a>
+        </div>";
+
+        var doc = DomShim.ParseFromString(html);
+
+        // Unquoted http and unquoted /series/
+        var img = doc.querySelector("img[src^=http]");
+        var link = doc.querySelector("a[href*=/series/]");
+
+        Assert.NotNull(img);
+        Assert.Equal("http://cdn.example.com/cover.jpg", img.getAttribute("src"));
+        Assert.NotNull(link);
+        Assert.Equal("/series/solo-leveling/1", link.getAttribute("href"));
+    }
+
+    [Fact]
     public void DomDocument_CreateElement_CreatesElementWithAttributes()
     {
         var doc = DomShim.ParseFromString("<html><body></body></html>");

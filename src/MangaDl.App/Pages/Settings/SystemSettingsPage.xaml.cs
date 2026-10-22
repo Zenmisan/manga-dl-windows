@@ -126,7 +126,43 @@ public sealed partial class SystemSettingsPage : Page
         }
     }
 
-    private void OnClearCache(object sender, RoutedEventArgs e) => Nav.Toast("Image cache cleared");
+    private async void OnClearCache(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await Task.Run(() =>
+            {
+                var appDataDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "manga-dl");
+                var cacheDir = Path.Combine(appDataDir, "cache");
+                if (Directory.Exists(cacheDir))
+                {
+                    foreach (var file in Directory.EnumerateFiles(cacheDir, "*", SearchOption.AllDirectories))
+                    {
+                        try { File.Delete(file); } catch { }
+                    }
+                }
+
+                var tempDir = Path.Combine(Path.GetTempPath(), "manga-dl");
+                if (Directory.Exists(tempDir))
+                {
+                    foreach (var file in Directory.EnumerateFiles(tempDir, "*", SearchOption.AllDirectories))
+                    {
+                        try { File.Delete(file); } catch { }
+                    }
+                }
+            });
+
+            if (CacheStorageText != null) CacheStorageText.Text = "Cache 0 B";
+            Nav.Toast("Image cache cleared");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("SystemSettingsPage.OnClearCache", ex);
+            Nav.Toast("Couldn't clear cache");
+        }
+    }
 
     private async void OnBackup(object sender, RoutedEventArgs e)
     {
@@ -210,7 +246,65 @@ public sealed partial class SystemSettingsPage : Page
         }
     }
 
-    private void OnAddServer(object sender, RoutedEventArgs e) => Nav.Toast("Server configuration dialog opens here");
+    private async void OnAddServer(object sender, RoutedEventArgs e)
+    {
+        var nameBox = new TextBox
+        {
+            PlaceholderText = "e.g. Home Suwayomi or Manga-DL Server",
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        var urlBox = new TextBox
+        {
+            PlaceholderText = "http://192.168.1.100:4567"
+        };
+
+        var panel = new StackPanel
+        {
+            Width = 360,
+            Spacing = 4
+        };
+        panel.Children.Add(new TextBlock { Text = "Server Name", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 13 });
+        panel.Children.Add(nameBox);
+        panel.Children.Add(new TextBlock { Text = "Server Address / URL", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 13 });
+        panel.Children.Add(urlBox);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Add Remote Server",
+            Content = panel,
+            PrimaryButtonText = "Add Server",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            var name = nameBox.Text.Trim();
+            var url = urlBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                Nav.Toast("Server URL cannot be empty");
+                return;
+            }
+
+            if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                url = "http://" + url;
+            }
+
+            var entry = string.IsNullOrWhiteSpace(name) ? url : $"{name}|{url}";
+            if (!AppServices.Settings.RemoteServers.Contains(entry))
+            {
+                AppServices.Settings.RemoteServers.Add(entry);
+                AppServices.Settings.Save();
+            }
+
+            Nav.Toast($"Remote server added: {(string.IsNullOrWhiteSpace(name) ? url : name)}");
+        }
+    }
 
     private void OnReleaseNotes(object sender, RoutedEventArgs e) =>
         Nav.Toast("manga-dl v1.0.0 — Native WinUI3 desktop app with embedded extensions");

@@ -123,7 +123,8 @@ public sealed class ExtensionBridge : IDisposable
             if (!b.IsUndefined() && !b.IsNull()) body = b.AsString();
         }
 
-        var result = _http.FetchAsync(url, method, headers, body).GetAwaiter().GetResult();
+        // Run on thread pool with ConfigureAwait(false) to prevent UI thread pool starvation/deadlock
+        var result = Task.Run(() => _http.FetchAsync(url, method, headers, body)).ConfigureAwait(false).GetAwaiter().GetResult();
 
         return new Dictionary<string, object?>
         {

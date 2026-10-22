@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
@@ -24,9 +26,142 @@ public sealed class DomShim
         var trimmed = selector.TrimStart();
         if (trimmed.StartsWith('>'))
         {
-            return ":scope " + trimmed;
+            trimmed = ":scope " + trimmed;
         }
-        return selector;
+
+        // Quote unquoted attribute values like img[src^=http] or a[href*=/series/]
+        trimmed = Regex.Replace(trimmed, @"\[\s*([a-zA-Z0-9_\-]+)\s*([~|^$*]?=)\s*([^""'\]\s]+)\s*\]", "[$1$2\"$3\"]");
+
+        return trimmed;
+    }
+
+    public static List<string> SplitSelectorList(string selector)
+    {
+        var parts = new List<string>();
+        if (string.IsNullOrWhiteSpace(selector)) return parts;
+
+        var sb = new StringBuilder();
+        int parenDepth = 0;
+        int bracketDepth = 0;
+        char inQuote = '\0';
+
+        for (int i = 0; i < selector.Length; i++)
+        {
+            char c = selector[i];
+            if (inQuote != '\0')
+            {
+                sb.Append(c);
+                if (c == inQuote && (i == 0 || selector[i - 1] != '\\'))
+                {
+                    inQuote = '\0';
+                }
+            }
+            else if (c == '\'' || c == '"')
+            {
+                inQuote = c;
+                sb.Append(c);
+            }
+            else if (c == '(')
+            {
+                parenDepth++;
+                sb.Append(c);
+            }
+            else if (c == ')')
+            {
+                if (parenDepth > 0) parenDepth--;
+                sb.Append(c);
+            }
+            else if (c == '[')
+            {
+                bracketDepth++;
+                sb.Append(c);
+            }
+            else if (c == ']')
+            {
+                if (bracketDepth > 0) bracketDepth--;
+                sb.Append(c);
+            }
+            else if (c == ',' && parenDepth == 0 && bracketDepth == 0)
+            {
+                var s = sb.ToString().Trim();
+                if (s.Length > 0) parts.Add(s);
+                sb.Clear();
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        var last = sb.ToString().Trim();
+        if (last.Length > 0) parts.Add(last);
+        return parts;
+    }
+
+    public static IElement? SafeQuerySelector(IParentNode node, string selector)
+    {
+        if (string.IsNullOrWhiteSpace(selector)) return null;
+        try
+        {
+            var normalized = NormalizeSelector(selector);
+            return node.QuerySelector(normalized);
+        }
+        catch
+        {
+            try
+            {
+                return SafeQuerySelectorAll(node, selector).FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
+
+    public static IEnumerable<IElement> SafeQuerySelectorAll(IParentNode node, string selector)
+    {
+        if (string.IsNullOrWhiteSpace(selector)) return Enumerable.Empty<IElement>();
+        var normalized = NormalizeSelector(selector);
+        try
+        {
+            return node.QuerySelectorAll(normalized);
+        }
+        catch
+        {
+            var parts = SplitSelectorList(selector);
+            if (parts.Count > 1)
+            {
+                var combined = new List<IElement>();
+                foreach (var part in parts)
+                {
+                    try
+                    {
+                        combined.AddRange(SafeQuerySelectorAll(node, part));
+                    }
+                    catch { }
+                }
+                return combined.Distinct();
+            }
+
+            var containsMatch = Regex.Match(normalized, @"^(.*?):contains\((?:""([^""]*)""|'([^']*)'|([^)]*))\)(.*)$", RegexOptions.IgnoreCase);
+            if (containsMatch.Success)
+            {
+                var baseSelector = (containsMatch.Groups[1].Value.Trim() + containsMatch.Groups[5].Value.Trim()).Trim();
+                var text = containsMatch.Groups[2].Success ? containsMatch.Groups[2].Value
+                    : (containsMatch.Groups[3].Success ? containsMatch.Groups[3].Value : containsMatch.Groups[4].Value);
+
+                if (string.IsNullOrWhiteSpace(baseSelector)) baseSelector = "*";
+                try
+                {
+                    var baseElements = node.QuerySelectorAll(baseSelector);
+                    return baseElements.Where(e => e.TextContent != null && e.TextContent.Contains(text, StringComparison.OrdinalIgnoreCase));
+                }
+                catch { }
+            }
+
+            return Enumerable.Empty<IElement>();
+        }
     }
 }
 
@@ -47,35 +182,19 @@ public sealed class DomDocument
 
     public DomElement? querySelector(string selector)
     {
-        try
-        {
-            var normalized = DomShim.NormalizeSelector(selector);
-            var el = _doc.QuerySelector(normalized);
-            return el != null ? new DomElement(el) : null;
-        }
-        catch
-        {
-            return null;
-        }
+        var el = DomShim.SafeQuerySelector(_doc, selector);
+        return el != null ? new DomElement(el) : null;
     }
 
     public DomElement[] querySelectorAll(string selector)
     {
-        try
+        var elements = DomShim.SafeQuerySelectorAll(_doc, selector).ToArray();
+        var result = new DomElement[elements.Length];
+        for (var i = 0; i < elements.Length; i++)
         {
-            var normalized = DomShim.NormalizeSelector(selector);
-            var elements = _doc.QuerySelectorAll(normalized);
-            var result = new DomElement[elements.Length];
-            for (var i = 0; i < elements.Length; i++)
-            {
-                result[i] = new DomElement(elements[i]);
-            }
-            return result;
+            result[i] = new DomElement(elements[i]);
         }
-        catch
-        {
-            return Array.Empty<DomElement>();
-        }
+        return result;
     }
 }
 
@@ -157,35 +276,19 @@ public sealed class DomElement
 
     public DomElement? querySelector(string selector)
     {
-        try
-        {
-            var normalized = DomShim.NormalizeSelector(selector);
-            var child = _el.QuerySelector(normalized);
-            return child != null ? new DomElement(child) : null;
-        }
-        catch
-        {
-            return null;
-        }
+        var child = DomShim.SafeQuerySelector(_el, selector);
+        return child != null ? new DomElement(child) : null;
     }
 
     public DomElement[] querySelectorAll(string selector)
     {
-        try
+        var elements = DomShim.SafeQuerySelectorAll(_el, selector).ToArray();
+        var result = new DomElement[elements.Length];
+        for (var i = 0; i < elements.Length; i++)
         {
-            var normalized = DomShim.NormalizeSelector(selector);
-            var elements = _el.QuerySelectorAll(normalized);
-            var result = new DomElement[elements.Length];
-            for (var i = 0; i < elements.Length; i++)
-            {
-                result[i] = new DomElement(elements[i]);
-            }
-            return result;
+            result[i] = new DomElement(elements[i]);
         }
-        catch
-        {
-            return Array.Empty<DomElement>();
-        }
+        return result;
     }
 
     public DomElement? closest(string selector)

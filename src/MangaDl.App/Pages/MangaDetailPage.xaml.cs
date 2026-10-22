@@ -13,10 +13,10 @@ namespace MangaDl.Pages;
 
 public sealed partial class MangaDetailPage : Page
 {
-    public ObservableCollection<Chapter> Chapters { get; } = new(Sample.Chapters);
+    public ObservableCollection<Chapter> Chapters { get; } = [];
 
     private readonly List<Chapter> _allChapters = [];
-    private Manga _currentManga = Sample.HollowCrown;
+    private Manga _currentManga = new("", "", "#1E293B", "", "0 ch", false);
     private bool _inLibrary;
     private bool _newestFirst = true;
     private bool _isNovel;
@@ -26,7 +26,15 @@ public sealed partial class MangaDetailPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        _currentManga = e.Parameter as Manga ?? Sample.HollowCrown;
+        if (e.Parameter is Manga manga)
+        {
+            _currentManga = manga;
+        }
+        else if (string.IsNullOrWhiteSpace(_currentManga.Title))
+        {
+            Nav.Toast("No manga selected");
+            return;
+        }
 
         // Ambilight: hero tinted with the cover colour, cover a darker shade of it.
         Hero.Background = X.Hex(_currentManga.Cover);

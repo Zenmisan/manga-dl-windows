@@ -68,6 +68,13 @@ public sealed class AppSettings
     public string? Bio { get; set; }
     public string? AvatarUrl { get; set; }
 
+    // Reading Goals
+    public int MonthlyGoal { get; set; } = 25;
+    public int YearlyGoal { get; set; } = 50;
+
+    // Remote Servers (Suwayomi / Komga / Manga-DL instances)
+    public List<string> RemoteServers { get; set; } = [];
+
     // AniList Tracker Settings
     public string AnilistClientId { get; set; } = "53109";
     public string AnilistClientSecret { get; set; } = "7xKnM4QU77qtWWLXOw3V0rx1mvLnmriX9ZcI3Cki";

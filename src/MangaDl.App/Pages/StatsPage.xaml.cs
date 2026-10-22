@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using MangaDl.Core;
 using MangaDl.Core.Gamification;
 using MangaDl.Helpers;
@@ -15,9 +16,9 @@ public sealed record HeatDay(int Level)
 
 public sealed partial class StatsPage : Page
 {
-    public IReadOnlyList<HeatDay> Activity { get; } = Sample.Activity.Select(level => new HeatDay(level)).ToList();
-    public IReadOnlyList<Bar> ByCategory { get; } = Sample.ByCategory;
-    public IReadOnlyList<Bar> BySource { get; } = Sample.BySource;
+    public ObservableCollection<HeatDay> Activity { get; } = [];
+    public ObservableCollection<Bar> ByCategory { get; } = [];
+    public ObservableCollection<Bar> BySource { get; } = [];
 
     public StatsPage()
     {
@@ -29,7 +30,7 @@ public sealed partial class StatsPage : Page
     {
         try
         {
-            var history = await AppServices.Database.GetHistoryAsync(100);
+            var history = await AppServices.Database.GetHistoryAsync(500);
             var library = await AppServices.Database.GetLibraryAsync();
             var completed = await AppServices.Database.GetAllCompletedProgressAsync();
 
@@ -71,8 +72,77 @@ public sealed partial class StatsPage : Page
             if (TimeReadingValue != null) TimeReadingValue.Text = $"{hours}h";
             if (CurrentStreakValue != null) CurrentStreakValue.Text = $"{streak}d";
             if (ReadingPaceValue != null) ReadingPaceValue.Text = $"{Math.Max(1, totalChapters / 8)}/wk";
-            if (MonthlyGoalValue != null) MonthlyGoalValue.Text = $"{Math.Min(totalChapters, 25)} / 25";
-            if (YearlyGoalValue != null) YearlyGoalValue.Text = $"{library.Count} / 50";
+
+            // Reading goals from settings
+            var mGoal = Math.Max(1, AppServices.Settings.MonthlyGoal);
+            var yGoal = Math.Max(1, AppServices.Settings.YearlyGoal);
+            if (MonthlyGoalValue != null) MonthlyGoalValue.Text = $"{Math.Min(totalChapters, mGoal)} / {mGoal}";
+            if (YearlyGoalValue != null) YearlyGoalValue.Text = $"{Math.Min(library.Count, yGoal)} / {yGoal}";
+
+            // Activity heatmap (52 weeks = 364 days)
+            var historyCountsByDate = history
+                .GroupBy(h => DateTimeOffset.FromUnixTimeMilliseconds(h.ReadAt).ToLocalTime().Date)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            Activity.Clear();
+            var startDate = DateTime.Today.AddDays(-363);
+            for (var d = startDate; d <= DateTime.Today; d = d.AddDays(1))
+            {
+                historyCountsByDate.TryGetValue(d, out var count);
+                var level = count switch
+                {
+                    0 => 0,
+                    1 or 2 => 1,
+                    >= 3 and <= 5 => 2,
+                    _ => 3
+                };
+                Activity.Add(new HeatDay(level));
+            }
+
+            // By Category
+            ByCategory.Clear();
+            var cats = await AppServices.Database.GetCategoriesAsync();
+            if (cats.Count > 0 && library.Count > 0)
+            {
+                var total = (double)library.Count;
+                foreach (var cat in cats)
+                {
+                    var itemsInCat = await AppServices.Database.GetMangaInCategoriesAsync(cat.Id);
+                    if (itemsInCat.Count > 0)
+                    {
+                        ByCategory.Add(new Bar(cat.Name, itemsInCat.Count / total));
+                    }
+                }
+            }
+            if (ByCategory.Count == 0 && library.Count > 0)
+            {
+                var typeGroups = library.GroupBy(m => string.IsNullOrWhiteSpace(m.Type) ? "Manga" : m.Type).ToList();
+                var total = (double)library.Count;
+                foreach (var g in typeGroups)
+                {
+                    ByCategory.Add(new Bar(g.Key, g.Count() / total));
+                }
+            }
+            if (ByCategory.Count == 0)
+            {
+                ByCategory.Add(new Bar("Default", 1.0));
+            }
+
+            // By Source
+            BySource.Clear();
+            if (library.Count > 0)
+            {
+                var srcGroups = library.GroupBy(m => m.Provider).OrderByDescending(g => g.Count()).Take(5).ToList();
+                var total = (double)library.Count;
+                foreach (var g in srcGroups)
+                {
+                    BySource.Add(new Bar(g.Key, g.Count() / total));
+                }
+            }
+            else
+            {
+                BySource.Add(new Bar("No sources yet", 0.0));
+            }
 
             // Gamification rank
             var profile = GamificationService.GetProfile(totalChapters, streak, library.Count);
@@ -111,6 +181,45 @@ public sealed partial class StatsPage : Page
         }
     }
 
-    private void OnEditGoals(object sender, RoutedEventArgs e) =>
-        Nav.Toast("Reading goals dialog opens here");
+    private async void OnEditGoals(object sender, RoutedEventArgs e)
+    {
+        var mBox = new TextBox
+        {
+            Text = AppServices.Settings.MonthlyGoal.ToString(),
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        var yBox = new TextBox
+        {
+            Text = AppServices.Settings.YearlyGoal.ToString()
+        };
+
+        var panel = new StackPanel { Width = 300, Spacing = 4 };
+        panel.Children.Add(new TextBlock { Text = "Monthly Chapter Goal", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 13 });
+        panel.Children.Add(mBox);
+        panel.Children.Add(new TextBlock { Text = "Yearly Manga Goal", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 13 });
+        panel.Children.Add(yBox);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Edit Reading Goals",
+            Content = panel,
+            PrimaryButtonText = "Save Goals",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            if (int.TryParse(mBox.Text.Trim(), out var m) && m > 0)
+                AppServices.Settings.MonthlyGoal = m;
+            if (int.TryParse(yBox.Text.Trim(), out var y) && y > 0)
+                AppServices.Settings.YearlyGoal = y;
+
+            AppServices.Settings.Save();
+            await LoadStatsAsync();
+            Nav.Toast("Reading goals updated");
+        }
+    }
 }

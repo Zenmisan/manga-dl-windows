@@ -19,7 +19,7 @@ namespace MangaDl.Pages;
 
 public sealed partial class ReaderPage : Page
 {
-    private Manga _currentManga = Sample.HollowCrown;
+    private Manga _currentManga = new("", "", "#1E293B", "", "0 ch", false);
     private string _chapterId = "1";
     private string _chapterTitle = "Chapter 1";
     private double _chapterNumber = 1.0;
@@ -146,6 +146,18 @@ public sealed partial class ReaderPage : Page
         }
 
         ApplyReaderPreferences();
+
+        if (string.IsNullOrWhiteSpace(_currentManga.Title))
+        {
+            if (ReaderStatusBanner != null)
+            {
+                ReaderStatusBanner.Visibility = Visibility.Visible;
+                ReaderStatusTitle.Text = "No Chapter Selected";
+                ReaderStatusMessage.Text = "Navigate from the Library or Browse page to select a manga to read.";
+            }
+            return;
+        }
+
         await InitializeMangaReaderAsync();
     }
 

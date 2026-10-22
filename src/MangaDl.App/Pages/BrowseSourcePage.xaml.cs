@@ -160,8 +160,54 @@ public sealed partial class BrowseSourcePage : Page
         catch {}
     }
 
-    private void OnOpenFilters(object sender, RoutedEventArgs e) =>
-        Nav.Toast($"Filter settings for {_sourceName}");
+    private async void OnOpenFilters(object sender, RoutedEventArgs e)
+    {
+        var fantasyCheck = new CheckBox { Content = "Fantasy", IsChecked = FantasyChip?.Visibility == Visibility.Visible };
+        var actionCheck = new CheckBox { Content = "Action", IsChecked = false };
+        var romanceCheck = new CheckBox { Content = "Romance", IsChecked = false };
+        var comedyCheck = new CheckBox { Content = "Comedy", IsChecked = false };
+        var ongoingCheck = new CheckBox { Content = "Ongoing Only", IsChecked = OngoingChip?.Visibility == Visibility.Visible };
+
+        var panel = new StackPanel { Width = 320, Spacing = 8 };
+        panel.Children.Add(new TextBlock { Text = "Genres", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 13 });
+        panel.Children.Add(fantasyCheck);
+        panel.Children.Add(actionCheck);
+        panel.Children.Add(romanceCheck);
+        panel.Children.Add(comedyCheck);
+        panel.Children.Add(new TextBlock { Text = "Status", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 13, Margin = new Thickness(0, 8, 0, 0) });
+        panel.Children.Add(ongoingCheck);
+
+        var dialog = new ContentDialog
+        {
+            Title = $"Filters · {_sourceName}",
+            Content = panel,
+            PrimaryButtonText = "Apply Filters",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            if (FantasyChip != null)
+                FantasyChip.Visibility = fantasyCheck.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            if (OngoingChip != null)
+                OngoingChip.Visibility = ongoingCheck.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+
+            // If a genre is selected, search for that genre keyword
+            var activeFilter = fantasyCheck.IsChecked == true ? "Fantasy"
+                : (actionCheck.IsChecked == true ? "Action"
+                : (romanceCheck.IsChecked == true ? "Romance"
+                : (comedyCheck.IsChecked == true ? "Comedy" : null)));
+
+            if (!string.IsNullOrWhiteSpace(activeFilter))
+            {
+                OnSearchSubmitted(null, activeFilter);
+            }
+            Nav.Toast($"Filters applied for {_sourceName}");
+        }
+    }
 
     private async void OnTabChanged(object sender, RoutedEventArgs e)
     {

@@ -242,8 +242,13 @@ public sealed partial class LibraryPage : Page
         }
     }
 
-    private void OnOpenManga(object sender, RoutedEventArgs e) =>
-        Nav.Go(typeof(MangaDetailPage), ((FrameworkElement)sender).DataContext ?? Sample.HollowCrown);
+    private void OnOpenManga(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is Manga manga)
+        {
+            Nav.Go(typeof(MangaDetailPage), manga);
+        }
+    }
 
     private void OnResume(object sender, RoutedEventArgs e)
     {
@@ -251,9 +256,13 @@ public sealed partial class LibraryPage : Page
         {
             Nav.Go(typeof(ReaderPage), ci.Manga);
         }
+        else if (_allManga.Count > 0)
+        {
+            Nav.Go(typeof(ReaderPage), _allManga[0]);
+        }
         else
         {
-            Nav.Go(typeof(ReaderPage), _allManga.FirstOrDefault() ?? Sample.HollowCrown);
+            Nav.Toast("No manga in library to resume");
         }
     }
 

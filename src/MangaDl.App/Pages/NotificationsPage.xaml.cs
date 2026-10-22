@@ -8,10 +8,72 @@ namespace MangaDl.Pages;
 
 public sealed partial class NotificationsPage : Page
 {
-    private readonly List<Notice> _allNotices = [.. Sample.Notices];
-    public ObservableCollection<Notice> Items { get; } = new(Sample.Notices);
+    private readonly List<Notice> _allNotices = [];
+    public ObservableCollection<Notice> Items { get; } = [];
 
-    public NotificationsPage() => InitializeComponent();
+    public NotificationsPage()
+    {
+        InitializeComponent();
+        Loaded += async (_, _) => await LoadNoticesAsync();
+    }
+
+    private async Task LoadNoticesAsync()
+    {
+        try
+        {
+            _allNotices.Clear();
+            Items.Clear();
+
+            // 1. App notice
+            _allNotices.Add(new Notice(
+                "manga-dl v1.0.0",
+                "Desktop client is running with native WinUI3 runtime.",
+                "Today",
+                false,
+                NoticeKind.Info,
+                "Check",
+                "Install"));
+
+            // 2. Real new chapters discovered
+            var newChapters = await AppServices.Database.GetNewChaptersAsync(15);
+            foreach (var ch in newChapters)
+            {
+                var manga = await AppServices.Database.GetLibraryItemAsync(ch.Provider, ch.MangaId);
+                var title = manga?.Title ?? ch.MangaId;
+                _allNotices.Add(new Notice(
+                    "New Chapter Available",
+                    $"{ch.Title} is out for {title}",
+                    "Recent",
+                    true,
+                    NoticeKind.Success,
+                    "Book",
+                    "View"));
+            }
+
+            // 3. Completed downloads
+            var downloads = await AppServices.Database.GetCompletedDownloadsAsync();
+            foreach (var dl in downloads.Take(10))
+            {
+                _allNotices.Add(new Notice(
+                    "Download Complete",
+                    $"{dl.ChapterTitle}",
+                    "Downloaded",
+                    false,
+                    NoticeKind.Success,
+                    "Download",
+                    "Open Folder"));
+            }
+
+            foreach (var n in _allNotices)
+            {
+                Items.Add(n);
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("NotificationsPage.LoadNoticesAsync", ex);
+        }
+    }
 
     private void OnMarkAllRead(object sender, RoutedEventArgs e)
     {
@@ -61,16 +123,21 @@ public sealed partial class NotificationsPage : Page
 
     private void OnFilterTab(object sender, RoutedEventArgs e)
     {
-        var tag = (string)((FrameworkElement)sender).Tag;
+        var tag = (sender as FrameworkElement)?.Tag as string ?? "All";
         Items.Clear();
-        var filtered = tag switch
+
+        IEnumerable<Notice> filtered = tag switch
         {
             "Unread" => _allNotices.Where(n => n.Unread),
-            "Chapters" => _allNotices.Where(n => n.Title.Contains("chapter", StringComparison.OrdinalIgnoreCase) || n.Body.Contains("Ch.", StringComparison.OrdinalIgnoreCase)),
-            "Downloads" => _allNotices.Where(n => n.Title.Contains("download", StringComparison.OrdinalIgnoreCase) || n.Body.Contains("download", StringComparison.OrdinalIgnoreCase)),
-            "App" => _allNotices.Where(n => n.Title.Contains("update", StringComparison.OrdinalIgnoreCase) || n.Title.Contains("extension", StringComparison.OrdinalIgnoreCase) || n.Title.Contains("synced", StringComparison.OrdinalIgnoreCase)),
-            _ => _allNotices,
+            "Chapters" => _allNotices.Where(n => n.Action == "View"),
+            "Downloads" => _allNotices.Where(n => n.Action == "Open Folder"),
+            "App" => _allNotices.Where(n => n.Action == "Install" || n.Action == null),
+            _ => _allNotices
         };
-        foreach (var item in filtered) Items.Add(item);
+
+        foreach (var notice in filtered)
+        {
+            Items.Add(notice);
+        }
     }
 }
