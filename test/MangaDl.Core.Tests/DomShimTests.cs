@@ -103,4 +103,46 @@ public class DomShimTests
         Assert.Equal("SPAN", third.tagName);
         Assert.Null(third.nextElementSibling);
     }
+
+    [Fact]
+    public void DomElement_AngleSharp_QuerySelectorSpecialSelectors()
+    {
+        var html = @"<div class=""meta"">
+            <div><span>Author Name</span> <a href=""/a1"">Author Link</a></div>
+            <p class=""author"">John Doe</p>
+            <span class=""leading-7"">Jane Smith</span>
+            <span class=""other"">Author: Bob</span>
+        </div>";
+
+        var doc = DomShim.ParseFromString(html);
+
+        // ReadHive selector: span.leading-7, .author, span:contains("Author")
+        var author1 = doc.querySelector(@"span.leading-7, .author, span:contains(""Author"")");
+        
+        // Pure :contains selector
+        var authorContainsOnly = doc.querySelector(@"span:contains(""Author"")");
+
+        // Pure :contains selector with single quotes
+        var authorContainsSingleQuotes = doc.querySelector(@"span:contains('Author')");
+
+        // Bato selector: .meta div:has(span) a, [class*="author"] a
+        var authorLinks = doc.querySelectorAll(@".meta div:has(span) a, [class*=""author""] a");
+
+        Assert.NotNull(author1);
+        Assert.NotNull(authorContainsOnly);
+        Assert.Equal("Author Name", authorContainsOnly.textContent);
+        Assert.NotNull(authorContainsSingleQuotes);
+        Assert.NotEmpty(authorLinks);
+    }
+
+    [Fact]
+    public void DomDocument_CreateElement_CreatesElementWithAttributes()
+    {
+        var doc = DomShim.ParseFromString("<html><body></body></html>");
+        var el = doc.createElement("canvas");
+        Assert.NotNull(el);
+        Assert.Equal("CANVAS", el.tagName);
+        el.setAttribute("width", "100");
+        Assert.Equal("100", el.getAttribute("width"));
+    }
 }

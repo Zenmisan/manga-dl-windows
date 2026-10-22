@@ -54,6 +54,7 @@ public sealed class ExtensionBridge : IDisposable
             globalThis.DOMParser.prototype.parseFromString = function(html, mime) {
                 return __domParse(html || '', mime || 'text/html');
             };
+            globalThis.document = __domParse('<!DOCTYPE html><html><body></body></html>', 'text/html');
         ");
 
         // 5. apiFetch native bridge

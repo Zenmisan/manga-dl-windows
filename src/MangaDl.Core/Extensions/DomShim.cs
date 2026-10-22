@@ -39,6 +39,12 @@ public sealed class DomDocument
         _doc = doc;
     }
 
+    public DomElement createElement(string tagName)
+    {
+        var el = _doc.CreateElement(tagName ?? "div");
+        return new DomElement(el);
+    }
+
     public DomElement? querySelector(string selector)
     {
         try
