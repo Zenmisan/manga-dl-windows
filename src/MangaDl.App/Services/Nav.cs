@@ -35,6 +35,7 @@ public static class Nav
         [typeof(BrowseSourcePage)] = "Browse",
         [typeof(DownloadsPage)] = "Downloads",
         [typeof(StatsPage)] = "Stats",
+        [typeof(LeaderboardPage)] = "Leaderboard",
         [typeof(NotificationsPage)] = "Notifications",
         [typeof(SettingsPage)] = "Settings",
         [typeof(HelpPage)] = "Help",

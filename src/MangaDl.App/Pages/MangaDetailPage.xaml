@@ -146,6 +146,36 @@
                 </Grid>
                 <ItemsRepeater ItemsSource="{x:Bind Chapters}" ItemTemplate="{StaticResource ChapterRow}" />
             </StackPanel>
+
+            <!-- Community Comments section -->
+            <StackPanel Padding="40,0,40,60" Spacing="16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <c:MdIcon Kind="Chat" Size="20" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="CommentsCountText" Text="Community Discussion" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Refresh" Style="{StaticResource PillButton}" Click="OnRefreshCommentsClicked" />
+                </Grid>
+
+                <!-- Comment composer box -->
+                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBox x:Name="CommentInputBox" PlaceholderText="Share your thoughts, theories, or reviews on this series..."
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" MaxHeight="120" FontSize="13" />
+                        <Grid>
+                            <TextBlock x:Name="PostingAsText" Text="Posting as: Hunter" FontSize="12" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
+                            <Button Content="Post Comment" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" Height="34" FontSize="12" Click="OnPostCommentClicked" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Comments List -->
+                <StackPanel x:Name="CommentsListPanel" Spacing="12" Margin="0,8,0,0" />
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>

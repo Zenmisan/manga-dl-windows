@@ -119,6 +119,17 @@
                             <TextBlock Grid.Column="1" Text="Stats" VerticalAlignment="Center" />
                         </Grid>
                     </RadioButton>
+
+                    <RadioButton x:Name="NavLeaderboard" Tag="Leaderboard" Style="{StaticResource NavRadio}" Click="OnNavClick" AutomationProperties.Name="Hunter Hall of Fame">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <c:MdIcon Kind="Trophy" Size="20" />
+                            <TextBlock Grid.Column="1" Text="Leaderboard" VerticalAlignment="Center" />
+                        </Grid>
+                    </RadioButton>
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Spacing="2">

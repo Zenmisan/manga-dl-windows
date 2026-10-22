@@ -29,6 +29,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Button Style="{StaticResource IconButton}" Click="OnClose" AutomationProperties.Name="Close reader">
                 <c:MdIcon Kind="Back" Size="20" />
@@ -37,7 +38,11 @@
                 <TextBlock x:Name="NovelTitleText" Text="Novel" FontSize="14" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
                 <TextBlock x:Name="NovelChapterText" Text=" · Ch. 1" FontSize="14" FontWeight="Medium" Foreground="{StaticResource FgSubtleBrush}" />
             </StackPanel>
-            <Button Grid.Column="2" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" AutomationProperties.Name="Reading settings">
+            <ToggleButton x:Name="CommentsToggle" Grid.Column="2" Style="{StaticResource IconToggle}"
+                          Checked="OnCommentsToggled" Unchecked="OnCommentsToggled" AutomationProperties.Name="Chapter comments">
+                <c:MdIcon Kind="Chat" Size="20" />
+            </ToggleButton>
+            <Button Grid.Column="3" Style="{StaticResource SmallGhostButton}" FontWeight="Bold" AutomationProperties.Name="Reading settings">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="Aa" FontFamily="{StaticResource SerifFont}" FontSize="14" VerticalAlignment="Center" />
                     <TextBlock Text="Reading Settings" VerticalAlignment="Center" />
@@ -92,6 +97,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!-- Chapter list -->
@@ -121,6 +127,49 @@
                                Text="[Progress saves as you scroll and syncs like manga progress.]" />
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- Comments drawer (340px) -->
+            <Border x:Name="CommentsDrawer" Grid.Column="2" Width="340"
+                    Background="{StaticResource PanelBrush}"
+                    BorderBrush="{StaticResource DividerStrongBrush}"
+                    BorderThickness="1,0,0,0"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Drawer Header -->
+                    <Grid Padding="18,16" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <c:MdIcon Kind="Chat" Size="18" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="DrawerCommentsTitle" Text="Chapter Comments" Style="{StaticResource SectionTitle}" FontSize="16" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Style="{StaticResource IconButton}" HorizontalAlignment="Right" Click="OnCloseCommentsDrawer" AutomationProperties.Name="Close comments">
+                            <c:MdIcon Kind="Close" Size="16" />
+                        </Button>
+                    </Grid>
+
+                    <!-- Comments List -->
+                    <ScrollViewer Grid.Row="1" Padding="16,12">
+                        <StackPanel x:Name="DrawerCommentsList" Spacing="10" />
+                    </ScrollViewer>
+
+                    <!-- Comment Composer -->
+                    <Border Grid.Row="2" Padding="14" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+                        <StackPanel Spacing="8">
+                            <TextBox x:Name="DrawerCommentInput" PlaceholderText="Drop a comment on this chapter..."
+                                     AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="80" FontSize="12" />
+                            <Grid>
+                                <TextBlock x:Name="DrawerPostingAsText" Text="Hunter" FontSize="11" Foreground="{StaticResource FgSubtleBrush}" VerticalAlignment="Center" />
+                                <Button Content="Post" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" Height="30" FontSize="11" Click="OnPostDrawerCommentClicked" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </Page>

@@ -38,6 +38,7 @@ public sealed class MangaDatabase : IAsyncDisposable
             await _db.CreateTableAsync<TrackerBindEntity>();
             await _db.CreateTableAsync<NewChapterEntity>();
             await _db.CreateTableAsync<BookmarkEntity>();
+            await _db.CreateTableAsync<CommentEntity>();
 
             // Ensure default categories exist
             var count = await _db.Table<CategoryEntity>().CountAsync();
@@ -492,6 +493,69 @@ public sealed class MangaDatabase : IAsyncDisposable
         return await _db.Table<BookmarkEntity>()
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
+    }
+
+    // ----------------------------------------------------
+    // Comments
+    // ----------------------------------------------------
+
+    public async Task AddCommentAsync(CommentEntity comment)
+    {
+        await InitializeAsync();
+        if (string.IsNullOrEmpty(comment.Id))
+        {
+            comment.Id = Guid.NewGuid().ToString("N");
+        }
+        if (comment.CreatedAt == 0)
+        {
+            comment.CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+        await _db.InsertOrReplaceAsync(comment);
+    }
+
+    public async Task<List<CommentEntity>> GetCommentsAsync(string provider, string mangaId, string? chapterId = null)
+    {
+        await InitializeAsync();
+        if (string.IsNullOrEmpty(chapterId))
+        {
+            return await _db.Table<CommentEntity>()
+                .Where(x => x.Provider == provider && x.MangaId == mangaId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+        }
+        else
+        {
+            return await _db.Table<CommentEntity>()
+                .Where(x => x.Provider == provider && x.MangaId == mangaId && x.ChapterId == chapterId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+        }
+    }
+
+    public async Task<bool> LikeCommentAsync(string commentId)
+    {
+        await InitializeAsync();
+        var comment = await _db.Table<CommentEntity>().Where(x => x.Id == commentId).FirstOrDefaultAsync();
+        if (comment == null) return false;
+
+        if (comment.IsLiked == 1)
+        {
+            comment.IsLiked = 0;
+            comment.Likes = Math.Max(0, comment.Likes - 1);
+        }
+        else
+        {
+            comment.IsLiked = 1;
+            comment.Likes += 1;
+        }
+        await _db.UpdateAsync(comment);
+        return comment.IsLiked == 1;
+    }
+
+    public async Task DeleteCommentAsync(string commentId)
+    {
+        await InitializeAsync();
+        await _db.Table<CommentEntity>().DeleteAsync(x => x.Id == commentId);
     }
 
     public async ValueTask DisposeAsync()

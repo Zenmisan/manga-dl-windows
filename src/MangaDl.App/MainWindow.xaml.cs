@@ -96,6 +96,7 @@ public sealed partial class MainWindow : Window
             "Browse" => typeof(ExtensionsPage),
             "Downloads" => typeof(DownloadsPage),
             "Stats" => typeof(StatsPage),
+            "Leaderboard" => typeof(LeaderboardPage),
             "Notifications" => typeof(NotificationsPage),
             "Settings" => typeof(SettingsPage),
             "Help" => typeof(HelpPage),

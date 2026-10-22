@@ -62,6 +62,7 @@ public static class AppServices
         });
 
     public static TrackerService Trackers { get; } = new(Http);
+    public static MangaDl.Core.Community.CommunityService Community { get; } = new();
     public static OAuthLoopbackListener Loopback { get; } = new(5678);
 
     public static async Task SyncTrackerProgressAsync(

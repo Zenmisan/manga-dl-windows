@@ -674,7 +674,31 @@ public sealed partial class ReaderPage : Page
 
     private void OnSettingsToggled(object sender, RoutedEventArgs e)
     {
-        if (SettingsPanel is not null) SettingsPanel.Visibility = X.Vis(((ToggleButton)sender).IsChecked == true);
+        var open = ((ToggleButton)sender).IsChecked == true;
+        if (SettingsPanel is not null) SettingsPanel.Visibility = X.Vis(open);
+        if (open)
+        {
+            if (CommentsDrawer != null) CommentsDrawer.Visibility = Visibility.Collapsed;
+            if (CommentsToggle != null) CommentsToggle.IsChecked = false;
+        }
+    }
+
+    private void OnCommentsToggled(object sender, RoutedEventArgs e)
+    {
+        var open = CommentsToggle?.IsChecked == true;
+        if (CommentsDrawer != null) CommentsDrawer.Visibility = X.Vis(open);
+        if (open)
+        {
+            if (SettingsPanel != null) SettingsPanel.Visibility = Visibility.Collapsed;
+            if (SettingsToggle != null) SettingsToggle.IsChecked = false;
+            _ = LoadChapterCommentsAsync();
+        }
+    }
+
+    private void OnCloseCommentsDrawer(object sender, RoutedEventArgs e)
+    {
+        if (CommentsDrawer != null) CommentsDrawer.Visibility = Visibility.Collapsed;
+        if (CommentsToggle != null) CommentsToggle.IsChecked = false;
     }
 
     private void OnFullscreen(object sender, RoutedEventArgs e) => ToggleFullscreen();
@@ -962,5 +986,157 @@ public sealed partial class ReaderPage : Page
         if (LeftPageBorder != null) LeftPageBorder.Background = bgTone;
         if (RightPageBorder != null) RightPageBorder.Background = bgTone;
         if (SinglePageBorder != null) SinglePageBorder.Background = bgTone;
+    }
+
+    private async Task LoadChapterCommentsAsync()
+    {
+        try
+        {
+            var userStats = await AppServices.Database.GetAllCompletedProgressAsync();
+            var userRank = GamificationService.GetHunterRank(userStats.Count * 10);
+            var username = AppServices.Settings.UserName ?? "Hunter";
+            if (DrawerPostingAsText != null) DrawerPostingAsText.Text = $"{username} ({userRank.Name})";
+
+            var chId = !string.IsNullOrEmpty(_chapterId) ? _chapterId : _chapterNumber.ToString();
+            var comments = await AppServices.Community.GetCommentsAsync(AppServices.Database, _manga.Source, _manga.Id, chId);
+
+            if (DrawerCommentsTitle != null) DrawerCommentsTitle.Text = $"Comments ({comments.Count})";
+            if (DrawerCommentsList == null) return;
+
+            DrawerCommentsList.Children.Clear();
+            if (comments.Count == 0)
+            {
+                DrawerCommentsList.Children.Add(new TextBlock
+                {
+                    Text = "No comments on this chapter yet. Drop your thoughts below!",
+                    FontSize = 12,
+                    Foreground = Application.Current.Resources.TryGetValue("FgSubtleBrush", out var sB) ? (Brush)sB : null,
+                    Margin = new Thickness(4)
+                });
+                return;
+            }
+
+            foreach (var c in comments)
+            {
+                DrawerCommentsList.Children.Add(BuildDrawerCommentCard(c));
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("ReaderPage.LoadChapterCommentsAsync", ex);
+        }
+    }
+
+    private UIElement BuildDrawerCommentCard(MangaDl.Core.Community.CommentItem c)
+    {
+        var card = new Border
+        {
+            Background = Application.Current.Resources.TryGetValue("SurfaceBrush", out var sB) ? (Brush)sB : null,
+            BorderBrush = Application.Current.Resources.TryGetValue("DividerBrush", out var dB) ? (Brush)dB : null,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(10, 8, 10, 8)
+        };
+
+        var stack = new StackPanel { Spacing = 6 };
+
+        var headerGrid = new Grid();
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var authorStack = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+        var nameText = new TextBlock { Text = c.Username, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 12 };
+        var rankBadge = new Border
+        {
+            Background = Application.Current.Resources.TryGetValue("AccentMutedBrush", out var aM) ? (Brush)aM : null,
+            CornerRadius = new CornerRadius(3),
+            Padding = new Thickness(4, 1, 4, 1),
+            Child = new TextBlock
+            {
+                Text = c.HunterRank,
+                FontSize = 10,
+                Foreground = Application.Current.Resources.TryGetValue("AccentLightBrush", out var aL) ? (Brush)aL : null
+            }
+        };
+        authorStack.Children.Add(nameText);
+        authorStack.Children.Add(rankBadge);
+        Grid.SetColumn(authorStack, 0);
+
+        var timeDiff = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - c.CreatedAt;
+        var hoursAgo = Math.Max(1, (int)(timeDiff / (1000 * 3600)));
+        var timeText = new TextBlock
+        {
+            Text = hoursAgo < 24 ? $"{hoursAgo}h" : $"{hoursAgo / 24}d",
+            FontSize = 10,
+            Foreground = Application.Current.Resources.TryGetValue("FgSubtleBrush", out var sub) ? (Brush)sub : null,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(timeText, 1);
+
+        headerGrid.Children.Add(authorStack);
+        headerGrid.Children.Add(timeText);
+        stack.Children.Add(headerGrid);
+
+        var body = new TextBlock { Text = c.Content, FontSize = 12, TextWrapping = TextWrapping.Wrap, LineHeight = 16 };
+        stack.Children.Add(body);
+
+        var footer = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 2, 0, 0) };
+        var likeBtn = new Button
+        {
+            Style = Application.Current.Resources.TryGetValue("GhostButton", out var gB) ? (Style)gB : null,
+            Padding = new Thickness(6, 2, 6, 2),
+            Height = 24,
+            FontSize = 10
+        };
+        var likeContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        var likeIcon = new Controls.MdIcon { Kind = c.IsLiked ? "HeartFilled" : "Heart", Size = 11, Foreground = Application.Current.Resources.TryGetValue("AccentLightBrush", out var hB) ? (Brush)hB : null };
+        var likeCount = new TextBlock { Text = c.Likes.ToString(), FontSize = 10, VerticalAlignment = VerticalAlignment.Center };
+        likeContent.Children.Add(likeIcon);
+        likeContent.Children.Add(likeCount);
+        likeBtn.Content = likeContent;
+
+        var currentLiked = c.IsLiked;
+        var currentLikes = c.Likes;
+
+        likeBtn.Click += async (_, _) =>
+        {
+            var nowLiked = await AppServices.Community.LikeCommentAsync(AppServices.Database, c.Id);
+            currentLiked = nowLiked;
+            currentLikes = nowLiked ? currentLikes + 1 : Math.Max(0, currentLikes - 1);
+            likeIcon.Kind = currentLiked ? "HeartFilled" : "Heart";
+            likeCount.Text = currentLikes.ToString();
+        };
+
+        footer.Children.Add(likeBtn);
+        stack.Children.Add(footer);
+
+        card.Content = stack;
+        return card;
+    }
+
+    private async void OnPostDrawerCommentClicked(object sender, RoutedEventArgs e)
+    {
+        if (DrawerCommentInput == null) return;
+        var text = DrawerCommentInput.Text.Trim();
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var userStats = await AppServices.Database.GetAllCompletedProgressAsync();
+        var userRank = GamificationService.GetHunterRank(userStats.Count * 10);
+        var username = AppServices.Settings.UserName ?? "Hunter";
+        var chId = !string.IsNullOrEmpty(_chapterId) ? _chapterId : _chapterNumber.ToString();
+
+        await AppServices.Community.PostCommentAsync(
+            AppServices.Database,
+            _manga.Source,
+            _manga.Id,
+            chapterId: chId,
+            username: username,
+            userAvatar: null,
+            hunterRank: userRank.Name,
+            content: text);
+
+        DrawerCommentInput.Text = string.Empty;
+        await LoadChapterCommentsAsync();
+        Nav.Toast("Comment posted!");
     }
 }

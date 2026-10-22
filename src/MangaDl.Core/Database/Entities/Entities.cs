@@ -258,3 +258,41 @@ public sealed class NewChapterEntity
     public long DetectedAt { get; set; }
 }
 
+[Table("comments")]
+public sealed class CommentEntity
+{
+    [PrimaryKey]
+    [Column("id")]
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Column("provider")]
+    public string Provider { get; set; } = string.Empty;
+
+    [Column("manga_id")]
+    public string MangaId { get; set; } = string.Empty;
+
+    [Column("chapter_id")]
+    public string? ChapterId { get; set; }
+
+    [Column("username")]
+    public string Username { get; set; } = "Anonymous Hunter";
+
+    [Column("user_avatar")]
+    public string? UserAvatar { get; set; }
+
+    [Column("hunter_rank")]
+    public string? HunterRank { get; set; }
+
+    [Column("content")]
+    public string Content { get; set; } = string.Empty;
+
+    [Column("created_at")]
+    public long CreatedAt { get; set; }
+
+    [Column("likes")]
+    public int Likes { get; set; }
+
+    [Column("is_liked")]
+    public int IsLiked { get; set; } // 0 or 1
+}
+
