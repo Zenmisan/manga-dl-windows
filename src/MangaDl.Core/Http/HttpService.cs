@@ -66,6 +66,14 @@ public sealed class HttpService : IDisposable
             }
         }
 
+        if (url.StartsWith("comixto://", StringComparison.OrdinalIgnoreCase))
+        {
+            if (ComixToDescrambler.TryParse(url, out var comixtoParams))
+            {
+                return comixtoParams.ImageUrl;
+            }
+        }
+
         if (url.StartsWith("/") && !string.IsNullOrEmpty(BackendUrl))
         {
             return BackendUrl.TrimEnd('/') + url;
@@ -126,6 +134,12 @@ public sealed class HttpService : IDisposable
         {
             var rawBytes = await FetchBytesAsync(actualUrl, referer ?? "https://asurascans.com/", ct);
             return AsuraDescrambler.Descramble(rawBytes, tiles, cols, rows);
+        }
+
+        if (ComixToDescrambler.TryParse(url, out var comixtoParams))
+        {
+            var rawBytes = await FetchBytesAsync(comixtoParams.ImageUrl, referer ?? "https://comix.to/", ct);
+            return ComixToDescrambler.Descramble(rawBytes, comixtoParams);
         }
 
         var resolvedUrl = ResolveUrl(url);
