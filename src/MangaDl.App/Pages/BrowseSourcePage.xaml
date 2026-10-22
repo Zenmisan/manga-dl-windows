@@ -67,6 +67,27 @@
                 </Border>
             </StackPanel>
 
+            <!-- Status Banner (Cloudflare Turnstile / Network / Empty states) -->
+            <Border x:Name="SourceStatusBanner" Visibility="Collapsed" Background="{StaticResource SurfaceRaisedBrush}"
+                    BorderBrush="{StaticResource DividerStrongBrush}" BorderThickness="1" CornerRadius="14" Padding="20,16" Margin="0,12,0,12">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="44" Height="44" CornerRadius="22" Background="{StaticResource DarkChipBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <c:MdIcon x:Name="SourceStatusIcon" Kind="Shield" Size="20" Foreground="{StaticResource AccentSoftBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Name="SourceStatusTitle" Text="Source Status" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FgBrush}" />
+                        <TextBlock x:Name="SourceStatusMessage" Text="Source status message" Style="{StaticResource BodyMuted}" FontSize="13" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="2" x:Name="SourceStatusActionButton" Content="Open in Browser" Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="16,0" VerticalAlignment="Center" Click="OnOpenBrowser" />
+                </Grid>
+            </Border>
+
             <!-- 8 across at 1440px -->
             <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource CatalogCover}">
                 <ItemsRepeater.Layout>

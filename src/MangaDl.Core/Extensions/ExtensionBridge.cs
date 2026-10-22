@@ -129,7 +129,8 @@ public sealed class ExtensionBridge : IDisposable
         {
             ["status"] = result.StatusCode,
             ["text"] = result.Text,
-            ["url"] = result.Url
+            ["url"] = result.Url,
+            ["isCloudflare"] = result.IsCloudflareChallenge
         };
     }
 

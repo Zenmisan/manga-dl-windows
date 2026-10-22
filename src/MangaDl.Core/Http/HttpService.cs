@@ -154,4 +154,12 @@ public sealed class HttpResponseResult
     public string Url { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
     public bool IsProxyHtml { get; set; }
+
+    public bool IsCloudflareChallenge =>
+        (StatusCode == 403 || StatusCode == 503) &&
+        (Text.Contains("cf-mitigated", StringComparison.OrdinalIgnoreCase) ||
+         Text.Contains("challenges.cloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+         Text.Contains("Just a moment...", StringComparison.OrdinalIgnoreCase) ||
+         Text.Contains("Checking your browser", StringComparison.OrdinalIgnoreCase) ||
+         Text.Contains("Cloudflare Ray ID", StringComparison.OrdinalIgnoreCase));
 }

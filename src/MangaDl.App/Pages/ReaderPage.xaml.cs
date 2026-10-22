@@ -35,10 +35,22 @@ public sealed partial class ReaderPage : Page
     private bool _isWebtoon = false;
     private bool _bookmarked = false;
     private bool _syncing = false;
+    private bool _updatingFilters = false;
+
+    private record WebtoonItemSlot(Border Container, Image Img, MangaPageInfo Page, TextBlock PlaceholderText)
+    {
+        public bool IsLoaded { get; set; }
+    }
+
+    private readonly List<WebtoonItemSlot> _webtoonSlots = [];
 
     public ReaderPage()
     {
         InitializeComponent();
+        if (WebtoonView != null)
+        {
+            WebtoonView.ViewChanged += OnWebtoonViewChanged;
+        }
         Loaded += (_, _) =>
         {
             Nav.SetTitle($"{_currentManga.Title} — {_chapterTitle}");
@@ -78,6 +90,26 @@ public sealed partial class ReaderPage : Page
         // Drawer toggles
         if (DrawerCropBorders is not null) DrawerCropBorders.IsChecked = s.CropBorders;
         if (DrawerTapZones is not null) DrawerTapZones.IsChecked = s.ClickZones;
+
+        _updatingFilters = true;
+        try
+        {
+            if (AmbilightToggle != null) AmbilightToggle.IsChecked = s.AmbilightGlow;
+            if (FilmstripToggle != null) FilmstripToggle.IsChecked = s.ShowFilmstrip;
+            if (SepiaToggle != null) SepiaToggle.IsChecked = s.ImageSepia;
+            if (InvertToggle != null) InvertToggle.IsChecked = s.ImageInvert;
+            if (GrayscaleToggle != null) GrayscaleToggle.IsChecked = s.ImageGrayscale;
+            if (BrightnessSlider != null) BrightnessSlider.Value = s.ImageBrightness + 100;
+            if (ContrastSlider != null) ContrastSlider.Value = s.ImageContrast + 100;
+            if (BrightnessText != null) BrightnessText.Text = $"{s.ImageBrightness + 100}%";
+            if (ContrastText != null) ContrastText.Text = $"{s.ImageContrast + 100}%";
+        }
+        finally
+        {
+            _updatingFilters = false;
+        }
+
+        ApplyImageFilters();
 
         // Initial mode
         if (s.ReaderMode == "Webtoon" || s.ReaderMode == "Vertical")
@@ -180,6 +212,7 @@ public sealed partial class ReaderPage : Page
                 _currentChapterIndex = 0;
             }
 
+            PopulateChapterDropdown();
             await LoadChapterPagesAsync(_chapterId, _chapterNumber, _chapterTitle);
         }
         catch (Exception ex)
@@ -238,6 +271,8 @@ public sealed partial class ReaderPage : Page
             SliderPageTotal.Text = _pageTotal.ToString();
         }
 
+        UpdateFilmstrip();
+
         if (_isWebtoon)
         {
             RenderWebtoonStrip();
@@ -275,6 +310,7 @@ public sealed partial class ReaderPage : Page
                 WebtoonView.Visibility = Visibility.Visible;
                 SpreadView.Visibility = Visibility.Collapsed;
                 SingleView.Visibility = Visibility.Collapsed;
+                if (BottomControlsOverlay != null) BottomControlsOverlay.Visibility = Visibility.Collapsed;
                 if (WebtoonOption != null) WebtoonOption.IsChecked = true;
                 if (DualToggle != null) DualToggle.IsChecked = false;
                 RenderWebtoonStrip();
@@ -285,9 +321,11 @@ public sealed partial class ReaderPage : Page
                 WebtoonView.Visibility = Visibility.Collapsed;
                 SpreadView.Visibility = Visibility.Collapsed;
                 SingleView.Visibility = Visibility.Visible;
+                if (BottomControlsOverlay != null) BottomControlsOverlay.Visibility = Visibility.Visible;
                 if (SingleOption != null) SingleOption.IsChecked = true;
                 if (DualToggle != null) DualToggle.IsChecked = false;
                 ShowPage();
+                UpdateFilmstrip();
                 break;
             default: // "spread"
                 _isWebtoon = false;
@@ -295,9 +333,11 @@ public sealed partial class ReaderPage : Page
                 WebtoonView.Visibility = Visibility.Collapsed;
                 SpreadView.Visibility = Visibility.Visible;
                 SingleView.Visibility = Visibility.Collapsed;
+                if (BottomControlsOverlay != null) BottomControlsOverlay.Visibility = Visibility.Visible;
                 if (SpreadOption != null) SpreadOption.IsChecked = true;
                 if (DualToggle != null) DualToggle.IsChecked = true;
                 ShowPage();
+                UpdateFilmstrip();
                 break;
         }
 
@@ -383,38 +423,114 @@ public sealed partial class ReaderPage : Page
             _ = SetImageSourceAsync(SingleImage, pSingle);
         }
 
+        UpdateFilmstripActivePage();
         RecordProgress();
     }
 
     private void RenderWebtoonStrip()
     {
-        if (WebtoonPagesStack == null) return;
+        if (WebtoonPagesStack == null || WebtoonView == null) return;
         WebtoonPagesStack.Children.Clear();
+        _webtoonSlots.Clear();
 
         var paddingPercent = AppServices.Settings.WebtoonSidePadding;
         var widthRatio = Math.Clamp(1.0 - (paddingPercent * 2.0 / 100.0), 0.3, 1.0);
 
-        foreach (var p in _pages)
+        for (int i = 0; i < _pages.Count; i++)
         {
+            var p = _pages[i];
             var border = new Border
             {
                 Background = X.Hex("#111111"),
                 CornerRadius = new CornerRadius(0),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 MaxWidth = 900 * widthRatio,
+                MinHeight = 850,
                 Margin = new Thickness(0, 0, 0, 4),
             };
+
+            var grid = new Grid();
+            var placeholder = new TextBlock
+            {
+                Text = $"Page {i + 1}",
+                FontSize = 13,
+                Foreground = X.Hex("#444444"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            grid.Children.Add(placeholder);
+
             var img = new Image
             {
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
-            border.Child = img;
+            grid.Children.Add(img);
+
+            border.Child = grid;
             WebtoonPagesStack.Children.Add(border);
-            _ = SetImageSourceAsync(img, p);
+
+            _webtoonSlots.Add(new WebtoonItemSlot(border, img, p, placeholder));
         }
 
+        UpdateWebtoonVisibleWindow();
         RecordProgress();
+    }
+
+    private void OnWebtoonViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+    {
+        UpdateWebtoonVisibleWindow();
+    }
+
+    private void UpdateWebtoonVisibleWindow()
+    {
+        if (!_isWebtoon || _webtoonSlots.Count == 0 || WebtoonView == null) return;
+
+        var scrollY = WebtoonView.VerticalOffset;
+        var viewH = WebtoonView.ViewportHeight > 0 ? WebtoonView.ViewportHeight : 800;
+
+        var windowTop = scrollY - (viewH * 2.5);
+        var windowBottom = scrollY + (viewH * 3.5);
+
+        double accumY = 0;
+        int activePage = 1;
+
+        for (int i = 0; i < _webtoonSlots.Count; i++)
+        {
+            var slot = _webtoonSlots[i];
+            var itemH = slot.Container.ActualHeight > 0 ? slot.Container.ActualHeight : 850;
+            var itemTop = accumY;
+            var itemBottom = accumY + itemH;
+
+            if (scrollY >= itemTop - (viewH * 0.4) && scrollY < itemBottom)
+            {
+                activePage = i + 1;
+            }
+
+            bool inWindow = itemBottom >= windowTop && itemTop <= windowBottom;
+
+            if (inWindow && !slot.IsLoaded)
+            {
+                slot.IsLoaded = true;
+                slot.PlaceholderText.Visibility = Visibility.Collapsed;
+                _ = SetImageSourceAsync(slot.Img, slot.Page);
+            }
+            else if (!inWindow && slot.IsLoaded)
+            {
+                slot.IsLoaded = false;
+                slot.Img.Source = null;
+                slot.PlaceholderText.Visibility = Visibility.Visible;
+            }
+
+            accumY += itemH + 4;
+        }
+
+        if (activePage != _page)
+        {
+            _page = activePage;
+            if (PageCount != null) PageCount.Text = $"{_page} / {_pageTotal}";
+            if (SliderPage != null) SliderPage.Text = _page.ToString();
+        }
     }
 
     private void RecordProgress()
@@ -469,6 +585,12 @@ public sealed partial class ReaderPage : Page
 
             ReaderMangaTitle.Text = _currentManga.Title;
             ReaderChapterTitle.Text = $"  ·  {_chapterTitle}";
+            if (ChapterDropdown != null)
+            {
+                ChapterDropdown.SelectionChanged -= OnChapterDropdownChanged;
+                ChapterDropdown.SelectedIndex = _currentChapterIndex;
+                ChapterDropdown.SelectionChanged += OnChapterDropdownChanged;
+            }
             Nav.Toast($"Opened {_chapterTitle}");
             await LoadChapterPagesAsync(_chapterId, _chapterNumber, _chapterTitle);
         }
@@ -492,6 +614,12 @@ public sealed partial class ReaderPage : Page
 
             ReaderMangaTitle.Text = _currentManga.Title;
             ReaderChapterTitle.Text = $"  ·  {_chapterTitle}";
+            if (ChapterDropdown != null)
+            {
+                ChapterDropdown.SelectionChanged -= OnChapterDropdownChanged;
+                ChapterDropdown.SelectedIndex = _currentChapterIndex;
+                ChapterDropdown.SelectionChanged += OnChapterDropdownChanged;
+            }
             Nav.Toast($"Opened {_chapterTitle}");
             await LoadChapterPagesAsync(_chapterId, _chapterNumber, _chapterTitle);
         }
@@ -569,14 +697,270 @@ public sealed partial class ReaderPage : Page
         Nav.Back();
     }
 
-    // ----- Filters (labels only) -----
+    // ----- Chapter Dropdown -----
+    private void PopulateChapterDropdown()
+    {
+        if (ChapterDropdown == null) return;
+        ChapterDropdown.SelectionChanged -= OnChapterDropdownChanged;
+        ChapterDropdown.Items.Clear();
+
+        for (int i = 0; i < _chapters.Count; i++)
+        {
+            var ch = _chapters[i];
+            ChapterDropdown.Items.Add(new ComboBoxItem
+            {
+                Content = $"Ch. {ch.Number} - {ch.Title}",
+                Tag = ch
+            });
+        }
+
+        if (_currentChapterIndex >= 0 && _currentChapterIndex < ChapterDropdown.Items.Count)
+        {
+            ChapterDropdown.SelectedIndex = _currentChapterIndex;
+        }
+
+        ChapterDropdown.SelectionChanged += OnChapterDropdownChanged;
+    }
+
+    private async void OnChapterDropdownChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ChapterDropdown?.SelectedItem is ComboBoxItem item && item.Tag is Chapter ch)
+        {
+            var idx = _chapters.IndexOf(ch);
+            if (idx >= 0 && idx != _currentChapterIndex)
+            {
+                _currentChapterIndex = idx;
+                _chapterId = ch.Number;
+                _chapterTitle = ch.Title;
+                if (double.TryParse(ch.Number, out var n)) _chapterNumber = n;
+                _page = 1;
+
+                ReaderChapterTitle.Text = $"  ·  {_chapterTitle}";
+                Nav.SetTitle($"{_currentManga.Title} — {_chapterTitle}");
+
+                if (LoadingRing != null)
+                {
+                    LoadingRing.Visibility = Visibility.Visible;
+                    LoadingRing.IsActive = true;
+                }
+
+                try
+                {
+                    await LoadChapterPagesAsync(_chapterId, _chapterNumber, _chapterTitle);
+                }
+                finally
+                {
+                    if (LoadingRing != null)
+                    {
+                        LoadingRing.Visibility = Visibility.Collapsed;
+                        LoadingRing.IsActive = false;
+                    }
+                }
+            }
+        }
+    }
+
+    // ----- Filmstrip Scrubber -----
+    private void UpdateFilmstrip()
+    {
+        if (FilmstripContainer == null || FilmstripThumbnailsStack == null) return;
+
+        if (_pageTotal > 60 || !AppServices.Settings.ShowFilmstrip || _isWebtoon)
+        {
+            FilmstripContainer.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        FilmstripContainer.Visibility = Visibility.Visible;
+        FilmstripThumbnailsStack.Children.Clear();
+
+        for (int i = 0; i < _pages.Count; i++)
+        {
+            int pageNum = i + 1;
+            var isCurrent = pageNum == _page || (_spread && pageNum == _page + 1);
+
+            var thumbBorder = new Border
+            {
+                Width = 36,
+                Height = 52,
+                CornerRadius = new CornerRadius(5),
+                Background = X.Hex("#181818"),
+                BorderBrush = isCurrent ? X.Hex("#6366f1") : X.Hex("#2a2a2a"),
+                BorderThickness = new Thickness(isCurrent ? 2 : 1),
+                Margin = new Thickness(1),
+                Tag = pageNum
+            };
+
+            var grid = new Grid();
+            var img = new Image
+            {
+                Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
+            };
+            grid.Children.Add(img);
+
+            var pageNumBadge = new Border
+            {
+                Background = X.Hex("#C0000000"),
+                CornerRadius = new CornerRadius(3),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, 0, 2),
+                Padding = new Thickness(3, 1, 3, 1)
+            };
+            pageNumBadge.Child = new TextBlock
+            {
+                Text = pageNum.ToString(),
+                FontSize = 9,
+                FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                Foreground = X.Hex("#e2e8f0")
+            };
+            grid.Children.Add(pageNumBadge);
+
+            thumbBorder.Child = grid;
+
+            // Load thumbnail image
+            _ = SetImageSourceAsync(img, _pages[i]);
+
+            // Jump to page on click
+            thumbBorder.PointerPressed += (s, ev) =>
+            {
+                if (s is Border b && b.Tag is int p)
+                {
+                    JumpToPage(p);
+                }
+            };
+
+            FilmstripThumbnailsStack.Children.Add(thumbBorder);
+        }
+
+        ScrollFilmstripToActive();
+    }
+
+    private void JumpToPage(int pageNum)
+    {
+        _page = Math.Clamp(pageNum, 1, _pageTotal);
+        ShowPage();
+    }
+
+    private void UpdateFilmstripActivePage()
+    {
+        if (FilmstripThumbnailsStack == null || FilmstripContainer == null || FilmstripContainer.Visibility != Visibility.Visible) return;
+
+        for (int i = 0; i < FilmstripThumbnailsStack.Children.Count; i++)
+        {
+            if (FilmstripThumbnailsStack.Children[i] is Border b && b.Tag is int p)
+            {
+                var isCurrent = p == _page || (_spread && p == _page + 1);
+                b.BorderBrush = isCurrent ? X.Hex("#6366f1") : X.Hex("#2a2a2a");
+                b.BorderThickness = new Thickness(isCurrent ? 2 : 1);
+            }
+        }
+
+        ScrollFilmstripToActive();
+    }
+
+    private void ScrollFilmstripToActive()
+    {
+        if (FilmstripScrollViewer == null || FilmstripThumbnailsStack == null) return;
+        var activeIdx = _page - 1;
+        if (activeIdx >= 0 && activeIdx < FilmstripThumbnailsStack.Children.Count)
+        {
+            var targetOffset = Math.Max(0, (activeIdx * 44) - (FilmstripScrollViewer.ViewportWidth / 2) + 22);
+            FilmstripScrollViewer.ChangeView(targetOffset, null, null);
+        }
+    }
+
+    // ----- Filters & Adjustments -----
     private void OnBrightness(object sender, RangeBaseValueChangedEventArgs e)
     {
         if (BrightnessText is not null) BrightnessText.Text = $"{(int)e.NewValue}%";
+        if (_updatingFilters) return;
+        AppServices.Settings.ImageBrightness = (int)e.NewValue - 100;
+        AppServices.Settings.Save();
+        ApplyImageFilters();
     }
 
     private void OnContrast(object sender, RangeBaseValueChangedEventArgs e)
     {
         if (ContrastText is not null) ContrastText.Text = $"{(int)e.NewValue}%";
+        if (_updatingFilters) return;
+        AppServices.Settings.ImageContrast = (int)e.NewValue - 100;
+        AppServices.Settings.Save();
+        ApplyImageFilters();
+    }
+
+    private void OnFilterChipToggled(object sender, RoutedEventArgs e)
+    {
+        if (_updatingFilters) return;
+        var s = AppServices.Settings;
+        if (sender == GrayscaleToggle) s.ImageGrayscale = GrayscaleToggle?.IsChecked == true;
+        else if (sender == InvertToggle) s.ImageInvert = InvertToggle?.IsChecked == true;
+        else if (sender == SepiaToggle) s.ImageSepia = SepiaToggle?.IsChecked == true;
+        s.Save();
+        ApplyImageFilters();
+    }
+
+    private void OnAmbilightToggled(object sender, RoutedEventArgs e)
+    {
+        if (_updatingFilters) return;
+        AppServices.Settings.AmbilightGlow = AmbilightToggle?.IsChecked == true;
+        AppServices.Settings.Save();
+        ApplyImageFilters();
+    }
+
+    private void OnFilmstripToggled(object sender, RoutedEventArgs e)
+    {
+        if (_updatingFilters) return;
+        AppServices.Settings.ShowFilmstrip = FilmstripToggle?.IsChecked == true;
+        AppServices.Settings.Save();
+        UpdateFilmstrip();
+    }
+
+    private void ApplyImageFilters()
+    {
+        var s = AppServices.Settings;
+        var brightness = s.ImageBrightness;
+        var sepia = s.ImageSepia;
+        var invert = s.ImageInvert;
+        var ambilight = s.AmbilightGlow;
+
+        double dimOpacity = 0;
+        double brightOpacity = 0;
+
+        if (brightness < 0)
+        {
+            dimOpacity = Math.Abs(brightness) / 50.0 * 0.75;
+        }
+        else if (brightness > 0)
+        {
+            brightOpacity = brightness / 50.0 * 0.45;
+        }
+
+        double sepiaOpacity = sepia ? 0.28 : 0;
+        double glowOpacity = ambilight ? 0.32 : 0;
+
+        // Apply to Left Page
+        if (LeftDimOverlay != null) LeftDimOverlay.Opacity = dimOpacity;
+        if (LeftBrightOverlay != null) LeftBrightOverlay.Opacity = brightOpacity;
+        if (LeftSepiaOverlay != null) LeftSepiaOverlay.Opacity = sepiaOpacity;
+        if (LeftGlowBorder != null) LeftGlowBorder.Opacity = glowOpacity;
+
+        // Apply to Right Page
+        if (RightDimOverlay != null) RightDimOverlay.Opacity = dimOpacity;
+        if (RightBrightOverlay != null) RightBrightOverlay.Opacity = brightOpacity;
+        if (RightSepiaOverlay != null) RightSepiaOverlay.Opacity = sepiaOpacity;
+        if (RightGlowBorder != null) RightGlowBorder.Opacity = glowOpacity;
+
+        // Apply to Single Page
+        if (SingleDimOverlay != null) SingleDimOverlay.Opacity = dimOpacity;
+        if (SingleBrightOverlay != null) SingleBrightOverlay.Opacity = brightOpacity;
+        if (SingleSepiaOverlay != null) SingleSepiaOverlay.Opacity = sepiaOpacity;
+        if (SingleGlowBorder != null) SingleGlowBorder.Opacity = glowOpacity;
+
+        // Invert effect background tone
+        var bgTone = invert ? X.Hex("#000000") : X.Hex("#141414");
+        if (LeftPageBorder != null) LeftPageBorder.Background = bgTone;
+        if (RightPageBorder != null) RightPageBorder.Background = bgTone;
+        if (SinglePageBorder != null) SinglePageBorder.Background = bgTone;
     }
 }

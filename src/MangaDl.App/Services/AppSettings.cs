@@ -26,8 +26,12 @@ public sealed class AppSettings
     public bool ClickZones { get; set; } = true;
     public string MouseWheelAction { get; set; } = "Scroll"; // "Scroll" | "Turn page" | "Zoom"
     public int ImageBrightness { get; set; } = 0; // -50 - 50
+    public int ImageContrast { get; set; } = 0; // -50 - 50
     public bool ImageGrayscale { get; set; } = false;
     public bool ImageInvert { get; set; } = false;
+    public bool ImageSepia { get; set; } = false;
+    public bool AmbilightGlow { get; set; } = false;
+    public bool ShowFilmstrip { get; set; } = true;
     public bool SharpenImages { get; set; } = true;
     public string DownloadPath { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),

@@ -10,7 +10,7 @@ namespace MangaDl.Pages;
 /// <summary>Popular / Latest catalogue of one source. Navigation parameter: the source name.</summary>
 public sealed partial class BrowseSourcePage : Page
 {
-    public ObservableCollection<Manga> Items { get; } = new(Sample.BrowseCatalog);
+    public ObservableCollection<Manga> Items { get; } = new();
 
     private string _sourceName = "MangaDex";
     private string _sourceId = "mangadex";
@@ -29,14 +29,29 @@ public sealed partial class BrowseSourcePage : Page
         await LoadPopularAsync();
     }
 
+    private void ShowStatusBanner(bool isCloudflare, string title, string message)
+    {
+        if (SourceStatusBanner == null) return;
+        SourceStatusBanner.Visibility = Visibility.Visible;
+        SourceStatusTitle.Text = title;
+        SourceStatusMessage.Text = message;
+        SourceStatusActionButton.Visibility = Visibility.Visible;
+    }
+
+    private void HideStatusBanner()
+    {
+        if (SourceStatusBanner != null) SourceStatusBanner.Visibility = Visibility.Collapsed;
+    }
+
     private async Task LoadPopularAsync()
     {
         try
         {
             var results = await AppServices.Extensions.GetPopularAsync(_sourceId, 1);
+            Items.Clear();
             if (results.Count > 0)
             {
-                Items.Clear();
+                HideStatusBanner();
                 foreach (var r in results)
                 {
                     Items.Add(new Manga(
@@ -49,11 +64,27 @@ public sealed partial class BrowseSourcePage : Page
                         _sourceName));
                 }
             }
+            else
+            {
+                ShowStatusBanner(
+                    isCloudflare: false,
+                    title: "No Catalog Items Found",
+                    message: $"{_sourceName} returned no items. The source might be under maintenance or experiencing temporary connection issues.");
+            }
         }
         catch (Exception ex)
         {
             AppLog.Warn("BrowseSourcePage.LoadPopularAsync", ex);
-            Nav.Toast($"Couldn't load {_sourceName}");
+            Items.Clear();
+            var isCf = ex.Message.Contains("Cloudflare", StringComparison.OrdinalIgnoreCase) ||
+                       ex.Message.Contains("403", StringComparison.OrdinalIgnoreCase) ||
+                       ex.Message.Contains("Turnstile", StringComparison.OrdinalIgnoreCase);
+            ShowStatusBanner(
+                isCloudflare: isCf,
+                title: isCf ? "Cloudflare Protection Active" : "Connection Failed",
+                message: isCf
+                    ? $"{_sourceName} is currently protected by Cloudflare Turnstile verification. Open it in your browser to pass the challenge."
+                    : $"Could not connect to {_sourceName}. Check your network connection or verify the source domain in your browser.");
         }
     }
 
@@ -68,9 +99,10 @@ public sealed partial class BrowseSourcePage : Page
         try
         {
             var results = await AppServices.Extensions.SearchAsync(_sourceId, query, 1);
+            Items.Clear();
             if (results.Count > 0)
             {
-                Items.Clear();
+                HideStatusBanner();
                 foreach (var r in results)
                 {
                     Items.Add(new Manga(
@@ -83,11 +115,26 @@ public sealed partial class BrowseSourcePage : Page
                         _sourceName));
                 }
             }
+            else
+            {
+                ShowStatusBanner(
+                    isCloudflare: false,
+                    title: "No Search Results",
+                    message: $"No manga found matching \"{query}\" on {_sourceName}. Try different keywords or check the site in your browser.");
+            }
         }
         catch (Exception ex)
         {
             AppLog.Warn("BrowseSourcePage.OnSearchSubmitted", ex);
-            Nav.Toast($"Search failed on {_sourceName}");
+            Items.Clear();
+            var isCf = ex.Message.Contains("Cloudflare", StringComparison.OrdinalIgnoreCase) ||
+                       ex.Message.Contains("403", StringComparison.OrdinalIgnoreCase);
+            ShowStatusBanner(
+                isCloudflare: isCf,
+                title: isCf ? "Cloudflare Protection Active" : "Search Failed",
+                message: isCf
+                    ? $"{_sourceName} is protected by Cloudflare. Open in browser to pass verification."
+                    : $"Search failed on {_sourceName}. Check your network connection.");
         }
     }
 
@@ -135,11 +182,12 @@ public sealed partial class BrowseSourcePage : Page
     {
         try
         {
-            var results = await AppServices.Extensions.GetPopularAsync(_sourceId, 1);
+            var results = await AppServices.Extensions.GetLatestAsync(_sourceId, 1);
+            Items.Clear();
             if (results.Count > 0)
             {
-                Items.Clear();
-                foreach (var r in results.Reverse())
+                HideStatusBanner();
+                foreach (var r in results)
                 {
                     Items.Add(new Manga(
                         r.Id,
@@ -151,10 +199,26 @@ public sealed partial class BrowseSourcePage : Page
                         _sourceName));
                 }
             }
+            else
+            {
+                ShowStatusBanner(
+                    isCloudflare: false,
+                    title: "No Latest Chapters Found",
+                    message: $"No recent updates found for {_sourceName}.");
+            }
         }
         catch (Exception ex)
         {
             AppLog.Warn("BrowseSourcePage.LoadLatestAsync", ex);
+            Items.Clear();
+            var isCf = ex.Message.Contains("Cloudflare", StringComparison.OrdinalIgnoreCase) ||
+                       ex.Message.Contains("403", StringComparison.OrdinalIgnoreCase);
+            ShowStatusBanner(
+                isCloudflare: isCf,
+                title: isCf ? "Cloudflare Protection Active" : "Connection Failed",
+                message: isCf
+                    ? $"{_sourceName} is protected by Cloudflare. Open in browser to pass verification."
+                    : $"Could not load latest releases from {_sourceName}.");
         }
     }
 
