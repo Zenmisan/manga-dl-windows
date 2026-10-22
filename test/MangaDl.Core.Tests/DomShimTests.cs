@@ -33,7 +33,7 @@ public class DomShimTests
         var remainingAdsCount = engine.GetValue("remainingAds").AsArray().Length;
         var text = engine.GetValue("text").AsString();
 
-        Assert.Equal(0, remainingAdsCount);
+        Assert.Equal(0u, remainingAdsCount);
         Assert.Contains("Real novel chapter text line 1.", text);
         Assert.Contains("Real novel chapter text line 2.", text);
         Assert.DoesNotContain("SPAM ADVERTISEMENT", text);

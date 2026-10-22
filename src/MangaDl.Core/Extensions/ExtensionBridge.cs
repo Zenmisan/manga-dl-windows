@@ -479,7 +479,7 @@ public sealed class ExtensionBridge : IDisposable
             title,
             desc.IsUndefined() || desc.IsNull() ? null : SafeString(desc),
             cover.IsUndefined() || cover.IsNull() ? null : SafeString(cover),
-            author.IsUndefined() || author.IsNull() ? null : SafeString(author),
+            author,
             artist.IsUndefined() || artist.IsNull() ? null : SafeString(artist),
             status.IsUndefined() || status.IsNull() ? null : SafeString(status),
             genres,
